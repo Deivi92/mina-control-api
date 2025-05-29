@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.minacontrol</groupId>
+    <artifactId>mina-control-api</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>MinaControl Pro - Sistema de Gestión Minera</name>
+    <description>Sistema integral para gestión de operaciones mineras de carbón en Socha, Boyacá</description>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+
+    <properties>
+        <java.version>17</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- ========== CORE ESENCIAL ========== -->
+        <!-- Spring Boot Web: Servidor web embebido (Tomcat) + APIs REST + JSON automático -->
+        <!-- PARA QUÉ: Crear endpoints como /api/empleados, /api/produccion sin configurar servidor -->
+        <!-- INCLUYE: @RestController, @RequestMapping, Jackson para JSON, validaciones HTTP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        
+        <!-- ========== BASE DE DATOS (DESARROLLO) ========== -->
+        <!-- H2: Base de datos en memoria, perfecta para desarrollo y testing -->
+        <!-- PARA QUÉ: Prototipar sin instalar PostgreSQL, datos se resetean al reiniciar -->
+        <!-- CONSOLA: Disponible en http://localhost:8080/h2-console (JDBC URL: jdbc:h2:mem:testdb) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <!-- ========== VALIDACIONES ========== -->
+        <!-- Spring Boot Validation: Validaciones automáticas para DTOs y entidades -->
+        <!-- PARA QUÉ: Validar datos de empleados (@NotNull, @Size, @Email, etc.) -->
+        <!-- EJEMPLO: @Valid en controllers, @NotBlank en campos obligatorios de Empleado -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        
+        <!-- ========== UTILIDADES DE DESARROLLO ========== -->
+        <!-- Lombok: Genera automáticamente getters, setters, constructores, toString -->
+        <!-- PARA QUÉ: Reducir código boilerplate en entidades y DTOs -->
+        <!-- EJEMPLO: @Data, @Builder, @AllArgsConstructor en clase Empleado -->
+        <!-- Eliminada dependencia de Lombok -->
+
+        <!-- ========== TESTING ========== -->
+        <!-- Spring Boot Test: Framework completo de testing (JUnit 5, MockMvc, TestContainers) -->
+        <!-- PARA QUÉ: Tests unitarios e integración de APIs REST -->
+        <!-- INCLUYE: @SpringBootTest, @WebMvcTest, MockMvc para testing de controllers -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Plugin principal de Spring Boot para empaquetar aplicación ejecutable -->
+            <!-- PARA QUÉ: Crear JAR ejecutable con 'mvn spring-boot:run' -->
+            <!-- COMANDOS: mvn spring-boot:run (desarrollo), mvn package (producción) -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- Excluir Lombok del JAR final (solo necesario en compilación) -->
+                        <!-- Eliminada exclusión de Lombok -->
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

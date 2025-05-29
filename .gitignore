@@ -1,0 +1,50 @@
+# Archivos y carpetas generados por Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Archivos de log
+*.log
+
+# Archivos de IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.DS_Store
+
+# Archivos de sistema operativo
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Archivos de WSL (si aplican y no deben ser versionados)
+# Ubuntu-24.04/ # Descomentar si esta carpeta no debe ser versionada
+
+# Archivos temporales o de compilación específicos de VSCode Java
+bin/
+.vscode/extensions.json # A menudo es específico del usuario
+.vscode/launch.json # Puede contener rutas absolutas o configuraciones locales
+# Mantener .vscode/settings.json si es relevante para el proyecto y compartido
+
+# Archivos de compilación de Java
+*.class
+
+# Archivos JAR/WAR/EAR (excepto los que quieras distribuir directamente)
+*.jar
+*.war
+*.ear
+
+# Archivos de dependencias descargadas (si no usas un gestor como Maven/Gradle que las maneje)
+# lib/
+# libs/

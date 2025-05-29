@@ -1,0 +1,37 @@
+@startuml sequence_registro_produccion_eliminar
+title Secuencia: Eliminar Registro de Producción
+
+actor Cliente as User
+participant "RegistroProduccionController" as Ctrl
+participant "RegistroProduccionService" as Srv
+participant "RegistroProduccionRepository (In-Memory)" as Repo
+
+User -> Ctrl : DELETE /api/v1/registros-produccion/{id}
+activate Ctrl
+Ctrl -> Srv : eliminarRegistro(id)
+activate Srv
+Srv -> Repo : existsById(id) // O findById para verificar y luego eliminar
+activate Repo
+Repo --> Srv : existe (boolean)
+deactivate Repo
+
+alt registroExiste
+  Srv -> Repo : deleteById(id)
+  activate Repo
+  Repo --> Srv : void
+  deactivate Repo
+  Srv --> Ctrl : void
+else noExiste
+  Srv --> Ctrl : throw ResourceNotFoundException("Registro no encontrado con id: " + id)
+end
+
+deactivate Srv
+
+alt registroEliminado
+  Ctrl --> User : HTTP 204 No Content
+else ResourceNotFoundException
+  Ctrl --> User : HTTP 404 Not Found
+end
+deactivate Ctrl
+
+@enduml

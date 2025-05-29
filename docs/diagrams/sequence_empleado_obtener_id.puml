@@ -1,0 +1,34 @@
+@startuml sequence_empleado_obtener_id
+title Secuencia: Obtener Empleado por ID
+
+actor Cliente as User
+participant "EmpleadoController" as Ctrl
+participant "EmpleadoService" as Srv
+participant "EmpleadoRepository (In-Memory)" as Repo
+participant "Empleado" as Model
+participant "EmpleadoDTO" as DTO
+
+User -> Ctrl : GET /api/v1/empleados/{id}
+activate Ctrl
+Ctrl -> Srv : obtenerEmpleadoPorId(id)
+activate Srv
+Srv -> Repo : findById(id)
+activate Repo
+Repo --> Srv : Optional<Empleado>
+deactivate Repo
+alt Empleado Encontrado
+    Srv -> Model : mapToDTO(empleadoEncontrado)
+    activate Model
+    Model --> Srv : empleadoDTO
+    deactivate Model
+    Srv --> Ctrl : empleadoDTO
+    Ctrl --> User : HTTP 200 OK (body: EmpleadoDTO)
+else Empleado No Encontrado
+    Srv --> Ctrl : throws ResourceNotFoundException
+    deactivate Srv
+    Ctrl -> GlobalExceptionHandler : maneja ResourceNotFoundException
+    GlobalExceptionHandler --> Ctrl : ResponseEntity (Error)
+    Ctrl --> User : HTTP 404 Not Found
+end
+deactivate Ctrl
+@enduml

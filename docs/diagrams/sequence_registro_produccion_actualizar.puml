@@ -1,0 +1,47 @@
+@startuml sequence_registro_produccion_actualizar
+title Secuencia: Actualizar Registro de Producción
+
+actor Cliente as User
+participant "RegistroProduccionController" as Ctrl
+participant "RegistroProduccionService" as Srv
+participant "RegistroProduccionRepository (In-Memory)" as Repo
+participant "RegistroProduccion" as Model
+participant "RegistroProduccionDTO" as DTO
+
+User -> Ctrl : PUT /api/v1/registros-produccion/{id} (body: RegistroProduccionDTO)
+activate Ctrl
+Ctrl -> Srv : actualizarRegistro(id, registroDTO)
+activate Srv
+Srv -> DTO : mapToEntity(registroDTO)
+activate DTO
+DTO --> Srv : registroEntityParaActualizar
+deactivate DTO
+Srv -> Repo : findById(id)
+activate Repo
+Repo --> Srv : registroExistente (o Optional.empty())
+deactivate Repo
+
+alt registroExiste
+  Srv -> Repo : save(registroActualizadoConDatosNuevos)
+  activate Repo
+  Repo --> Srv : registroGuardado
+  deactivate Repo
+  Srv -> Model : mapToDTO(registroGuardado)
+  activate Model
+  Model --> Srv : registroDTOResult
+  deactivate Model
+  Srv --> Ctrl : registroDTOResult
+else noExiste
+  Srv --> Ctrl : throw ResourceNotFoundException("Registro no encontrado con id: " + id)
+end
+
+deactivate Srv
+
+alt registroActualizado
+  Ctrl --> User : HTTP 200 OK (body: RegistroProduccionDTO)
+else ResourceNotFoundException
+  Ctrl --> User : HTTP 404 Not Found
+end
+deactivate Ctrl
+
+@enduml

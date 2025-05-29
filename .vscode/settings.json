@@ -1,0 +1,70 @@
+{
+    "terminal.integrated.defaultProfile.windows": "Ubuntu-24.04 (WSL)",
+    "terminal.integrated.profiles.windows": {
+        "Ubuntu-24.04 (WSL)": {
+            "path": "C:\\Windows\\System32\\wsl.exe",
+            "args": ["-d", "Ubuntu-24.04"],
+            "icon": "terminal-ubuntu"
+        },
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        },
+        "Command Prompt": {
+            "path": "cmd.exe",
+            "icon": "terminal-cmd"
+        }    },
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    
+    // ========== CONFIGURACIÓN JAVA & MAVEN ==========
+    "java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-17",
+            "path": "/usr/lib/jvm/java-17-openjdk-amd64"
+        }
+    ],
+    
+    // ========== AUTO-RELOAD DE DEPENDENCIAS ==========
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.autobuild.enabled": true,
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.maxConcurrentBuilds": 1,
+    "java.import.maven.enabled": true,
+    "java.import.gradle.enabled": false,
+    
+    // ========== MAVEN CONFIGURACIÓN ==========
+    "maven.executable.path": "/usr/bin/mvn",
+    "maven.terminal.useJavaHome": true,
+    "maven.downloadSources": true,
+    "maven.downloadJavadoc": false,
+    "maven.updateSnapshots": false,
+    
+    // ========== OPTIMIZACIONES DE RENDIMIENTO ==========
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m",
+    "java.completion.enabled": true,
+    "java.completion.overwrite": true,
+    "java.completion.guessMethodArguments": true,
+    
+    // ========== SPRING BOOT ESPECÍFICO ==========
+    "spring-boot.ls.checkjvm": false,
+    "spring.initializr.defaultLanguage": "Java",
+    "spring.initializr.defaultJavaVersion": "17",
+    "spring.initializr.defaultPackaging": "Jar",
+    
+    // ========== FILES & WORKSPACE ==========
+    "files.exclude": {
+        "**/target": true,
+        "**/.mvn": true
+    },
+    "search.exclude": {
+        "**/target": true,
+        "**/node_modules": true
+    },
+    
+    // ========== LIVE RELOAD ==========
+    "java.referencesCodeLens.enabled": true,
+    "java.implementationsCodeLens.enabled": true,
+    "java.signatureHelp.enabled": true,
+    "java.contentProvider.preferred": "fernflower"
+}

@@ -1,0 +1,154 @@
+@startuml class_diagram_fase1
+title Diagrama de Clases - Fase 1: MinaControl Pro
+
+!theme materia-outline
+
+package com.minacontrol {
+
+  package config {
+    class GlobalExceptionHandler {
+      + handleGlobalException(Exception ex, WebRequest request)
+      + handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request)
+      + handleValidationExceptions(MethodArgumentNotValidException ex)
+    }
+  }
+
+  package controller {
+    class EmpleadoController {
+      + EmpleadoService empleadoService
+      + crearEmpleado(EmpleadoDTO empleadoDTO) : ResponseEntity<EmpleadoDTO>
+      + obtenerEmpleadoPorId(Long id) : ResponseEntity<EmpleadoDTO>
+      + obtenerTodosLosEmpleados() : ResponseEntity<List<EmpleadoDTO>>
+      + actualizarEmpleado(Long id, EmpleadoDTO empleadoDTO) : ResponseEntity<EmpleadoDTO>
+      + eliminarEmpleado(Long id) : ResponseEntity<Void>
+    }
+
+    class RegistroProduccionController {
+      + RegistroProduccionService registroProduccionService
+      + crearRegistroProduccion(RegistroProduccionDTO registroDTO) : ResponseEntity<RegistroProduccionDTO>
+      + obtenerRegistroProduccionPorId(Long id) : ResponseEntity<RegistroProduccionDTO>
+      + obtenerRegistrosPorFecha(LocalDate fecha) : ResponseEntity<List<RegistroProduccionDTO>>
+      + obtenerRegistrosPorEmpleadoYFecha(Long empleadoId, LocalDate fecha) : ResponseEntity<List<RegistroProduccionDTO>>
+      + actualizarRegistroProduccion(Long id, RegistroProduccionDTO registroDTO) : ResponseEntity<RegistroProduccionDTO>
+      + eliminarRegistroProduccion(Long id) : ResponseEntity<Void>
+    }
+  }
+
+  package dto {
+    class EmpleadoDTO {
+      - Long id
+      - String nombres
+      - String apellidos
+      - String cargo
+      - String numeroIdentificacion
+      - LocalDate fechaContratacion
+      + getters/setters/constructors
+    }
+
+    class RegistroProduccionDTO {
+      - Long id
+      - Long empleadoId
+      - LocalDate fecha
+      - Double toneladasExtraidas
+      - String turno (MANANA, TARDE, NOCHE)
+      + getters/setters/constructors
+    }
+  }
+
+  package model {
+    class Empleado {
+      - Long id
+      - String nombres
+      - String apellidos
+      - String cargo
+      - String numeroIdentificacion
+      - LocalDate fechaContratacion
+      + getters/setters/constructors (Lombok)
+    }
+
+    class RegistroProduccion {
+      - Long id
+      - Empleado empleado
+      - LocalDate fecha
+      - Double toneladasExtraidas
+      - Turno turno
+      + getters/setters/constructors (Lombok)
+    }
+
+    enum Turno {
+      MANANA, TARDE, NOCHE
+    }
+  }
+
+  package repository {
+    interface EmpleadoRepository {
+      + save(Empleado empleado) : Empleado
+      + findById(Long id) : Optional<Empleado>
+      + findAll() : List<Empleado>
+      + deleteById(Long id) : void
+      + findByNumeroIdentificacion(String numeroIdentificacion) : Optional<Empleado>
+    }
+
+    interface RegistroProduccionRepository {
+      + save(RegistroProduccion registro) : RegistroProduccion
+      + findById(Long id) : Optional<RegistroProduccion>
+      + findAll() : List<RegistroProduccion>
+      + deleteById(Long id) : void
+      + findByFecha(LocalDate fecha) : List<RegistroProduccion>
+      + findByEmpleadoAndFecha(Empleado empleado, LocalDate fecha) : List<RegistroProduccion>
+    }
+  }
+
+  package service {
+    class EmpleadoService {
+      + EmpleadoRepository empleadoRepository
+      + crearEmpleado(EmpleadoDTO empleadoDTO) : EmpleadoDTO
+      + obtenerEmpleadoPorId(Long id) : EmpleadoDTO
+      + obtenerTodosLosEmpleados() : List<EmpleadoDTO>
+      + actualizarEmpleado(Long id, EmpleadoDTO empleadoDTO) : EmpleadoDTO
+      + eliminarEmpleado(Long id) : void
+      - mapToDTO(Empleado empleado) : EmpleadoDTO
+      - mapToEntity(EmpleadoDTO empleadoDTO) : Empleado
+    }
+
+    class RegistroProduccionService {
+      + RegistroProduccionRepository registroProduccionRepository
+      + EmpleadoRepository empleadoRepository
+      + crearRegistroProduccion(RegistroProduccionDTO registroDTO) : RegistroProduccionDTO
+      + obtenerRegistroProduccionPorId(Long id) : RegistroProduccionDTO
+      + obtenerRegistrosPorFecha(LocalDate fecha) : List<RegistroProduccionDTO>
+      + obtenerRegistrosPorEmpleadoYFecha(Long empleadoId, LocalDate fecha) : List<RegistroProduccionDTO>
+      + actualizarRegistroProduccion(Long id, RegistroProduccionDTO registroDTO) : RegistroProduccionDTO
+      + eliminarRegistroProduccion(Long id) : void
+      - mapToDTO(RegistroProduccion registro) : RegistroProduccionDTO
+      - mapToEntity(RegistroProduccionDTO registroDTO, Empleado empleado) : RegistroProduccion
+    }
+  }
+
+  class MinaControlApiApplication {
+    + main(String[] args)
+  }
+}
+
+' Relationships
+EmpleadoController ..> EmpleadoService
+RegistroProduccionController ..> RegistroProduccionService
+
+EmpleadoService ..> EmpleadoRepository
+EmpleadoService ..> EmpleadoDTO : maps
+EmpleadoService ..> Empleado : maps
+
+RegistroProduccionService ..> RegistroProduccionRepository
+RegistroProduccionService ..> EmpleadoRepository : uses
+RegistroProduccionService ..> RegistroProduccionDTO : maps
+RegistroProduccionService ..> RegistroProduccion : maps
+RegistroProduccionService ..> Empleado : uses for mapping
+
+Empleado --> "*" RegistroProduccion : "1" registra "0..*"
+RegistroProduccion o-- Turno
+
+MinaControlApiApplication --> EmpleadoController
+MinaControlApiApplication --> RegistroProduccionController
+MinaControlApiApplication --> GlobalExceptionHandler
+
+@enduml

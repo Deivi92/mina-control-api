@@ -1,0 +1,28 @@
+@startuml sequence_empleado_obtener_todos
+title Secuencia: Obtener Todos los Empleados
+
+actor Cliente as User
+participant "EmpleadoController" as Ctrl
+participant "EmpleadoService" as Srv
+participant "EmpleadoRepository (In-Memory)" as Repo
+participant "Empleado" as Model
+participant "EmpleadoDTO" as DTO
+
+User -> Ctrl : GET /api/v1/empleados
+activate Ctrl
+Ctrl -> Srv : obtenerTodosLosEmpleados()
+activate Srv
+Srv -> Repo : findAll()
+activate Repo
+Repo --> Srv : listaEmpleadosEntities
+deactivate Repo
+Srv -> Model : mapToDTOList(listaEmpleadosEntities)
+activate Model
+Model --> Srv : listaEmpleadoDTOResult
+deactivate Model
+Srv --> Ctrl : listaEmpleadoDTOResult
+deactivate Srv
+Ctrl --> User : HTTP 200 OK (body: List<EmpleadoDTO>)
+deactivate Ctrl
+
+@enduml
