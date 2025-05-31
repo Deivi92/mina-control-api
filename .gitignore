@@ -10,7 +10,7 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# Archivos de log
+# Archivos de log           ||
 *.log
 
 # Archivos de IDE
@@ -48,3 +48,10 @@ bin/
 # Archivos de dependencias descargadas (si no usas un gestor como Maven/Gradle que las maneje)
 # lib/
 # libs/
+
+# Variables de entorno y secretos
+.env
+.env.local
+.env.development
+.env.production
+*.env

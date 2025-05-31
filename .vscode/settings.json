@@ -61,10 +61,31 @@
         "**/target": true,
         "**/node_modules": true
     },
-    
-    // ========== LIVE RELOAD ==========
+      // ========== LIVE RELOAD ==========
     "java.referencesCodeLens.enabled": true,
     "java.implementationsCodeLens.enabled": true,
     "java.signatureHelp.enabled": true,
-    "java.contentProvider.preferred": "fernflower"
+    "java.contentProvider.preferred": "fernflower",
+      // ========== GITHUB COPILOT INSTRUCCIONES ==========
+    "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+    "github.copilot.chat.useWorkspaceContext": true,
+    
+    // ========== HABILITAR MCP SUPPORT ==========
+    "chat.mcp.enabled": true,
+    "chat.mcp.discovery.enabled": true,
+      // ========== HABILITAR COPILOT COMPLETAMENTE ==========
+    "github.copilot.enable": {
+        "*": true,
+        "java": true,
+        "markdown": true,
+        "json": true
+    },
+    "github.copilot.inlineSuggest.enable": true,
+    "github.copilot.editor.enableAutoCompletions": true,
+    
+    // ========== VARIABLES DE ENTORNO ==========
+    "terminal.integrated.env.linux": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+    },
+    "terminal.integrated.inheritEnv": true
 }
