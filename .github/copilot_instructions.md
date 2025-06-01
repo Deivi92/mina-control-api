@@ -1,5 +1,89 @@
 # Instrucciones para GitHub Copilot - Proyecto MinaControl Pro
 
+## 🌍 Configuración de Idioma y Terminología
+
+*   **Responder SIEMPRE en español.**
+*   **CODIFICACIÓN PREDOMINANTEMENTE EN ESPAÑOL:**
+    *   Todo el código nuevo específico del dominio del proyecto (nombres de clases de negocio, métodos de lógica de negocio, variables que representan conceptos del dominio, comentarios explicativos de la lógica) debe estar escrito en español para mantener la coherencia y facilitar la comprensión.
+    *   Se priorizará la traducción progresiva del código existente que no cumpla esta directriz.
+    *   **Excepciones por Convenciones de la Industria:**
+        *   **Nombres de Paquetes de Capa:** Se permite el uso de nombres estándar en inglés para los paquetes que representan capas arquitectónicas comunes en Spring Boot, tales como: `controller`, `dto`, `model` (o `entity`), `repository`, `service`, `config`, `exception`.
+        *   **Métodos de Acceso (Getters/Setters):** Se mantendrá la convención estándar de JavaBeans con prefijos `get` y `set` para los métodos de acceso a propiedades (ej. `getNombre()`, `setNombre()`).
+        *   **Nombres de Clases de Frameworks/Librerías:** Al extender o implementar clases/interfaces de frameworks (ej. Spring, JUnit), se seguirán las convenciones de nomenclatura de dicho framework si es necesario.
+        *   **Términos Técnicos Web y HTTP:** Mantener en inglés términos técnicos estándar en contextos web/API como:
+            * `request`, `response`, `body`, `header`, `status`, `endpoint`
+            * Métodos HTTP: `GET`, `POST`, `PUT`, `DELETE`
+            * Códigos y frases de estado HTTP: `OK`, `CREATED`, `BAD_REQUEST`, `NOT_FOUND`, etc.
+        *   **Términos Técnicos de Desarrollo:** Mantener en inglés términos como:
+            * `timestamp`, `error`, `message` (en respuestas de error)
+            * `path`, `page`, `size` (en contextos de paginación)
+            * `id`, `query`, `value` (en parámetros y consultas)
+            * `log`, `debug`, `info`, `warn`, `error` (en contextos de logging)
+        *   **Variables de Infraestructura:** Mantener en inglés términos como:
+            * `host`, `port`, `url`, `connection`, `stream`, `buffer`
+            * `file`, `directory`, `path`
+*   **Para anglicismos técnicos no cubiertos por excepciones:** Usar formato "anglicismo (explicación clara en español)".
+*   **Ejemplos obligatorios (para términos generales):**
+    *   endpoint (punto de acceso de API)
+    *   commit (confirmación de cambios)
+    *   branch (rama de código)
+    *   merge (fusión de ramas)
+    *   pull request (solicitud de integración)
+    *   deploy (despliegue/publicación)
+    *   build (construcción/compilación)
+    *   pipeline (flujo de trabajo automatizado)
+    *   testing (pruebas)
+    *   debugging (depuración)
+    *   refactoring (refactorización)
+    *   framework (marco de trabajo)
+    *   library (biblioteca)
+    *   package (paquete de dominio, ej. `com.minacontrol.personal`)
+    *   controller (controlador de API, paquete `controller`)
+    *   service (servicio de negocio, paquete `service`)
+    *   repository (repositorio de datos, paquete `repository`)
+    *   model (modelo de datos, paquete `model`)
+    *   entity (entidad de dominio, ej. `Empleado`)
+
+### 1.1. Ejemplos de Aplicación de Convenciones de Idioma
+
+**Ejemplo 1: Manejador de Excepciones (términos técnicos en inglés)**
+```java
+@ExceptionHandler(RecursoNoEncontradoException.class)
+public ResponseEntity<Map<String, Object>> manejarExcepcionRecursoNoEncontrado(RecursoNoEncontradoException ex) {
+    // Nombres de clases de dominio y métodos en español
+    Map<String, Object> body = new HashMap<>(); // 'body' se mantiene en inglés por ser término técnico estándar
+    body.put("timestamp", LocalDateTime.now().toString()); // 'timestamp' se mantiene en inglés
+    body.put("status", HttpStatus.NOT_FOUND.value()); // 'status' se mantiene en inglés
+    body.put("error", HttpStatus.NOT_FOUND.getReasonPhrase()); // 'error' se mantiene en inglés
+    body.put("message", ex.getMessage()); // 'message' se mantiene en inglés
+    
+    return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+}
+```
+
+**Ejemplo 2: Controlador REST (mezcla de términos)**
+```java
+@RestController
+@RequestMapping("/api/empleados") // URL en español para recursos de dominio
+public class EmpleadoController { // Clases de dominio en español
+    
+    @PostMapping
+    public ResponseEntity<EmpleadoResponseDTO> crearEmpleado(@Valid @RequestBody EmpleadoRequestDTO empleadoRequestDTO) {
+        // Método en español, pero anotaciones técnicas como @RequestBody en inglés
+        EmpleadoResponseDTO nuevoEmpleado = empleadoService.crearEmpleado(empleadoRequestDTO);
+        return new ResponseEntity<>(nuevoEmpleado, HttpStatus.CREATED); // HttpStatus en inglés
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<EmpleadoResponseDTO> obtenerEmpleadoPorId(@PathVariable Long id) {
+        // Método y parámetros en español, excepto 'id' que es término técnico
+        return empleadoService.obtenerEmpleadoPorId(id)
+                .map(empleado -> new ResponseEntity<>(empleado, HttpStatus.OK))
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado no encontrado con id: " + id));
+    }
+}
+```
+
 ## 1. Resumen del Proyecto
 
 *   **Nombre del Proyecto:** MinaControl Pro
@@ -32,20 +116,66 @@
 
 ## 4. Arquitectura del Software (Fase 1)
 
-*   **Patrón General:** Arquitectura en Capas.
+*   **Patrón General:** Arquitectura Modular Orientada a Dominios (Features). El proyecto se organiza en módulos que representan las principales áreas de negocio (ej. `personal`, `registrosProduccion`). Cada módulo internamente sigue una organización por capas técnicas.
 *   **Paquete Base:** `com.minacontrol`
 *   **Estructura de Paquetes Principal (`src/main/java/com/minacontrol`):**
-    *   `MinaControlApiApplication.java`: Clase principal.
-    *   `config`: Clases de configuración.
-    *   `controller`: Controladores REST (`@RestController`).
-    *   `dto`: Data Transfer Objects (`RequestDTO`, `ResponseDTO`).
-    *   `exception`: Manejo global de excepciones (`@ControllerAdvice`), excepciones personalizadas.
-    *   `model` (o `entity`): Clases de entidad.
-    *   `repository`: Interfaces de repositorio.
-    *   `service`: Lógica de negocio.
-*   **Estructura de Paquetes de Pruebas (`src/test/java/com/minacontrol`):** Estructura paralela.
+    *   `MinaControlApiApplication.java`: Clase principal de la aplicación Spring Boot.
+    *   `config/`: Contiene clases de configuración global para la aplicación (ej. Beans, seguridad si aplica).
+    *   `exception/`: Manejo global de excepciones (`@ControllerAdvice`) y clases de excepciones personalizadas para toda la aplicación.
+    *   **Módulos de Dominio (ejemplos):**
+        *   `personal/` (anteriormente `empleado`): Contiene toda la lógica y componentes relacionados con la gestión de personal.
+            *   `controller/`: Controladores REST (`@RestController`) específicos del módulo de personal.
+            *   `dto/`: Data Transfer Objects (`RequestDTO`, `ResponseDTO`) para el módulo de personal.
+            *   `model/` (o `entity/`): Clases de entidad JPA o modelos de dominio para personal.
+            *   `repository/`: Interfaces de repositorio (ej. Spring Data JPA) para el acceso a datos de personal.
+            *   `service/`: Lógica de negocio e interfaces de servicio para el módulo de personal.
+        *   `registrosProduccion/` (anteriormente `registroproduccion`): Contiene toda la lógica y componentes relacionados con los registros de producción.
+            *   (estructura interna similar al módulo `personal` con `controller`, `dto`, `model`, `repository`, `service`)
+*   **Estructura de Paquetes de Pruebas (`src/test/java/com/minacontrol`):** Sigue una estructura paralela a `src/main/java`, replicando los paquetes de los módulos de dominio y sus capas para las pruebas correspondientes.
 
-### 4.1. Diagramas UML de Referencia (PlantUML)
+### 4.1. Árbol de Directorios Principal (Fuente)
+
+A continuación, se muestra una vista simplificada de la estructura de directorios clave del código fuente:
+
+```text
+mina-control-api/
+├── pom.xml
+├── docs/
+│   └── ... (documentación y diagramas)
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── minacontrol/
+│   │   │           ├── MinaControlApiApplication.java
+│   │   │           ├── config/                 # Configuración transversal
+│   │   │           ├── exception/              # Excepciones transversales
+│   │   │           ├── personal/               # Módulo de Personal (Dominio)
+│   │   │           │   ├── controller/
+│   │   │           │   ├── dto/
+│   │   │           │   ├── model/
+│   │   │           │   ├── repository/
+│   │   │           │   └── service/
+│   │   │           └── registrosProduccion/    # Módulo de Registros de Producción (Dominio)
+│   │   │               ├── controller/
+│   │   │               ├── dto/
+│   │   │               ├── model/
+│   │   │               ├── repository/
+│   │   │               └── service/
+│   │   └── resources/
+│   │       └── application.properties
+│   └── test/
+│       ├── java/
+│       │   └── com/
+│       │       └── minacontrol/
+│       │           ├── personal/
+│       │           └── registrosProduccion/
+│       └── resources/
+└── .github/
+    └── copilot_instructions.md
+```
+
+### 4.2. Diagramas UML de Referencia (PlantUML)
 
 Los siguientes diagramas UML se encuentran en la carpeta `docs/diagrams/` y proporcionan una representación visual de la arquitectura y los flujos principales para la Fase 1:
 
@@ -154,3 +284,12 @@ Los siguientes diagramas UML se encuentran en la carpeta `docs/diagrams/` y prop
 *   **Pruebas:** Sugerir/generar esqueletos de pruebas.
 *   **Evitar Complejidad Innecesaria (Fase 1):** No introducir tecnologías no listadas para Fase 1.
 *   **Consultar en Caso de Duda:** Pedir clarificación si la solicitud es ambigua o conflictiva.
+*   **Decisiones sobre Términos Técnicos:**
+    * **Regla General:** Cuando exista duda si un término debe estar en español o inglés, preguntarse: "¿Es un término técnico de programación o infraestructura ampliamente utilizado en la industria?" Si es así, mantenerlo en inglés.
+    * **Para Nuevos Términos:** Si aparece un término técnico que no está explícitamente cubierto en las listas anteriores, evaluar si cumple alguno de estos criterios:
+      1. Es un término técnico de una biblioteca o framework.
+      2. Es un término común en patrones de diseño o arquitectura.
+      3. Es una convención ampliamente aceptada en el mundo de desarrollo.
+      
+      Si cumple algún criterio, mantenerlo en inglés; de lo contrario, traducirlo al español.
+    * **Consistencia:** Una vez tomada una decisión sobre un término, aplicarla de manera consistente en todo el código.

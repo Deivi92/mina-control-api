@@ -65,10 +65,11 @@
     "java.referencesCodeLens.enabled": true,
     "java.implementationsCodeLens.enabled": true,
     "java.signatureHelp.enabled": true,
-    "java.contentProvider.preferred": "fernflower",
-      // ========== GITHUB COPILOT INSTRUCCIONES ==========
+    "java.contentProvider.preferred": "fernflower",      // ========== GITHUB COPILOT INSTRUCCIONES ==========
     "github.copilot.chat.codeGeneration.useInstructionFiles": true,
     "github.copilot.chat.useWorkspaceContext": true,
+    "github.copilot.chat.localeOverride": "es",
+    "github.copilot.chat.customInstructions": "IMPORTANTE: Para anglicismos técnicos usar formato 'anglicismo (explicación clara)'. Ejemplos: endpoint (punto de acceso API), commit (confirmación de cambios), branch (rama de código), merge (fusión de ramas), deploy (despliegue), build (compilación), pipeline (flujo automatizado), pull request (solicitud de integración), testing (pruebas), debugging (depuración), refactoring (refactorización).",
     
     // ========== HABILITAR MCP SUPPORT ==========
     "chat.mcp.enabled": true,

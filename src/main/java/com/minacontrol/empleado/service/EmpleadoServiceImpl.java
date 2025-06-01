@@ -2,7 +2,7 @@ package com.minacontrol.empleado.service;
 
 import com.minacontrol.empleado.dto.EmpleadoRequestDTO;
 import com.minacontrol.empleado.dto.EmpleadoResponseDTO;
-import com.minacontrol.exception.ResourceNotFoundException;
+import com.minacontrol.exception.RecursoNoEncontradoException;
 import com.minacontrol.empleado.model.Empleado;
 import com.minacontrol.empleado.repository.EmpleadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;

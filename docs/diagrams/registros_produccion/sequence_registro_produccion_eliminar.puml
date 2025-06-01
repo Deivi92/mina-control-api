@@ -6,30 +6,27 @@ participant "RegistroProduccionController" as Ctrl
 participant "RegistroProduccionService" as Srv
 participant "RegistroProduccionRepository (In-Memory)" as Repo
 
-User -> Ctrl : DELETE /api/v1/registros-produccion/{id}
+User -> Ctrl : DELETE /api/registros-produccion/{id}
 activate Ctrl
 Ctrl -> Srv : eliminarRegistro(id)
 activate Srv
-Srv -> Repo : existsById(id) // O findById para verificar y luego eliminar
+Srv -> Repo : findById(id)
 activate Repo
-Repo --> Srv : existe (boolean)
+Repo --> Srv : Optional<RegistroProduccion>
 deactivate Repo
 
-alt registroExiste
+alt Registro Existe
   Srv -> Repo : deleteById(id)
   activate Repo
   Repo --> Srv : void
   deactivate Repo
   Srv --> Ctrl : void
-else noExiste
-  Srv --> Ctrl : throw ResourceNotFoundException("Registro no encontrado con id: " + id)
-end
-
-deactivate Srv
-
-alt registroEliminado
   Ctrl --> User : HTTP 204 No Content
-else ResourceNotFoundException
+else Registro No Existe
+  Srv --> Ctrl : throws RecursoNoEncontradoException("Registro no encontrado")
+  deactivate Srv
+  Ctrl -> GlobalExceptionHandler : maneja RecursoNoEncontradoException
+  GlobalExceptionHandler --> Ctrl : ResponseEntity (Error)
   Ctrl --> User : HTTP 404 Not Found
 end
 deactivate Ctrl

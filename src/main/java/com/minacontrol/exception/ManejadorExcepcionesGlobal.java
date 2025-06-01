@@ -12,28 +12,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
-public class GlobalExceptionHandler {
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+public class ManejadorExcepcionesGlobal {    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> manejarExcepcionesValidacion(MethodArgumentNotValidException ex) {        Map<String, String> errores = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
+            String nombreCampo = ((FieldError) error).getField();
+            String mensajeError = error.getDefaultMessage();
+            errores.put(nombreCampo, mensajeError);
         });
 
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("errors", errors);
+        body.put("errors", errores);
         body.put("message", "Error de validación");
 
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+    }    @ExceptionHandler(RecursoNoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> manejarExcepcionRecursoNoEncontrado(RecursoNoEncontradoException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", HttpStatus.NOT_FOUND.value());
@@ -42,11 +37,9 @@ public class GlobalExceptionHandler {
         // body.put("path", ((org.springframework.web.context.request.ServletRequestAttributes) org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest().getRequestURI()); // Opcional: añadir la ruta
 
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
-    }
-
-    // Puedes añadir más manejadores para otras excepciones generales aquí
+    }    // Puedes añadir más manejadores para otras excepciones generales aquí
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+    public ResponseEntity<Map<String, Object>> manejarExcepcionGenerica(Exception ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
