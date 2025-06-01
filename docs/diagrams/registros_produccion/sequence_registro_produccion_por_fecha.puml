@@ -1,0 +1,47 @@
+@startuml sequence_registro_produccion_por_fecha
+title Secuencia: Obtener Registros de Producción por Fecha
+
+actor Cliente as User
+participant "RegistroProduccionController" as Ctrl
+participant "RegistroProduccionService" as Srv
+participant "RegistroProduccionRepository (In-Memory)" as RepoProd
+participant "EmpleadoRepository (In-Memory)" as RepoEmp
+participant "RegistroProduccion" as ModelProd
+participant "Empleado" as ModelEmp
+participant "RegistroProduccionResponseDTO" as ResDTO
+
+User -> Ctrl : GET /api/registros-produccion/fecha/{fecha}
+activate Ctrl
+Ctrl -> Srv : obtenerRegistrosPorFecha(fecha)
+activate Srv
+
+Srv -> Srv : validarFormatoFecha(fecha)
+alt Formato de Fecha Válido
+  Srv -> RepoProd : findByFechaRegistro(fecha)
+  activate RepoProd
+  RepoProd --> Srv : List<RegistroProduccion>
+  deactivate RepoProd
+  
+  loop Para cada registro
+    Srv -> RepoEmp : findById(registro.getResponsableTurnoId())
+    activate RepoEmp
+    RepoEmp --> Srv : empleado
+    deactivate RepoEmp
+    
+    Srv -> ResDTO : fromEntity(registro, empleado)
+    activate ResDTO
+    ResDTO --> Srv : registroResponseDTO
+    deactivate ResDTO
+  end
+  
+  Srv --> Ctrl : List<RegistroProduccionResponseDTO>
+  Ctrl --> User : HTTP 200 OK (body: List<RegistroProduccionResponseDTO>)
+else Formato de Fecha Inválido
+  Srv --> Ctrl : throws IllegalArgumentException("Formato de fecha inválido")
+  deactivate Srv
+  Ctrl -> GlobalExceptionHandler : maneja IllegalArgumentException
+  GlobalExceptionHandler --> Ctrl : ResponseEntity (Error)
+  Ctrl --> User : HTTP 400 Bad Request (Error: Formato de fecha inválido)
+end
+deactivate Ctrl
+@enduml

@@ -1,0 +1,78 @@
+@startuml sequence_registro_produccion_actualizar
+title Secuencia: Actualizar Registro de Producción
+
+actor Cliente as User
+participant "RegistroProduccionController" as Ctrl
+participant "RegistroProduccionService" as Srv
+participant "RegistroProduccionRepository (In-Memory)" as RepoProd
+participant "EmpleadoRepository (In-Memory)" as RepoEmp
+participant "RegistroProduccion" as ModelProd
+participant "Empleado" as ModelEmp
+participant "RegistroProduccionRequestDTO" as ReqDTO
+participant "RegistroProduccionResponseDTO" as ResDTO
+
+User -> Ctrl : PUT /api/registros-produccion/{id} (body: RegistroProduccionRequestDTO)
+activate Ctrl
+Ctrl -> Srv : actualizarRegistro(id, registroDTO)
+activate Srv
+
+Srv -> Srv : validarDatos(registroDTO)
+note right of Srv: Valida fecha no futura,\ntoneladas > 0, etc.
+
+Srv -> RepoProd : findById(id)
+activate RepoProd
+RepoProd --> Srv : Optional<RegistroProduccion>
+deactivate RepoProd
+
+alt Registro Existe
+  Srv -> RepoEmp : findById(registroDTO.getResponsableTurnoId())
+  activate RepoEmp
+  RepoEmp --> Srv : Optional<Empleado>
+  deactivate RepoEmp
+  
+  alt Empleado Existe
+    Srv -> RepoProd : findByFechaRegistroAndTurnoAndIdNot(fecha, turno, id)
+    activate RepoProd
+    RepoProd --> Srv : Optional<RegistroProduccion>
+    deactivate RepoProd
+    
+    alt No Existe Otro Registro para Misma Fecha y Turno
+      Srv -> ReqDTO : toEntity(registroDTO, registroExistente)
+      activate ReqDTO
+      ReqDTO --> Srv : registroActualizado
+      deactivate ReqDTO
+      
+      Srv -> RepoProd : save(registroActualizado)
+      activate RepoProd
+      RepoProd --> Srv : registroGuardado
+      deactivate RepoProd
+      
+      Srv -> ResDTO : fromEntity(registroGuardado, empleado)
+      activate ResDTO
+      ResDTO --> Srv : registroResponseDTO
+      deactivate ResDTO
+      
+      Srv --> Ctrl : registroResponseDTO
+      Ctrl --> User : HTTP 200 OK (body: RegistroProduccionResponseDTO)
+    else Ya Existe Otro Registro para Misma Fecha y Turno
+      Srv --> Ctrl : throws IllegalArgumentException("Ya existe otro registro para esta fecha y turno")
+      Ctrl -> GlobalExceptionHandler : maneja IllegalArgumentException
+      GlobalExceptionHandler --> Ctrl : ResponseEntity (Error)
+      Ctrl --> User : HTTP 409 Conflict (Error: Registro duplicado)
+    end
+  else Empleado No Existe
+    Srv --> Ctrl : throws RecursoNoEncontradoException("Empleado no encontrado")
+    Ctrl -> GlobalExceptionHandler : maneja RecursoNoEncontradoException
+    GlobalExceptionHandler --> Ctrl : ResponseEntity (Error)
+    Ctrl --> User : HTTP 404 Not Found (Error: Empleado no encontrado)
+  end
+else Registro No Existe
+  Srv --> Ctrl : throws RecursoNoEncontradoException("Registro no encontrado")
+  deactivate Srv
+  Ctrl -> GlobalExceptionHandler : maneja RecursoNoEncontradoException
+  GlobalExceptionHandler --> Ctrl : ResponseEntity (Error)
+  Ctrl --> User : HTTP 404 Not Found (Error: Registro no encontrado)
+end
+deactivate Ctrl
+
+@enduml

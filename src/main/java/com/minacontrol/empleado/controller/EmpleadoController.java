@@ -3,7 +3,7 @@ package com.minacontrol.empleado.controller;
 import com.minacontrol.empleado.dto.EmpleadoRequestDTO;
 import com.minacontrol.empleado.dto.EmpleadoResponseDTO;
 import com.minacontrol.empleado.service.EmpleadoService;
-import com.minacontrol.exception.ResourceNotFoundException; // Asegúrate que esta excepción esté en el lugar correcto o crea una específica del módulo
+import com.minacontrol.exception.RecursoNoEncontradoException; // Actualizado al nuevo nombre en español
 
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class EmpleadoController {
     public ResponseEntity<EmpleadoResponseDTO> obtenerEmpleadoPorId(@PathVariable Long id) {
         return empleadoService.obtenerEmpleadoPorId(id)
                 .map(empleado -> new ResponseEntity<>(empleado, HttpStatus.OK))
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado no encontrado con id: " + id));
     }
 
     @GetMapping
@@ -48,7 +48,7 @@ public class EmpleadoController {
     public ResponseEntity<EmpleadoResponseDTO> actualizarEmpleado(@PathVariable Long id, @Valid @RequestBody EmpleadoRequestDTO empleadoRequestDTO) {
         return empleadoService.actualizarEmpleado(id, empleadoRequestDTO)
                 .map(empleado -> new ResponseEntity<>(empleado, HttpStatus.OK))
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con id: " + id + " para actualizar"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado no encontrado con id: " + id + " para actualizar"));
     }
 
     @DeleteMapping("/{id}")
@@ -56,6 +56,6 @@ public class EmpleadoController {
         if (empleadoService.eliminarEmpleado(id)) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
-        throw new ResourceNotFoundException("Empleado no encontrado con id: " + id + " para eliminar");
+        throw new RecursoNoEncontradoException("Empleado no encontrado con id: " + id + " para eliminar");
     }
 }
