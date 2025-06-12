@@ -15,9 +15,8 @@
             "icon": "terminal-cmd"
         }    },
     "terminal.integrated.cwd": "${workspaceFolder}",
-    
-    // ========== CONFIGURACIÓN JAVA & MAVEN ==========
-    "java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
+      // ========== CONFIGURACIÓN JAVA & MAVEN ==========
+    "java.jdt.ls.java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
     "java.configuration.runtimes": [
         {
             "name": "JavaSE-17",
@@ -41,16 +40,13 @@
     "maven.updateSnapshots": false,
     
     // ========== OPTIMIZACIONES DE RENDIMIENTO ==========
-    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m",
-    "java.completion.enabled": true,
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m",    "java.completion.enabled": true,
     "java.completion.overwrite": true,
-    "java.completion.guessMethodArguments": true,
-    
-    // ========== SPRING BOOT ESPECÍFICO ==========
+    "java.completion.guessMethodArguments": "insertBestGuessedArguments",    // ========== SPRING BOOT ESPECÍFICO ==========
     "spring-boot.ls.checkjvm": false,
     "spring.initializr.defaultLanguage": "Java",
     "spring.initializr.defaultJavaVersion": "17",
-    "spring.initializr.defaultPackaging": "Jar",
+    "spring.initializr.defaultPackaging": "JAR",
     
     // ========== FILES & WORKSPACE ==========
     "files.exclude": {
@@ -73,16 +69,13 @@
     
     // ========== HABILITAR MCP SUPPORT ==========
     "chat.mcp.enabled": true,
-    "chat.mcp.discovery.enabled": true,
-      // ========== HABILITAR COPILOT COMPLETAMENTE ==========
+    "chat.mcp.discovery.enabled": true,    // ========== HABILITAR COPILOT COMPLETAMENTE ==========
     "github.copilot.enable": {
         "*": true,
         "java": true,
         "markdown": true,
         "json": true
     },
-    "github.copilot.inlineSuggest.enable": true,
-    "github.copilot.editor.enableAutoCompletions": true,
     
     // ========== VARIABLES DE ENTORNO ==========
     "terminal.integrated.env.linux": {
