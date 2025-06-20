@@ -1,0 +1,189 @@
+@startuml architecture_overview
+!theme materia-outline
+title Arquitectura General - MinaControl Pro
+
+' ===== ACTORES =====
+actor Empleado as EMP
+actor Administrador as ADM  
+actor Gerente as GER
+
+' ===== CAPA DE PRESENTACIÓN =====
+package "Frontend (Futuro)" {
+  [Panel Empleado] as FE_EMP
+  [Dashboard Admin] as FE_ADM
+  [Dashboard Gerente] as FE_GER
+}
+
+' ===== CAPA DE API =====
+package "API REST Layer" {
+  [AuthController] as API_AUTH
+  [EmpleadoController] as API_EMP
+  [TurnoController] as API_TUR
+  [ProduccionController] as API_PRO
+  [LogisticaController] as API_LOG
+  [NominaController] as API_NOM
+  [ReporteController] as API_REP
+}
+
+' ===== CAPA DE SEGURIDAD =====
+package "Security Layer" {
+  [Spring Security] as SEC
+  [JWT Authentication] as JWT
+  [Role Authorization] as AUTH
+}
+
+' ===== CAPA DE SERVICIOS =====
+package "Business Logic Layer" {
+  package "Autenticación Domain" {
+    [AuthService] as SRV_AUTH
+  }
+  
+  package "Empleados Domain" {
+    [EmpleadoService] as SRV_EMP
+  }
+  
+  package "Turnos Domain" {
+    [TurnoService] as SRV_TUR
+  }
+  
+  package "Producción Domain" {
+    [ProduccionService] as SRV_PRO
+  }
+  
+  package "Logística Domain" {
+    [LogisticaService] as SRV_LOG
+  }
+  
+  package "Nómina Domain" {
+    [NominaService] as SRV_NOM
+  }
+  
+  package "Reportes Domain" {
+    [ReporteService] as SRV_REP
+  }
+}
+
+' ===== CAPA DE PERSISTENCIA =====
+package "Data Access Layer" {
+  [UsuarioRepository] as REPO_USER
+  [EmpleadoRepository] as REPO_EMP
+  [TurnoRepository] as REPO_TUR
+  [ProduccionRepository] as REPO_PRO
+  [LogisticaRepository] as REPO_LOG
+  [NominaRepository] as REPO_NOM
+  [ReporteRepository] as REPO_REP
+}
+
+' ===== BASE DE DATOS =====
+database "PostgreSQL" {
+  [Usuario] as DB_USER
+  [Empleado] as DB_EMP
+  [RegistroAsistencia] as DB_ASI
+  [RegistroProduccion] as DB_PRO
+  [Despacho] as DB_DES
+  [CalculoNomina] as DB_NOM
+  [ReporteGenerado] as DB_REP
+}
+
+' ===== SERVICIOS EXTERNOS =====
+package "External Services" {
+  [PDF Generator] as PDF
+  [Email Service] as EMAIL
+  [File Storage] as FILES
+}
+
+' ===== CONEXIONES DE ACTORES =====
+EMP --> FE_EMP : Consulta datos\npersonales
+ADM --> FE_ADM : Gestión operativa\ndiaria
+GER --> FE_GER : Reportes y\nnómina
+
+' ===== CONEXIONES FRONTEND -> API =====
+' Autenticación (todos los usuarios)
+FE_EMP --> API_AUTH : POST login/logout
+FE_ADM --> API_AUTH : POST login/logout, cambio password
+FE_GER --> API_AUTH : POST login/logout, recuperar password
+
+FE_EMP --> API_EMP : GET perfil
+FE_EMP --> API_TUR : GET asistencia propia
+FE_EMP --> API_PRO : GET producción propia
+FE_EMP --> API_NOM : GET pagos propios
+
+FE_ADM --> API_EMP : CRUD empleados
+FE_ADM --> API_TUR : Gestión turnos/asistencia
+FE_ADM --> API_PRO : Gestión producción
+FE_ADM --> API_LOG : Gestión despachos
+
+FE_GER --> API_NOM : Gestión nómina
+FE_GER --> API_REP : Generación reportes
+FE_GER --> API_EMP : Consulta empleados
+FE_GER --> API_PRO : Consulta producción
+
+' ===== SEGURIDAD =====
+API_AUTH --> SEC : Sin autenticación (login)
+API_EMP --> SEC : Autenticación requerida
+API_TUR --> SEC
+API_PRO --> SEC
+API_LOG --> SEC
+API_NOM --> SEC
+API_REP --> SEC
+
+SEC --> JWT : Token validation
+SEC --> AUTH : Role validation
+
+' ===== API -> SERVICIOS =====
+API_AUTH --> SRV_AUTH
+API_EMP --> SRV_EMP
+API_TUR --> SRV_TUR
+API_PRO --> SRV_PRO
+API_LOG --> SRV_LOG
+API_NOM --> SRV_NOM
+API_REP --> SRV_REP
+
+' ===== SERVICIOS -> REPOSITORIOS =====
+SRV_AUTH --> REPO_USER
+SRV_AUTH --> REPO_EMP
+SRV_EMP --> REPO_EMP
+SRV_TUR --> REPO_TUR
+SRV_PRO --> REPO_PRO
+SRV_LOG --> REPO_LOG
+SRV_NOM --> REPO_NOM
+SRV_REP --> REPO_REP
+
+' ===== REPOSITORIOS -> BASE DATOS =====
+REPO_USER --> DB_USER
+REPO_EMP --> DB_EMP
+REPO_TUR --> DB_ASI
+REPO_PRO --> DB_PRO
+REPO_LOG --> DB_DES
+REPO_NOM --> DB_NOM
+REPO_REP --> DB_REP
+
+' ===== INTEGRACIONES TRANSVERSALES =====
+SRV_NOM --> SRV_TUR : Consulta horas\ntrabajadas
+SRV_NOM --> SRV_PRO : Consulta producción\npara bonificaciones
+SRV_REP --> SRV_EMP : Datos empleados
+SRV_REP --> SRV_PRO : Datos producción
+SRV_REP --> SRV_TUR : Datos asistencia
+
+' ===== SERVICIOS EXTERNOS =====
+SRV_NOM --> PDF : Generar comprobantes
+SRV_REP --> PDF : Generar reportes
+SRV_NOM --> EMAIL : Enviar comprobantes
+SRV_REP --> FILES : Almacenar archivos
+
+' ===== NOTAS =====
+note top of SEC : Spring Security + JWT\nAutorización por roles:\nEMPLEADO, ADMINISTRADOR, GERENTE\nAutenticación simple: número ID empleado
+
+note right of SRV_AUTH : Gestión de credenciales\nCambio/recuperación contraseñas\nValidación de tokens JWT
+
+note right of SRV_LOG : Despachos solo de carbón\nConductor/vehículo como campos simples
+
+note right of SRV_NOM : Integra datos de múltiples dominios\npara cálculo de nómina semanal
+
+note bottom of DB_USER : Tabla de autenticación separada\nvinculada 1:1 con empleados
+
+note bottom of DB_EMP : PostgreSQL con relaciones\nnormalizadas entre dominios
+
+note left of PDF : Servicios externos para\ngeneración de documentos\ny notificaciones
+
+@enduml

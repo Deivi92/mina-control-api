@@ -1,19 +1,38 @@
 # Diagramas UML del Proyecto MinaControl Pro
 
-Esta carpeta contiene los diagramas UML organizados por módulos para el proyecto MinaControl Pro.
+Esta carpeta contiene los diagramas UML organizados por dominios para el proyecto MinaControl Pro.
 
 ## Estructura de carpetas
 
-- **empleado**: Diagramas relacionados con la gestión de empleados
-- **registros_produccion**: Diagramas relacionados con la gestión de registros de producción
-- **general**: Diagramas generales del sistema y arquitectura
+- **general**: Diagramas transversales del sistema (ER, clases completas, arquitectura)
+- **empleados**: Diagramas específicos del dominio de empleados
+- **turnos**: Diagramas específicos del dominio de turnos/asistencia
+- **produccion**: Diagramas específicos del dominio de producción
+- **nomina**: Diagramas específicos del dominio de nómina
+- **logistica**: Diagramas específicos del dominio de logística/despachos  
+- **reportes**: Diagramas específicos del dominio de reportes
 
 ## Convenciones de nomenclatura
 
 Los diagramas siguen la siguiente convención de nomenclatura:
 
-- `sequence_[módulo]_[operación].puml`: Para diagramas de secuencia
-- `class_diagram_[alcance].puml`: Para diagramas de clases
+- `er_diagram_completo.puml`: Diagrama entidad-relación completo del sistema
+- `class_diagram_completo.puml`: Diagrama de clases completo del sistema
+- `architecture_overview.puml`: Vista general de la arquitectura
+- `sequence_[operacion]_[objeto].puml`: Para diagramas de secuencia específicos
+- `class_[dominio]_domain.puml`: Para diagramas de clases por dominio
+
+## Estado actual
+
+### ✅ Fase 1: Fundación (Completada)
+- [x] ER Diagram Completo - Define modelo de datos completo
+- [x] Class Diagram Completo - Define estructura de clases
+- [x] Architecture Overview - Define arquitectura general
+
+### 🚧 Próximas fases
+- **Fase 2**: Diagramas de clase por dominio
+- **Fase 3**: Diagramas de secuencia por endpoint
+- **Fase 4**: Flujos transversales integrados
 
 ## Visualización de diagramas
 

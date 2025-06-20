@@ -1,0 +1,221 @@
+@startuml er_diagram_completo
+!theme materia-outline
+title Diagrama Entidad-Relación Completo - MinaControl Pro
+
+' ===== CONFIGURACIÓN =====
+!define TABLE(name,desc) class name as "desc" << (T,#FFAAAA) >>
+!define ENTITY(name,desc) entity name as "desc"
+
+' ===== DOMINIO: AUTENTICACIÓN =====
+entity Usuario {
+  + id : BIGINT <<PK>>
+  --
+  * numero_identificacion : VARCHAR(20) <<UK>>
+  * password_hash : VARCHAR(255)
+  * password_temporal : BOOLEAN
+  * ultimo_acceso : TIMESTAMP
+  * token_recuperacion : VARCHAR(255)
+  * fecha_expiracion_token : TIMESTAMP
+  * intentos_fallidos : INTEGER
+  * cuenta_bloqueada : BOOLEAN
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' ===== DOMINIO: EMPLEADOS =====
+entity Empleado {
+  + id : BIGINT <<PK>>
+  --
+  * usuario_id : BIGINT <<FK>>
+  * nombres : VARCHAR(100)
+  * apellidos : VARCHAR(100)
+  * numero_identificacion : VARCHAR(20) <<UK>>
+  * email : VARCHAR(100) <<UK>>
+  * telefono : VARCHAR(15)
+  * cargo : VARCHAR(50)
+  * fecha_contratacion : DATE
+  * salario_base : DECIMAL(10,2)
+  * estado : ENUM('ACTIVO','INACTIVO')
+  * rol_sistema : ENUM('EMPLEADO','ADMINISTRADOR','GERENTE')
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' ===== DOMINIO: TURNOS =====
+entity TipoTurno {
+  + id : BIGINT <<PK>>
+  --
+  * nombre : VARCHAR(50)
+  * hora_inicio : TIME
+  * hora_fin : TIME
+  * descripcion : TEXT
+  * activo : BOOLEAN
+  created_at : TIMESTAMP
+}
+
+entity AsignacionTurno {
+  + id : BIGINT <<PK>>
+  --
+  * empleado_id : BIGINT <<FK>>
+  * tipo_turno_id : BIGINT <<FK>>
+  * fecha_inicio : DATE
+  * fecha_fin : DATE
+  * activo : BOOLEAN
+  created_at : TIMESTAMP
+}
+
+entity RegistroAsistencia {
+  + id : BIGINT <<PK>>
+  --
+  * empleado_id : BIGINT <<FK>>
+  * tipo_turno_id : BIGINT <<FK>>
+  * fecha : DATE
+  * hora_entrada : TIMESTAMP
+  * hora_salida : TIMESTAMP
+  * horas_trabajadas : DECIMAL(4,2)
+  * observaciones : TEXT
+  * estado : ENUM('PRESENTE','AUSENTE','TARDANZA','PERMISO')
+  * registrado_por : BIGINT <<FK>>
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' ===== ELIMINAR ENTIDAD TIPOMATERIAL =====
+
+entity RegistroProduccion {
+  + id : BIGINT <<PK>>
+  --
+  * empleado_id : BIGINT <<FK>>
+  * tipo_turno_id : BIGINT <<FK>>
+  * fecha_registro : DATE
+  * cantidad_extraida_toneladas : DECIMAL(10,3)
+  * ubicacion_extraccion : VARCHAR(100)
+  * observaciones : TEXT
+  * validado : BOOLEAN
+  * registrado_por : BIGINT <<FK>>
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' ===== DOMINIO: LOGÍSTICA =====
+entity Despacho {
+  + id : BIGINT <<PK>>
+  --
+  * numero_despacho : VARCHAR(20) <<UK>>
+  * nombre_conductor : VARCHAR(100)
+  * numero_licencia : VARCHAR(20)
+  * telefono_conductor : VARCHAR(15)
+  * placa_vehiculo : VARCHAR(10)
+  * modelo_vehiculo : VARCHAR(50)
+  * capacidad_toneladas : DECIMAL(8,2)
+  * cantidad_despachada_toneladas : DECIMAL(10,3)
+  * destino : VARCHAR(200)
+  * fecha_programada : DATE
+  * fecha_salida : TIMESTAMP
+  * fecha_entrega : TIMESTAMP
+  * estado : ENUM('PROGRAMADO','EN_TRANSITO','ENTREGADO','CANCELADO')
+  * observaciones : TEXT
+  * registrado_por : BIGINT <<FK>>
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+' ===== DOMINIO: NÓMINA =====
+entity PeriodoNomina {
+  + id : BIGINT <<PK>>
+  --
+  * fecha_inicio : DATE
+  * fecha_fin : DATE
+  * numero_semana : INTEGER
+  * año : INTEGER
+  * estado : ENUM('ABIERTO','CALCULADO','PAGADO','CERRADO')
+  * calculado_por : BIGINT <<FK>>
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity CalculoNomina {
+  + id : BIGINT <<PK>>
+  --
+  * periodo_nomina_id : BIGINT <<FK>>
+  * empleado_id : BIGINT <<FK>>
+  * horas_trabajadas : DECIMAL(6,2)
+  * horas_extras : DECIMAL(6,2)
+  * cantidad_producida_toneladas : DECIMAL(10,3)
+  * salario_base : DECIMAL(10,2)
+  * bonificacion_produccion : DECIMAL(10,2)
+  * bonificacion_asistencia : DECIMAL(10,2)
+  * descuentos : DECIMAL(10,2)
+  * total_bruto : DECIMAL(10,2)
+  * deducciones : DECIMAL(10,2)
+  * total_neto : DECIMAL(10,2)
+  * observaciones : TEXT
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity ComprobantePago {
+  + id : BIGINT <<PK>>
+  --
+  * calculo_nomina_id : BIGINT <<FK>>
+  * numero_comprobante : VARCHAR(20) <<UK>>
+  * fecha_generacion : TIMESTAMP
+  * fecha_pago : DATE
+  * ruta_archivo_pdf : VARCHAR(500)
+  * estado : ENUM('GENERADO','ENTREGADO','PAGADO')
+  created_at : TIMESTAMP
+}
+
+' ===== DOMINIO: REPORTES =====
+entity ReporteGenerado {
+  + id : BIGINT <<PK>>
+  --
+  * tipo_reporte : ENUM('PRODUCCION','ASISTENCIA','COSTOS_LABORALES','OPERACIONAL')
+  * nombre_reporte : VARCHAR(100)
+  * parametros_json : TEXT
+  * fecha_generacion : TIMESTAMP
+  * fecha_inicio_datos : DATE
+  * fecha_fin_datos : DATE
+  * ruta_archivo : VARCHAR(500)
+  * formato : ENUM('PDF','EXCEL','CSV')
+  * generado_por : BIGINT <<FK>>
+  created_at : TIMESTAMP
+}
+
+' ===== RELACIONES =====
+Usuario ||--|| Empleado : "autenticación"
+
+Empleado ||--o{ AsignacionTurno : "tiene asignaciones"
+TipoTurno ||--o{ AsignacionTurno : "define turnos"
+
+Empleado ||--o{ RegistroAsistencia : "registra asistencia"
+TipoTurno ||--o{ RegistroAsistencia : "en turno"
+Empleado ||--o{ RegistroAsistencia : "registrado_por"
+
+Empleado ||--o{ RegistroProduccion : "produce"
+TipoTurno ||--o{ RegistroProduccion : "en turno"
+Empleado ||--o{ RegistroProduccion : "registrado_por"
+
+Empleado ||--o{ Despacho : "registrado_por"
+
+Empleado ||--o{ PeriodoNomina : "calculado_por"
+PeriodoNomina ||--o{ CalculoNomina : "contiene cálculos"
+Empleado ||--o{ CalculoNomina : "para empleado"
+CalculoNomina ||--|| ComprobantePago : "genera comprobante"
+
+Empleado ||--o{ ReporteGenerado : "generado_por"
+
+' ===== NOTAS =====
+note top of Usuario : Control de autenticación\nCredenciales y seguridad
+
+note top of Empleado : Entidad central del sistema\nTodos los dominios la referencian
+
+note right of RegistroAsistencia : Control diario de entrada/salida\nBase para cálculos de nómina
+
+note right of RegistroProduccion : Core del negocio minero\nSolo extracción de carbón (toneladas)
+
+note bottom of CalculoNomina : Cálculo semanal automatizado\nBasa en asistencia y producción
+
+note left of Despacho : Control de salidas de carbón\nDatos simples de conductor/vehículo
+
+@enduml

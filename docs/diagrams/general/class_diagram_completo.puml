@@ -1,0 +1,445 @@
+@startuml class_diagram_completo
+!theme materia-outline
+title Diagrama de Clases Completo - MinaControl Pro
+
+' ===== CONFIGURACIÓN =====
+!define ENTITY(x) class x << (E,#E8F5E8) Entity >>
+!define DTO(x) class x << (D,#E8E8F5) DTO >>
+!define SERVICE(x) class x << (S,#F5F5E8) Service >>
+!define CONTROLLER(x) class x << (C,#F5E8E8) Controller >>
+!define REPOSITORY(x) interface x << (R,#E8F5F5) Repository >>
+
+package "com.minacontrol" {
+
+  ' ===== DOMINIO: AUTENTICACIÓN =====
+  package auth {
+    
+    ENTITY(Usuario) {
+      - Long id
+      - String numeroIdentificacion
+      - String passwordHash
+      - Boolean passwordTemporal
+      - LocalDateTime ultimoAcceso
+      - String tokenRecuperacion
+      - LocalDateTime fechaExpiracionToken
+      - Integer intentosFallidos
+      - Boolean cuentaBloqueada
+      - LocalDateTime createdAt
+      - LocalDateTime updatedAt
+      + getters/setters()
+    }
+
+    DTO(LoginRequestDTO) {
+      - String numeroIdentificacion
+      - String password
+      + getters/setters()
+    }
+
+    DTO(LoginResponseDTO) {
+      - String token
+      - String tipoToken
+      - Long empleadoId
+      - String rolSistema
+      - Boolean passwordTemporal
+      + getters/setters()
+    }
+
+    DTO(CambioPasswordDTO) {
+      - String passwordActual
+      - String passwordNueva
+      - String confirmacionPassword
+      + getters/setters()
+    }
+
+    SERVICE(AuthService) {
+      + LoginResponseDTO login(LoginRequestDTO)
+      + void logout(String token)
+      + void cambiarPassword(Long empleadoId, CambioPasswordDTO)
+      + void recuperarPassword(String numeroIdentificacion)
+      + Boolean validarToken(String token)
+    }
+
+    CONTROLLER(AuthController) {
+      + ResponseEntity<LoginResponseDTO> login(LoginRequestDTO)
+      + ResponseEntity<Void> logout(HttpServletRequest)
+      + ResponseEntity<Void> cambiarPassword(CambioPasswordDTO)
+      + ResponseEntity<Void> recuperarPassword(String)
+    }
+
+    REPOSITORY(UsuarioRepository) {
+      + Optional<Usuario> findByNumeroIdentificacion(String)
+      + Boolean existsByNumeroIdentificacion(String)
+      + void updatePasswordByUsuarioId(Long, String)
+    }
+  }
+
+  ' ===== DOMINIO: EMPLEADOS =====
+  package empleado {
+      ENTITY(Empleado) {
+      - Long id
+      - Long usuarioId
+      - String nombres
+      - String apellidos
+      - String numeroIdentificacion
+      - String email
+      - String telefono
+      - String cargo
+      - LocalDate fechaContratacion
+      - BigDecimal salarioBase
+      - EstadoEmpleado estado
+      - RolSistema rolSistema
+      - LocalDateTime createdAt
+      - LocalDateTime updatedAt
+      + getters/setters()
+    }
+
+    DTO(EmpleadoDTO) {
+      - Long id
+      - String nombres
+      - String apellidos
+      - String numeroIdentificacion
+      - String email
+      - String telefono
+      - String cargo
+      - LocalDate fechaContratacion
+      - BigDecimal salarioBase
+      - String estado
+      - String rolSistema
+      + getters/setters()
+    }
+
+    DTO(EmpleadoCreateDTO) {
+      - String nombres
+      - String apellidos
+      - String numeroIdentificacion
+      - String email
+      - String telefono
+      - String cargo
+      - LocalDate fechaContratacion
+      - BigDecimal salarioBase
+      - String rolSistema
+      + validation annotations
+    }
+
+    REPOSITORY(EmpleadoRepository) {
+      + findByNumeroIdentificacion(String) : Optional<Empleado>
+      + findByEmail(String) : Optional<Empleado>
+      + findByEstado(EstadoEmpleado) : List<Empleado>
+      + findByRolSistema(RolSistema) : List<Empleado>
+    }
+
+    SERVICE(EmpleadoService) {
+      - EmpleadoRepository empleadoRepository
+      + crearEmpleado(EmpleadoCreateDTO) : EmpleadoDTO
+      + actualizarEmpleado(Long, EmpleadoDTO) : EmpleadoDTO
+      + obtenerEmpleadoPorId(Long) : EmpleadoDTO
+      + obtenerTodosEmpleados() : List<EmpleadoDTO>
+      + cambiarEstadoEmpleado(Long, EstadoEmpleado) : EmpleadoDTO
+      + obtenerEmpleadosPorRol(RolSistema) : List<EmpleadoDTO>
+    }
+
+    CONTROLLER(EmpleadoController) {
+      - EmpleadoService empleadoService
+      + crearEmpleado(EmpleadoCreateDTO) : ResponseEntity<EmpleadoDTO>
+      + actualizarEmpleado(Long, EmpleadoDTO) : ResponseEntity<EmpleadoDTO>
+      + obtenerEmpleadoPorId(Long) : ResponseEntity<EmpleadoDTO>
+      + obtenerTodosEmpleados() : ResponseEntity<List<EmpleadoDTO>>
+      + cambiarEstadoEmpleado(Long, String) : ResponseEntity<EmpleadoDTO>
+      + obtenerPerfilPersonal() : ResponseEntity<EmpleadoDTO>
+    }
+
+    enum EstadoEmpleado {
+      ACTIVO
+      INACTIVO
+    }
+
+    enum RolSistema {
+      EMPLEADO
+      ADMINISTRADOR
+      GERENTE
+    }
+  }
+
+  ' ===== DOMINIO: TURNOS =====
+  package turno {
+    
+    ENTITY(TipoTurno) {
+      - Long id
+      - String nombre
+      - LocalTime horaInicio
+      - LocalTime horaFin
+      - String descripcion
+      - Boolean activo
+      - LocalDateTime createdAt
+      + getters/setters()
+    }
+
+    ENTITY(AsignacionTurno) {
+      - Long id
+      - Long empleadoId
+      - Long tipoTurnoId
+      - LocalDate fechaInicio
+      - LocalDate fechaFin
+      - Boolean activo
+      - LocalDateTime createdAt
+      + getters/setters()
+    }
+
+    ENTITY(RegistroAsistencia) {
+      - Long id
+      - Long empleadoId
+      - Long tipoTurnoId
+      - LocalDate fecha
+      - LocalDateTime horaEntrada
+      - LocalDateTime horaSalida
+      - BigDecimal horasTrabajadas
+      - String observaciones
+      - EstadoAsistencia estado
+      - Long registradoPor
+      - LocalDateTime createdAt
+      - LocalDateTime updatedAt
+      + calcularHorasTrabajadas() : BigDecimal
+    }
+
+    DTO(RegistroAsistenciaDTO) {
+      - Long id
+      - Long empleadoId
+      - String nombreEmpleado
+      - Long tipoTurnoId
+      - String nombreTurno
+      - LocalDate fecha
+      - LocalDateTime horaEntrada
+      - LocalDateTime horaSalida
+      - BigDecimal horasTrabajadas
+      - String estado
+      - String observaciones
+    }
+
+    DTO(RegistrarAsistenciaDTO) {
+      - Long empleadoId
+      - Long tipoTurnoId
+      - String tipoRegistro
+      - String observaciones
+    }
+
+    SERVICE(TurnoService) {
+      + registrarEntradaSalida(RegistrarAsistenciaDTO) : RegistroAsistenciaDTO
+      + consultarAsistencia(Long, LocalDate, LocalDate) : List<RegistroAsistenciaDTO>
+      + configurarTurno(TipoTurnoDTO) : TipoTurnoDTO
+      + gestionarExcepcion(ExcepcionAsistenciaDTO) : RegistroAsistenciaDTO
+    }
+
+    enum EstadoAsistencia {
+      PRESENTE
+      AUSENTE
+      TARDANZA
+      PERMISO
+    }
+  }
+  ' ===== DOMINIO: PRODUCCIÓN =====
+  package produccion {
+    
+    ENTITY(RegistroProduccion) {
+      - Long id
+      - Long empleadoId
+      - Long tipoTurnoId
+      - LocalDate fechaRegistro
+      - BigDecimal cantidadExtraidaToneladas
+      - String ubicacionExtraccion
+      - String observaciones
+      - Boolean validado
+      - Long registradoPor
+      - LocalDateTime createdAt
+      - LocalDateTime updatedAt
+    }
+
+    DTO(RegistroProduccionDTO) {
+      - Long id
+      - Long empleadoId
+      - String nombreEmpleado
+      - Long tipoTurnoId
+      - String nombreTurno
+      - LocalDate fechaRegistro
+      - BigDecimal cantidadExtraidaToneladas
+      - String ubicacionExtraccion
+      - String observaciones
+      - Boolean validado
+    }
+
+    SERVICE(ProduccionService) {
+      + registrarProduccion(RegistroProduccionCreateDTO) : RegistroProduccionDTO
+      + consultarProduccionPorEmpleado(Long, LocalDate, LocalDate) : List<RegistroProduccionDTO>
+      + consultarProduccionPorFecha(LocalDate, LocalDate) : List<RegistroProduccionDTO>
+      + actualizarRegistroProduccion(Long, RegistroProduccionDTO) : RegistroProduccionDTO
+      + eliminarRegistroProduccion(Long) : void
+    }
+  }
+
+  ' ===== DOMINIO: LOGÍSTICA =====
+  package logistica {
+    
+    ENTITY(Despacho) {
+      - Long id
+      - String numeroDespacho
+      - String nombreConductor
+      - String numeroLicencia
+      - String telefonoConductor
+      - String placaVehiculo
+      - String modeloVehiculo
+      - BigDecimal capacidadToneladas
+      - BigDecimal cantidadDespachadaToneladas
+      - String destino
+      - LocalDate fechaProgramada
+      - LocalDateTime fechaSalida
+      - LocalDateTime fechaEntrega
+      - EstadoDespacho estado
+      - String observaciones
+      - Long registradoPor
+      - LocalDateTime createdAt
+      - LocalDateTime updatedAt
+    }
+
+    SERVICE(LogisticaService) {
+      + registrarDespacho(DespachoCreateDTO) : DespachoDTO
+      + consultarDespachos(LocalDate, LocalDate) : List<DespachoDTO>
+      + actualizarEstadoDespacho(Long, EstadoDespacho) : DespachoDTO
+    }
+
+    enum EstadoDespacho {
+      PROGRAMADO
+      EN_TRANSITO
+      ENTREGADO
+      CANCELADO
+    }
+  }
+
+  ' ===== DOMINIO: NÓMINA =====
+  package nomina {
+    
+    ENTITY(PeriodoNomina) {
+      - Long id
+      - LocalDate fechaInicio
+      - LocalDate fechaFin
+      - Integer numeroSemana
+      - Integer año
+      - EstadoPeriodo estado
+      - Long calculadoPor
+      - LocalDateTime createdAt
+      - LocalDateTime updatedAt
+    }    ENTITY(CalculoNomina) {
+      - Long id
+      - Long periodoNominaId
+      - Long empleadoId
+      - BigDecimal horasTrabajadas
+      - BigDecimal horasExtras
+      - BigDecimal cantidadProducidaToneladas
+      - BigDecimal salarioBase
+      - BigDecimal bonificacionProduccion
+      - BigDecimal bonificacionAsistencia
+      - BigDecimal descuentos
+      - BigDecimal totalBruto
+      - BigDecimal deducciones
+      - BigDecimal totalNeto
+      - String observaciones
+      - LocalDateTime createdAt
+      - LocalDateTime updatedAt
+      + calcularTotalBruto() : BigDecimal
+      + calcularTotalNeto() : BigDecimal
+    }
+
+    ENTITY(ComprobantePago) {
+      - Long id
+      - Long calculoNominaId
+      - String numeroComprobante
+      - LocalDateTime fechaGeneracion
+      - LocalDate fechaPago
+      - String rutaArchivoPdf
+      - EstadoComprobante estado
+      - LocalDateTime createdAt
+    }
+
+    SERVICE(NominaService) {
+      + calcularNominaSemanal(LocalDate) : List<CalculoNominaDTO>
+      + ajustarCalculoNomina(Long, AjusteNominaDTO) : CalculoNominaDTO
+      + generarComprobantesPago(Long) : List<ComprobantePagoDTO>
+      + consultarHistorialPagos(Long, LocalDate, LocalDate) : List<CalculoNominaDTO>
+    }
+
+    enum EstadoPeriodo {
+      ABIERTO
+      CALCULADO
+      PAGADO
+      CERRADO
+    }
+
+    enum EstadoComprobante {
+      GENERADO
+      ENTREGADO
+      PAGADO
+    }
+  }
+
+  ' ===== DOMINIO: REPORTES =====
+  package reporte {
+    
+    ENTITY(ReporteGenerado) {
+      - Long id
+      - TipoReporte tipoReporte
+      - String nombreReporte
+      - String parametrosJson
+      - LocalDateTime fechaGeneracion
+      - LocalDate fechaInicioDatos
+      - LocalDate fechaFinDatos
+      - String rutaArchivo
+      - FormatoReporte formato
+      - Long generadoPor
+      - LocalDateTime createdAt
+    }
+
+    SERVICE(ReporteService) {
+      + generarReporteProduccion(ParametrosReporteDTO) : ReporteDTO
+      + generarReporteAsistencia(ParametrosReporteDTO) : ReporteDTO
+      + generarReporteCostosLaborales(ParametrosReporteDTO) : ReporteDTO
+      + exportarDatosOperacionales(ParametrosExportDTO) : ReporteDTO
+    }
+
+    enum TipoReporte {
+      PRODUCCION
+      ASISTENCIA
+      COSTOS_LABORALES
+      OPERACIONAL
+    }
+
+    enum FormatoReporte {
+      PDF
+      EXCEL
+      CSV
+    }
+  }
+  ' ===== RELACIONES PRINCIPALES =====
+  Usuario ||--|| Empleado : "autenticación"
+  Empleado ||--o{ RegistroAsistencia : "registra"
+  Empleado ||--o{ RegistroProduccion : "produce"
+  Empleado ||--o{ CalculoNomina : "recibe pago"
+  Empleado ||--o{ Despacho : "registra"
+  TipoTurno ||--o{ RegistroAsistencia : "en turno"
+  TipoTurno ||--o{ RegistroProduccion : "en turno"
+  PeriodoNomina ||--o{ CalculoNomina : "contiene"
+  CalculoNomina ||--|| ComprobantePago : "genera"
+
+}
+
+' ===== NOTAS =====
+note top of Usuario : Control de autenticación\ny credenciales de acceso
+
+note top of Empleado : Entidad central que conecta\ntodos los dominios del sistema
+
+note right of RegistroAsistencia : Base para cálculos\nde nómina semanal
+
+note right of RegistroProduccion : Solo extracción de carbón\n(toneladas)
+
+note right of Despacho : Datos simples de conductor\ny vehículo (no entidades separadas)
+
+note bottom of CalculoNomina : Integra datos de asistencia\ny producción para pagos
+
+@enduml
