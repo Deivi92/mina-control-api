@@ -1,0 +1,31 @@
+@startuml sequence_gestionar_excepciones
+!theme plain
+
+title "Flujo de Gestionar Excepciones de Asistencia"
+
+actor Administrador
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Turnos" as TurnosService
+participant "Base de Datos" as DB
+
+Administrador -> Cliente: Selecciona empleado, fecha y tipo de excepción (permiso, falta justificada, etc.)
+Cliente -> Gateway: POST /turnos/excepciones (idEmpleado, fecha, tipo, justificacion)
+Gateway -> TurnosService: POST /turnos/excepciones (datos de la excepción)
+
+TurnosService -> DB: Buscar empleado
+DB --> TurnosService: Retorna datos del empleado
+
+alt Empleado existe
+    TurnosService -> DB: Crea un registro de excepción de asistencia
+    DB --> TurnosService: Confirma creación
+    TurnosService --> Gateway: Devuelve mensaje de éxito
+    Gateway --> Cliente: 201 Created (Excepción registrada)
+    Cliente -> Administrador: Muestra confirmación
+else Empleado no existe
+    TurnosService --> Gateway: Devuelve error
+    Gateway --> Cliente: 404 Not Found (Empleado no encontrado)
+    Cliente -> Administrador: Muestra mensaje de error
+end
+
+@enduml

@@ -1,0 +1,20 @@
+@startuml sequence_logout
+!theme plain
+
+title "Flujo de Cierre de Sesión (Logout)"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Autenticación" as AuthServer
+
+Usuario -> Cliente: Solicita cerrar sesión
+Cliente -> Gateway: POST /auth/logout
+Gateway -> AuthServer: POST /auth/logout
+
+AuthServer -> AuthServer: Invalida el token de refresco (si aplica, ej. guardándolo en una blacklist)
+AuthServer --> Gateway: Devuelve mensaje de éxito
+Gateway --> Cliente: 200 OK (Sesión cerrada)
+Cliente -> Usuario: Muestra mensaje de cierre de sesión exitoso y limpia el almacenamiento local (elimina tokens)
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml sequence_generar_comprobantes
+!theme plain
+
+title "Flujo de Generar Comprobantes de Pago"
+
+actor Gerente
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Nómina" as NominaService
+participant "Servicio de Documentos" as DocumentService
+participant "Base de Datos" as DB
+
+Gerente -> Cliente: Solicita generar comprobantes para nómina confirmada
+Cliente -> Gateway: POST /api/nomina/{id}/comprobantes
+Gateway -> NominaService: POST /api/nomina/{id}/comprobantes
+
+NominaService -> DB: Buscar registros de nómina de la semana
+DB --> NominaService: Retorna detalles de pagos por empleado
+
+alt Nómina confirmada y no pagada
+    loop Para cada empleado
+        NominaService -> DocumentService: Generar PDF del comprobante de pago
+        DocumentService --> NominaService: Retorna URL del comprobante generado
+        NominaService -> DB: Almacenar referencia al comprobante
+        DB --> NominaService: Confirma almacenamiento
+    end
+    
+    NominaService -> DB: Marcar nómina como "comprobantes generados"
+    DB --> NominaService: Confirma actualización de estado
+    NominaService --> Gateway: Devuelve lista de comprobantes generados
+    Gateway --> Cliente: 200 OK (Comprobantes generados)
+    Cliente -> Gerente: Muestra lista de comprobantes para distribución
+else Nómina no confirmada o ya pagada
+    NominaService --> Gateway: Devuelve error de estado
+    Gateway --> Cliente: 409 Conflict (Estado inválido para generar comprobantes)
+    Cliente -> Gerente: Muestra mensaje de error
+end
+
+@enduml

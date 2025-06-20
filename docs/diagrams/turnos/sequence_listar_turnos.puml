@@ -1,0 +1,43 @@
+@startuml sequence_listar_turnos
+!theme materia-outline
+title Diagrama de Secuencia - Listar Todos los Turnos
+
+' ===== PARTICIPANTES =====
+actor "Usuario\nAdministrador" as Usuario
+participant "TurnoController" as Controller
+participant "TurnoService" as Service
+participant "TurnoRepository" as Repository
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : GET /api/turnos
+
+activate Controller
+Controller -> Service : obtenerTurnos()
+activate Service
+
+Service -> Repository : findAll()
+activate Repository
+Repository -> DB : SELECT * FROM turnos
+activate DB
+DB --> Repository : List<Turno>
+deactivate DB
+Repository --> Service : List<Turno>
+deactivate Repository
+
+Service -> Service : convertir cada Turno a TurnoDTO
+note right
+    Para cada turno en la lista:
+    - Mapear campos básicos (ID, fechas, área, etc.)
+    - Calcular campos derivados (duración, capacidad disponible)
+    - Formatear la salida
+end note
+
+Service --> Controller : List<TurnoDTO>
+deactivate Service
+
+Controller --> Usuario : 200 OK\n(List<TurnoDTO>)
+
+deactivate Controller
+
+@enduml

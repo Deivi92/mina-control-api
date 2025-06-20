@@ -1,0 +1,141 @@
+@startuml sequence_crear_turno
+!theme materia-outline
+title Diagrama de Secuencia - Crear Turno
+
+' ===== PARTICIPANTES =====
+actor "Administrador\no Gerente" as Admin
+participant "TurnoController" as Controller
+participant "TurnoService" as Service
+participant "TurnoRepository" as TurnoRepo
+participant "TipoTurnoRepository" as TipoRepo
+participant "AsignacionTurnoRepository" as AsignRepo
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Admin -> Controller : POST /api/turnos\n(TurnoCreateDTO)
+note right : Request JSON:\n{\n  "fechaInicio": "2024-01-15T06:00:00",\n  "fechaFin": "2024-01-15T14:00:00",\n  "capacidadMaxima": 15,\n  "descripcion": "Turno matutino Área A",\n  "area": "EXTRACCION",\n  "tipoTurnoId": 1\n}
+
+activate Controller
+Controller -> Controller : Validar formato JSON\ny campos requeridos
+
+alt Datos válidos
+    Controller -> Service : crearTurno(dto)
+    activate Service
+    
+    ' ===== VALIDACIONES DE NEGOCIO =====
+    Service -> Service : validarDatosBasicos(dto)
+    note right : - Fecha inicio < fecha fin\n- Capacidad > 0\n- Área válida\n- Duración mínima/máxima
+    
+    ' Validar que existe el tipo de turno
+    Service -> TipoRepo : findById(tipoTurnoId)
+    activate TipoRepo
+    TipoRepo -> DB : SELECT * FROM tipos_turno WHERE id = ?
+    activate DB
+    DB --> TipoRepo : TipoTurno encontrado
+    deactivate DB
+    TipoRepo --> Service : Optional<TipoTurno>
+    deactivate TipoRepo
+    
+    alt Tipo de turno existe y está activo
+        ' ===== VALIDAR CONFLICTOS DE HORARIO =====
+        Service -> TurnoRepo : existsConflictoHorario(fechaInicio, fechaFin)
+        activate TurnoRepo
+        TurnoRepo -> DB : SELECT COUNT(*) FROM turnos\nWHERE (fecha_inicio <= ? AND fecha_fin > ?)\nOR (fecha_inicio < ? AND fecha_fin >= ?)\nAND estado != 'CANCELADO'
+        activate DB
+        DB --> TurnoRepo : 0 (sin conflictos)
+        deactivate DB
+        TurnoRepo --> Service : false
+        deactivate TurnoRepo
+        
+        alt Sin conflictos de horario
+            ' ===== CREAR ENTIDAD =====
+            Service -> Service : crear entidad Turno
+            note right : - Asignar tipo de turno\n- Estado inicial: PROGRAMADO\n- Timestamps automáticos\n- Validar horarios de trabajo
+            
+            ' ===== PERSISTIR =====
+            Service -> TurnoRepo : save(turno)
+            activate TurnoRepo
+            TurnoRepo -> DB : INSERT INTO turnos (\n  fecha_inicio, fecha_fin,\n  capacidad_maxima, descripcion,\n  area, tipo_turno_id, estado,\n  created_at, updated_at\n) VALUES (...)
+            activate DB
+            DB --> TurnoRepo : Turno con ID generado
+            deactivate DB
+            TurnoRepo --> Service : Turno persistido
+            deactivate TurnoRepo
+            
+            ' ===== RESPUESTA =====
+            Service -> Service : convertir a TurnoDTO
+            Service --> Controller : TurnoDTO
+            deactivate Service
+            
+            Controller --> Admin : 201 Created\n(TurnoDTO)
+            note left : Response JSON:\n{\n  "id": 456,\n  "fechaInicio": "2024-01-15T06:00:00",\n  "fechaFin": "2024-01-15T14:00:00",\n  "capacidadMaxima": 15,\n  "descripcion": "Turno matutino Área A",\n  "area": "EXTRACCION",\n  "tipoTurno": "MATUTINO",\n  "estado": "PROGRAMADO",\n  "empleadosAsignados": 0,\n  "capacidadDisponible": 15,\n  "duracion": "8 horas"\n}
+        
+        else Conflicto de horario
+            Service --> Controller : ConflictoHorarioException
+            deactivate Service
+            Controller --> Admin : 409 Conflict\n{"error": "Ya existe un turno\nen ese horario"}
+        end
+        
+    else Tipo de turno no existe o inactivo
+        Service --> Controller : TurnoNoEncontradoException
+        deactivate Service
+        Controller --> Admin : 404 Not Found\n{"error": "Tipo de turno no encontrado\no inactivo"}
+    end
+    
+else Datos inválidos
+    Controller --> Admin : 400 Bad Request\n{"error": "Datos de turno inválidos"}
+end
+
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo Alternativo: Crear Turno Recurrente (Opcional) ==
+
+Admin -> Controller : POST /api/turnos/recurrente\n(TurnoRecurrenteDTO)
+note right : Request JSON:\n{\n  "fechaInicio": "2024-01-15T06:00:00",\n  "fechaFin": "2024-01-15T14:00:00",\n  "capacidadMaxima": 15,\n  "descripcion": "Turno matutino semanal",\n  "area": "EXTRACCION",\n  "tipoTurnoId": 1,\n  "frecuencia": "SEMANAL",\n  "fechaFinRecurrencia": "2024-12-31",\n  "diasSemana": ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES"]\n}
+
+activate Controller
+Controller -> Service : crearTurnoRecurrente(dto)
+activate Service
+
+loop Para cada fecha en el rango de recurrencia
+    Service -> Service : calcular próxima fecha según frecuencia
+    
+    Service -> TurnoRepo : existsConflictoHorario(fechaInicio, fechaFin)
+    activate TurnoRepo
+    TurnoRepo -> DB : Validar conflictos para fecha específica
+    TurnoRepo --> Service : resultado validación
+    deactivate TurnoRepo
+    
+    alt Sin conflicto en esta fecha
+        Service -> TurnoRepo : save(turno para esta fecha)
+        activate TurnoRepo
+        TurnoRepo -> DB : INSERT turno individual
+        TurnoRepo --> Service : Turno creado
+        deactivate TurnoRepo
+    else Conflicto en esta fecha
+        Service -> Service : agregar a lista de conflictos
+    end
+end
+
+Service --> Controller : List<TurnoDTO> (turnos creados)\n+ List<String> (fechas con conflicto)
+deactivate Service
+
+Controller --> Admin : 201 Created (parcial)\n{\n  "turnosCreados": [...],\n  "conflictos": ["2024-01-20: Ya existe turno", ...]\n}
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo de Error: Validación de Capacidad Excesiva ==
+
+Admin -> Controller : POST /api/turnos\n(capacidadMaxima: 1000)
+activate Controller
+Controller -> Service : crearTurno(dto)
+activate Service
+Service -> Service : validarDatosBasicos(dto)
+note right : Capacidad máxima > límite permitido\n(ej: > 50 empleados por turno)
+Service --> Controller : IllegalArgumentException("Capacidad excede límite")
+deactivate Service
+Controller --> Admin : 400 Bad Request\n{"error": "Capacidad máxima excede\nel límite permitido (50)"}
+deactivate Controller
+
+@enduml

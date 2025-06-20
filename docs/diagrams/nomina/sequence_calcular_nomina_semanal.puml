@@ -1,0 +1,35 @@
+@startuml sequence_calcular_nomina_semanal
+!theme plain
+
+title "Flujo de Calcular Nómina Semanal"
+
+actor Gerente
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Nómina" as NominaService
+participant "Servicio de Turnos" as TurnosService
+participant "Servicio de Producción" as ProduccionService
+participant "Base de Datos" as DB
+
+Gerente -> Cliente: Selecciona semana para calcular nómina
+Cliente -> Gateway: POST /api/nomina/calcular (fechaInicioSemana, fechaFinSemana)
+Gateway -> NominaService: POST /api/nomina/calcular
+
+NominaService -> TurnosService: Obtener registros de asistencia de la semana
+TurnosService --> NominaService: Retorna horas trabajadas por empleado
+
+NominaService -> ProduccionService: Obtener registros de producción de la semana
+ProduccionService --> NominaService: Retorna toneladas producidas por empleado
+
+NominaService -> DB: Obtener configuración salarial de empleados activos
+DB --> NominaService: Retorna salarios base y configuraciones
+
+NominaService -> NominaService: Calcular pagos por empleado (salario base + bonos por producción)
+NominaService -> DB: Crear registros de nómina semanal
+DB --> NominaService: Confirma creación de registros
+
+NominaService --> Gateway: Devuelve resumen de nómina calculada
+Gateway --> Cliente: 201 Created (Nómina calculada)
+Cliente -> Gerente: Muestra resumen de pagos a realizar
+
+@enduml

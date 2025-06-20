@@ -1,0 +1,69 @@
+@startuml sequence_eliminar_turno
+!theme materia-outline
+title Diagrama de Secuencia - Eliminar Turno
+
+' ===== PARTICIPANTES =====
+actor "Usuario\nAdministrador" as Usuario
+participant "TurnoController" as Controller
+participant "TurnoService" as Service
+participant "TurnoRepository" as Repository
+participant "AsignacionTurnoRepository" as AsignacionRepo
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : DELETE /api/turnos/{id}
+
+activate Controller
+Controller -> Service : eliminarTurno(id)
+activate Service
+
+Service -> Repository : findById(id)
+activate Repository
+Repository -> DB : SELECT * FROM turnos WHERE id = {id}
+activate DB
+DB --> Repository : Optional<Turno>
+deactivate DB
+Repository --> Service : Optional<Turno>
+deactivate Repository
+
+alt Turno encontrado
+    Service -> AsignacionRepo : findByTurnoId(id)
+    activate AsignacionRepo
+    AsignacionRepo -> DB : SELECT COUNT(*) FROM asignaciones_turnos WHERE turno_id = {id}
+    activate DB
+    DB --> AsignacionRepo : 0
+    deactivate DB
+    AsignacionRepo --> Service : List (empty)
+    deactivate AsignacionRepo
+
+    alt Sin empleados asignados
+        Service -> Repository : deleteById(id)
+        activate Repository
+        Repository -> DB : DELETE FROM turnos WHERE id = {id}
+        activate DB
+        DB --> Repository : void
+        deactivate DB
+        Repository --> Service : void
+        deactivate Repository
+        Service --> Controller : void
+        deactivate Service
+        Controller --> Usuario : 204 No Content
+    else Con empleados asignados
+        Service --> Controller : throw IllegalStateException("No se puede eliminar un turno con empleados asignados")
+        deactivate Service
+        Controller -> ManejadorExcepcionesGlobal : handleIllegalState
+        activate ManejadorExcepcionesGlobal
+        ManejadorExcepcionesGlobal --> Usuario : 409 Conflict
+        deactivate ManejadorExcepcionesGlobal
+    end
+else Turno no encontrado
+    Service --> Controller : throw RecursoNoEncontradoException
+    deactivate Service
+    Controller -> ManejadorExcepcionesGlobal : handleRecursoNoEncontrado
+    activate ManejadorExcepcionesGlobal
+    ManejadorExcepcionesGlobal --> Usuario : 404 Not Found
+    deactivate ManejadorExcepcionesGlobal
+end
+
+deactivate Controller
+@enduml

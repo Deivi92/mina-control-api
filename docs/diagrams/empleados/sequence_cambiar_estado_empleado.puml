@@ -1,0 +1,32 @@
+@startuml sequence_cambiar_estado_empleado
+!theme plain
+
+title "Flujo de Cambiar Estado de Empleado"
+
+actor Administrador
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Empleados" as EmpleadoService
+participant "Base de Datos" as DB
+
+Administrador -> Cliente: Selecciona empleado y nuevo estado (ACTIVO/INACTIVO)
+Cliente -> Gateway: PATCH /api/empleados/{id}/estado (nuevoEstado)
+Gateway -> EmpleadoService: PATCH /api/empleados/{id}/estado (nuevoEstado)
+
+EmpleadoService -> DB: Buscar empleado por ID
+DB --> EmpleadoService: Retorna datos del empleado
+
+alt Empleado existe
+    EmpleadoService -> DB: Actualizar estado del empleado
+    DB --> EmpleadoService: Confirma actualización
+    EmpleadoService -> EmpleadoService: Convertir entidad a DTO
+    EmpleadoService --> Gateway: Devuelve EmpleadoDTO con nuevo estado
+    Gateway --> Cliente: 200 OK (Empleado actualizado)
+    Cliente -> Administrador: Muestra confirmación del cambio de estado
+else Empleado no existe
+    EmpleadoService --> Gateway: Devuelve error
+    Gateway --> Cliente: 404 Not Found (Empleado no encontrado)
+    Cliente -> Administrador: Muestra mensaje de error
+end
+
+@enduml

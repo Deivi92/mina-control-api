@@ -1,0 +1,102 @@
+@startuml sequence_crear_empleado
+!theme materia-outline
+title Diagrama de Secuencia - Crear Empleado
+
+' ===== PARTICIPANTES =====
+actor "Usuario\nAdministrador" as Usuario
+participant "EmpleadoController" as Controller
+participant "EmpleadoService" as Service
+participant "EmpleadoRepository" as Repository
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : POST /api/empleados\n(EmpleadoCreateDTO)
+note right : Request JSON:\n{\n  "nombres": "Juan Carlos",\n  "apellidos": "García López",\n  "numeroIdentificacion": "12345678",\n  "email": "juan.garcia@empresa.com",\n  "telefono": "+57 300 123 4567",\n  "cargo": "Operador de Mina",\n  "fechaContratacion": "2024-01-15",\n  "salarioBase": 2500000,\n  "rolSistema": "EMPLEADO"\n}
+
+activate Controller
+Controller -> Controller : Validar formato JSON\ny campos requeridos
+
+alt Datos válidos
+    Controller -> Service : crearEmpleado(dto)
+    activate Service
+    
+    ' ===== VALIDACIONES DE NEGOCIO =====
+    Service -> Service : validarDatos(dto)
+    note right : - Nombres no vacíos\n- Email válido\n- Salario > 0\n- Fecha <= hoy
+    
+    ' Validar número de identificación único
+    Service -> Repository : existsByNumeroIdentificacion(numero)
+    activate Repository
+    Repository -> DB : SELECT COUNT(*) WHERE numero_identificacion = ?
+    activate DB
+    DB --> Repository : 0 (no existe)
+    deactivate DB
+    Repository --> Service : false
+    deactivate Repository
+    
+    ' Validar email único
+    Service -> Repository : existsByEmail(email)
+    activate Repository
+    Repository -> DB : SELECT COUNT(*) WHERE email = ?
+    activate DB
+    DB --> Repository : 0 (no existe)
+    deactivate DB
+    Repository --> Service : false
+    deactivate Repository
+    
+    alt Validaciones exitosas
+        ' ===== CREAR ENTIDAD =====
+        Service -> Service : convertir DTO a Entidad
+        note right : - Asignar timestamps\n- Estado inicial: ACTIVO\n- Generar ID automático
+        
+        ' ===== PERSISTIR =====
+        Service -> Repository : save(empleado)
+        activate Repository
+        Repository -> DB : INSERT INTO empleados (...)
+        activate DB
+        DB --> Repository : Empleado con ID generado
+        deactivate DB
+        Repository --> Service : Empleado persistido
+        deactivate Repository
+        
+        ' ===== RESPUESTA =====
+        Service -> Service : convertir Entidad a DTO
+        Service --> Controller : EmpleadoDTO
+        deactivate Service
+        
+        Controller --> Usuario : 201 Created\n(EmpleadoDTO)
+        note left : Response JSON:\n{\n  "id": 123,\n  "nombres": "Juan Carlos",\n  "apellidos": "García López",\n  "numeroIdentificacion": "12345678",\n  "email": "juan.garcia@empresa.com",\n  "telefono": "+57 300 123 4567",\n  "cargo": "Operador de Mina",\n  "fechaContratacion": "2024-01-15",\n  "salarioBase": 2500000,\n  "estado": "ACTIVO",\n  "rolSistema": "EMPLEADO",\n  "nombreCompleto": "Juan Carlos García López",\n  "antiguedadMeses": 0\n}
+    
+    else Error de validación
+        Service --> Controller : DuplicatedEmpleadoException
+        deactivate Service
+        Controller --> Usuario : 409 Conflict\n{"error": "Ya existe un empleado\ncon ese número de identificación"}
+    end
+    
+else Datos inválidos
+    Controller --> Usuario : 400 Bad Request\n{"error": "Campos requeridos faltantes"}
+end
+
+deactivate Controller
+
+' ===== FLUJO ALTERNATIVO - ERROR =====
+note over Usuario, DB : **Flujo Alternativo: Error de Base de Datos**
+
+Usuario -> Controller : POST /api/empleados\n(EmpleadoCreateDTO)
+activate Controller
+Controller -> Service : crearEmpleado(dto)
+activate Service
+Service -> Repository : save(empleado)
+activate Repository
+Repository -> DB : INSERT INTO empleados (...)
+activate DB
+DB --> Repository : SQLException
+deactivate DB
+Repository --> Service : DataAccessException
+deactivate Repository
+Service --> Controller : RuntimeException
+deactivate Service
+Controller --> Usuario : 500 Internal Server Error\n{"error": "Error interno del servidor"}
+deactivate Controller
+
+@enduml

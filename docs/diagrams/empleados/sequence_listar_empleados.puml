@@ -1,0 +1,112 @@
+@startuml sequence_listar_empleados
+!theme materia-outline
+title Diagrama de Secuencia - Listar Empleados
+
+' ===== PARTICIPANTES =====
+actor "Usuario\nAdministrador" as Usuario
+participant "EmpleadoController" as Controller
+participant "EmpleadoService" as Service
+participant "EmpleadoRepository" as Repository
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : GET /api/empleados
+note right : Obtener todos los empleados\nRegistrados en el sistema
+
+activate Controller
+Controller -> Service : obtenerTodosEmpleados()
+activate Service
+
+Service -> Repository : findAll()
+activate Repository
+Repository -> DB : SELECT * FROM empleados\nORDER BY apellidos, nombres
+activate DB
+DB --> Repository : List<Empleado>
+deactivate DB
+Repository --> Service : List<Empleado>
+deactivate Repository
+
+Service -> Service : convertir entidades a DTOs
+note right : Transformar cada empleado\na EmpleadoListDTO:\n- Solo campos necesarios para lista\n- Calcular nombre completo\n- Convertir enums a strings
+
+Service --> Controller : List<EmpleadoListDTO>
+deactivate Service
+
+Controller --> Usuario : 200 OK\n(List<EmpleadoListDTO>)
+note left : Response JSON:\n[\n  {\n    "id": 1,\n    "nombreCompleto": "Ana María Rodríguez",\n    "numeroIdentificacion": "87654321",\n    "cargo": "Gerente de Producción",\n    "estado": "ACTIVO",\n    "rolSistema": "GERENTE",\n    "fechaContratacion": "2023-05-10"\n  },\n  {\n    "id": 2,\n    "nombreCompleto": "Juan Carlos García López",\n    "numeroIdentificacion": "12345678",\n    "cargo": "Operador de Mina",\n    "estado": "ACTIVO",\n    "rolSistema": "EMPLEADO",\n    "fechaContratacion": "2024-01-15"\n  }\n]
+
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo Alternativo: Filtrar por Estado ==
+
+Usuario -> Controller : GET /api/empleados/activos
+note right : Obtener solo empleados\ncon estado ACTIVO
+
+activate Controller
+Controller -> Service : obtenerEmpleadosActivos()
+activate Service
+
+Service -> Repository : findByEstado(EstadoEmpleado.ACTIVO)
+activate Repository
+Repository -> DB : SELECT * FROM empleados\nWHERE estado = 'ACTIVO'\nORDER BY apellidos, nombres
+activate DB
+DB --> Repository : List<Empleado> (filtrada)
+deactivate DB
+Repository --> Service : List<Empleado> (solo activos)
+deactivate Repository
+
+Service -> Service : convertir entidades a DTOs
+Service --> Controller : List<EmpleadoListDTO> (solo activos)
+deactivate Service
+
+Controller --> Usuario : 200 OK\n(empleados activos)
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo Alternativo: Buscar por Cargo ==
+
+Usuario -> Controller : GET /api/empleados/buscar?cargo=operador
+note right : Buscar empleados que tengan\n"operador" en su cargo
+
+activate Controller
+Controller -> Service : buscarEmpleadosPorCargo("operador")
+activate Service
+
+Service -> Repository : findByCargoContainingIgnoreCase("operador")
+activate Repository
+Repository -> DB : SELECT * FROM empleados\nWHERE LOWER(cargo) LIKE '%operador%'\nORDER BY apellidos, nombres
+activate DB
+DB --> Repository : List<Empleado> (coincidencias)
+deactivate DB
+Repository --> Service : List<Empleado> (filtrada por cargo)
+deactivate Repository
+
+Service -> Service : convertir entidades a DTOs
+Service --> Controller : List<EmpleadoListDTO> (filtrada)
+deactivate Service
+
+Controller --> Usuario : 200 OK\n(empleados con cargo similar)
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo de Error: Base de Datos No Disponible ==
+
+Usuario -> Controller : GET /api/empleados
+activate Controller
+Controller -> Service : obtenerTodosEmpleados()
+activate Service
+Service -> Repository : findAll()
+activate Repository
+Repository -> DB : SELECT * FROM empleados
+activate DB
+DB --> Repository : Connection timeout
+deactivate DB
+Repository --> Service : DataAccessException
+deactivate Repository
+Service --> Controller : RuntimeException
+deactivate Service
+Controller --> Usuario : 500 Internal Server Error\n{"error": "Base de datos no disponible"}
+deactivate Controller
+
+@enduml

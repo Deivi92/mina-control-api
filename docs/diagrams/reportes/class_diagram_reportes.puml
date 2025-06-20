@@ -1,0 +1,242 @@
+@startuml class_diagram_reportes
+!theme materia-outline
+title Diagrama de Clases - Dominio Reportes
+
+' ===== CONFIGURACIÓN =====
+!define ENTITY(x) class x << (E,#E8F5E8) Entity >>
+!define DTO(x) class x << (D,#E8E8F5) DTO >>
+!define SERVICE(x) class x << (S,#F5F5E8) Service >>
+!define CONTROLLER(x) class x << (C,#F5E8E8) Controller >>
+!define REPOSITORY(x) interface x << (R,#E8F5F5) Repository >>
+
+package "com.minacontrol.reporte" {
+
+  ' ===== ENTIDADES =====
+  ENTITY(ReporteGenerado) {
+    - Long id
+    - TipoReporte tipoReporte
+    - String nombreReporte
+    - String parametrosJson
+    - LocalDateTime fechaGeneracion
+    - LocalDate fechaInicioDatos
+    - LocalDate fechaFinDatos
+    - String rutaArchivo
+    - FormatoReporte formato
+    - Long generadoPor
+    - LocalDateTime createdAt
+    --
+    + String getDescripcionCompleta()
+    + Boolean estaDisponible()
+    + String getNombreArchivo()
+    + Duration getTiempoGeneracion()
+  }
+
+  ' ===== ENUMS =====
+  enum TipoReporte {
+    PRODUCCION
+    ASISTENCIA
+    COSTOS_LABORALES
+    OPERACIONAL
+    --
+    + String getDescripcion()
+    + String getPlantilla()
+  }
+
+  enum FormatoReporte {
+    PDF
+    EXCEL
+    CSV
+    --
+    + String getDescripcion()
+    + String getExtension()
+    + String getMimeType()
+  }
+
+  ' ===== DTOs =====
+  DTO(ParametrosReporteDTO) {
+    - TipoReporte tipoReporte
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - FormatoReporte formato
+    - List<Long> empleadosIds
+    - List<String> areas
+    - Boolean incluirDetalle
+    - Map<String, Object> parametrosAdicionales
+    --
+    + void validarParametros()
+    + String toJson()
+  }
+
+  DTO(ReporteDTO) {
+    - Long id
+    - String tipoReporte
+    - String nombreReporte
+    - LocalDateTime fechaGeneracion
+    - LocalDate fechaInicioDatos
+    - LocalDate fechaFinDatos
+    - String formato
+    - String urlDescarga
+    - String generadoPor
+    --
+    + static ReporteDTO fromEntity(ReporteGenerado reporte)
+  }
+
+  DTO(ReporteProduccionDTO) {
+    - String titulo
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - BigDecimal totalProduccion
+    - BigDecimal promedioProduccion
+    - Integer totalRegistros
+    - Integer empleadosInvolucrados
+    - List<ProduccionEmpleadoReporteDTO> produccionPorEmpleado
+    - List<ProduccionDiariaReporteDTO> produccionDiaria
+    --
+    + String generarResumen()
+  }
+
+  DTO(ReporteAsistenciaDTO) {
+    - String titulo
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - Integer totalEmpleados
+    - BigDecimal promedioAsistencia
+    - Integer totalTardanzas
+    - Integer totalAusencias
+    - List<AsistenciaEmpleadoReporteDTO> asistenciaPorEmpleado
+    - List<AsistenciaDiariaReporteDTO> asistenciaDiaria
+    --
+    + BigDecimal calcularPorcentajeAsistencia()
+  }
+
+  DTO(ReporteCostosLaboralesDTO) {
+    - String titulo
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - BigDecimal totalCostos
+    - BigDecimal costoPromedioPorEmpleado
+    - BigDecimal costoPorTonelada
+    - BigDecimal totalHorasTrabajadas
+    - List<CostoEmpleadoReporteDTO> costosPorEmpleado
+    - List<CostoPeriodoReporteDTO> costosPorPeriodo
+    --
+    + BigDecimal calcularEficienciaCosto()
+  }
+
+  DTO(DatosOperacionalesDTO) {
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - FormatoReporte formato
+    - String tipoExportacion
+    - List<String> tablas
+    - Map<String, Object> filtros
+    --
+    + void validarExportacion()
+  }
+
+  ' ===== REPOSITORIO =====
+  REPOSITORY(ReporteGeneradoRepository) {
+    + Optional<ReporteGenerado> findById(Long id)
+    + List<ReporteGenerado> findAll()
+    + List<ReporteGenerado> findByTipoReporte(TipoReporte tipo)
+    + List<ReporteGenerado> findByGeneradoPor(Long generadoPor)
+    + List<ReporteGenerado> findByFechaGeneracionBetween(LocalDateTime inicio, LocalDateTime fin)
+    + List<ReporteGenerado> findByFechaDatos(LocalDate fechaInicio, LocalDate fechaFin)
+    + ReporteGenerado save(ReporteGenerado reporte)
+    + void deleteById(Long id)
+    + void deleteByFechaGeneracionBefore(LocalDateTime fecha)
+  }
+
+  ' ===== SERVICIOS =====
+  SERVICE(ReporteService) {
+    - ReporteGeneradoRepository reporteRepository
+    - ProduccionService produccionService
+    - TurnoService turnoService
+    - NominaService nominaService
+    --
+    + ReporteDTO generarReporteProduccion(ParametrosReporteDTO parametros)
+    + ReporteDTO generarReporteAsistencia(ParametrosReporteDTO parametros)
+    + ReporteDTO generarReporteCostosLaborales(ParametrosReporteDTO parametros)
+    + ReporteDTO exportarDatosOperacionales(DatosOperacionalesDTO datos)
+    + List<ReporteDTO> obtenerTodosReportes()
+    + List<ReporteDTO> obtenerReportesPorTipo(TipoReporte tipo)
+    + ReporteDTO obtenerReportePorId(Long id)
+    + void eliminarReporte(Long id)
+    + void limpiarReportesAntiguos(Integer diasAntiguedad)
+    + String obtenerUrlDescarga(Long reporteId)
+  }
+
+  SERVICE(GeneradorReporteService) {
+    + ReporteProduccionDTO generarDatosProduccion(ParametrosReporteDTO parametros)
+    + ReporteAsistenciaDTO generarDatosAsistencia(ParametrosReporteDTO parametros)
+    + ReporteCostosLaboralesDTO generarDatosCostosLaborales(ParametrosReporteDTO parametros)
+    + String generarArchivoPDF(Object datosReporte, String plantilla)
+    + String generarArchivoExcel(Object datosReporte)
+    + String generarArchivoCSV(Object datosReporte)
+  }
+
+  ' ===== CONTROLADOR =====
+  CONTROLLER(ReporteController) {
+    - ReporteService reporteService
+    --
+    + ResponseEntity<ReporteDTO> generarReporteProduccion(ParametrosReporteDTO parametros)
+    + ResponseEntity<ReporteDTO> generarReporteAsistencia(ParametrosReporteDTO parametros)
+    + ResponseEntity<ReporteDTO> generarReporteCostosLaborales(ParametrosReporteDTO parametros)
+    + ResponseEntity<ReporteDTO> exportarDatosOperacionales(DatosOperacionalesDTO datos)
+    + ResponseEntity<List<ReporteDTO>> obtenerTodosReportes()
+    + ResponseEntity<List<ReporteDTO>> obtenerReportesPorTipo(String tipo)
+    + ResponseEntity<ReporteDTO> obtenerReportePorId(Long id)
+    + ResponseEntity<Resource> descargarReporte(Long id)
+    + ResponseEntity<Void> eliminarReporte(Long id)
+  }
+
+  ' ===== EXCEPCIONES =====
+  class ReporteNoEncontradoException {
+    + ReporteNoEncontradoException(String mensaje)
+    + ReporteNoEncontradoException(Long id)
+  }
+
+  class ParametrosReporteInvalidosException {
+    + ParametrosReporteInvalidosException(String campo, String valor)
+  }
+
+  class ErrorGeneracionReporteException {
+    + ErrorGeneracionReporteException(String mensaje, Throwable causa)
+  }
+}
+
+' ===== RELACIONES =====
+ReporteGenerado ||--|| TipoReporte : "tiene tipo"
+ReporteGenerado ||--|| FormatoReporte : "tiene formato"
+
+ReporteController --> ReporteService : "usa"
+ReporteService --> ReporteGeneradoRepository : "usa"
+ReporteService --> GeneradorReporteService : "usa"
+ReporteGeneradoRepository --> ReporteGenerado : "gestiona"
+
+ReporteService --> ReporteDTO : "produce"
+ReporteService --> ParametrosReporteDTO : "consume"
+ReporteService --> DatosOperacionalesDTO : "consume"
+
+GeneradorReporteService --> ReporteProduccionDTO : "produce"
+GeneradorReporteService --> ReporteAsistenciaDTO : "produce"
+GeneradorReporteService --> ReporteCostosLaboralesDTO : "produce"
+
+ReporteController --> ReporteDTO : "retorna"
+ReporteController --> ParametrosReporteDTO : "recibe"
+ReporteController --> DatosOperacionalesDTO : "recibe"
+
+ReporteService --> ReporteNoEncontradoException : "lanza"
+ReporteService --> ParametrosReporteInvalidosException : "lanza"
+ReporteService --> ErrorGeneracionReporteException : "lanza"
+
+' ===== NOTAS =====
+note top of ReporteGenerado : Registro de reportes generados\nMetadatos y rutas de archivos
+
+note right of ReporteService : Coordinación de generación\nIntegración con otros dominios
+
+note bottom of GeneradorReporteService : Generación de archivos\nPDF, Excel, CSV
+
+note left of ReporteController : API REST\nEndpoints según casos de uso
+
+@enduml

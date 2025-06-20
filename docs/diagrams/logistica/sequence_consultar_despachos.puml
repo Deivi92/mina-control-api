@@ -1,0 +1,32 @@
+@startuml sequence_consultar_despachos
+!theme plain
+
+title "Flujo de Consultar Despachos"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Logística" as LogisticaService
+participant "Base de Datos" as DB
+
+Usuario -> Cliente: Solicita consultar despachos (filtros de fecha, destino, estado)
+Cliente -> Gateway: GET /api/despachos?fechaDesde={fecha}&fechaHasta={fecha}&destino={destino}&estado={estado}
+Gateway -> LogisticaService: GET /api/despachos?...
+
+LogisticaService -> DB: Consultar despachos con filtros aplicados
+DB --> LogisticaService: Retorna lista de despachos
+
+alt Despachos encontrados
+    LogisticaService -> LogisticaService: Convertir entidades a DTOs
+    LogisticaService -> DB: Obtener datos adicionales si es necesario
+    DB --> LogisticaService: Retorna datos relacionados
+    LogisticaService --> Gateway: Devuelve lista de DespachoDTO
+    Gateway --> Cliente: 200 OK (Lista de despachos)
+    Cliente -> Usuario: Muestra tabla de despachos con filtros aplicados
+else No hay despachos
+    LogisticaService --> Gateway: Devuelve lista vacía
+    Gateway --> Cliente: 200 OK (Lista vacía)
+    Cliente -> Usuario: Muestra mensaje "No hay despachos en el período"
+end
+
+@enduml

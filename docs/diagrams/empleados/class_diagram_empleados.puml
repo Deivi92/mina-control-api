@@ -1,0 +1,203 @@
+@startuml class_diagram_empleados
+!theme materia-outline
+title Diagrama de Clases - Dominio Empleados
+
+' ===== CONFIGURACIÓN =====
+!define ENTITY(x) class x << (E,#E8F5E8) Entity >>
+!define DTO(x) class x << (D,#E8E8F5) DTO >>
+!define SERVICE(x) class x << (S,#F5F5E8) Service >>
+!define CONTROLLER(x) class x << (C,#F5E8E8) Controller >>
+!define REPOSITORY(x) interface x << (R,#E8F5F5) Repository >>
+
+package "com.minacontrol.empleado" {
+
+  ' ===== ENTIDADES =====
+  ENTITY(Empleado) {
+    - Long id
+    - Long usuarioId
+    - String nombres
+    - String apellidos
+    - String numeroIdentificacion
+    - String email
+    - String telefono
+    - String cargo
+    - LocalDate fechaContratacion
+    - BigDecimal salarioBase
+    - EstadoEmpleado estado
+    - RolSistema rolSistema
+    - LocalDateTime createdAt
+    - LocalDateTime updatedAt
+    --
+    + String getNombreCompleto()
+    + Integer calcularAntiguedadEnMeses()
+    + Boolean estaActivo()
+    + Boolean puedeGestionarEmpleados()
+  }
+
+  ' ===== ENUMS =====
+  enum EstadoEmpleado {
+    ACTIVO
+    INACTIVO
+    --
+    + String getDescripcion()
+    + Boolean esActivo()
+  }
+
+  enum RolSistema {
+    EMPLEADO
+    ADMINISTRADOR  
+    GERENTE
+    --
+    + String getDescripcion()
+    + Set<String> getPermisos()
+    + Boolean puedeAcceder(String recurso)
+  }
+
+  ' ===== DTOs =====
+  DTO(EmpleadoDTO) {
+    - Long id
+    - String nombres
+    - String apellidos
+    - String numeroIdentificacion
+    - String email
+    - String telefono
+    - String cargo
+    - LocalDate fechaContratacion
+    - BigDecimal salarioBase
+    - String estado
+    - String rolSistema
+    - String nombreCompleto
+    - Integer antiguedadMeses
+    --
+    + static EmpleadoDTO fromEntity(Empleado)
+  }
+
+  DTO(EmpleadoCreateDTO) {
+    - String nombres
+    - String apellidos
+    - String numeroIdentificacion
+    - String email
+    - String telefono
+    - String cargo
+    - LocalDate fechaContratacion
+    - BigDecimal salarioBase
+    - String rolSistema
+    --
+    + Empleado toEntity()
+    + void validarDatos()
+  }
+
+  DTO(EmpleadoUpdateDTO) {
+    - String nombres
+    - String apellidos
+    - String email
+    - String telefono
+    - String cargo
+    - BigDecimal salarioBase
+    --
+    + void aplicarCambios(Empleado empleado)
+  }
+
+  DTO(EmpleadoListDTO) {
+    - Long id
+    - String nombreCompleto
+    - String numeroIdentificacion
+    - String cargo
+    - String estado
+    - String rolSistema
+    - LocalDate fechaContratacion
+    --
+    + static List<EmpleadoListDTO> fromEntityList(List<Empleado>)
+  }
+
+  ' ===== REPOSITORIO =====
+  REPOSITORY(EmpleadoRepository) {
+    + Optional<Empleado> findById(Long id)
+    + List<Empleado> findAll()
+    + Optional<Empleado> findByNumeroIdentificacion(String numero)
+    + Optional<Empleado> findByEmail(String email)
+    + List<Empleado> findByEstado(EstadoEmpleado estado)
+    + List<Empleado> findByRolSistema(RolSistema rol)
+    + List<Empleado> findByCargoContainingIgnoreCase(String cargo)
+    + Boolean existsByNumeroIdentificacion(String numero)
+    + Boolean existsByEmail(String email)
+    + void deleteById(Long id)
+    + Empleado save(Empleado empleado)
+  }
+
+  ' ===== SERVICIO =====
+  SERVICE(EmpleadoService) {
+    - EmpleadoRepository empleadoRepository
+    --
+    + EmpleadoDTO crearEmpleado(EmpleadoCreateDTO dto)
+    + EmpleadoDTO actualizarEmpleado(Long id, EmpleadoUpdateDTO dto)
+    + EmpleadoDTO obtenerEmpleadoPorId(Long id)
+    + EmpleadoDTO obtenerEmpleadoPorNumeroIdentificacion(String numero)
+    + List<EmpleadoListDTO> obtenerTodosEmpleados()
+    + List<EmpleadoListDTO> obtenerEmpleadosActivos()
+    + List<EmpleadoListDTO> obtenerEmpleadosPorRol(RolSistema rol)
+    + List<EmpleadoListDTO> buscarEmpleadosPorCargo(String cargo)
+    + EmpleadoDTO cambiarEstadoEmpleado(Long id, EstadoEmpleado nuevoEstado)
+    + void eliminarEmpleado(Long id)
+    + Boolean validarNumeroIdentificacionUnico(String numero, Long empleadoId)
+    + Boolean validarEmailUnico(String email, Long empleadoId)
+  }
+
+  ' ===== CONTROLADOR =====
+  CONTROLLER(EmpleadoController) {
+    - EmpleadoService empleadoService
+    --
+    + ResponseEntity<EmpleadoDTO> crearEmpleado(EmpleadoCreateDTO dto)
+    + ResponseEntity<EmpleadoDTO> actualizarEmpleado(Long id, EmpleadoUpdateDTO dto)
+    + ResponseEntity<EmpleadoDTO> obtenerEmpleadoPorId(Long id)
+    + ResponseEntity<List<EmpleadoListDTO>> obtenerTodosEmpleados()
+    + ResponseEntity<List<EmpleadoListDTO>> obtenerEmpleadosActivos()
+    + ResponseEntity<List<EmpleadoListDTO>> obtenerEmpleadosPorRol(String rol)
+    + ResponseEntity<List<EmpleadoListDTO>> buscarEmpleadosPorCargo(String cargo)
+    + ResponseEntity<EmpleadoDTO> cambiarEstadoEmpleado(Long id, String estado)
+    + ResponseEntity<Void> eliminarEmpleado(Long id)
+    + ResponseEntity<EmpleadoDTO> obtenerPerfilPersonal()
+  }
+
+  ' ===== EXCEPCIONES =====
+  class EmpleadoNoEncontradoException {
+    + EmpleadoNoEncontradoException(String mensaje)
+    + EmpleadoNoEncontradoException(Long id)
+  }
+
+  class DuplicatedEmpleadoException {
+    + DuplicatedEmpleadoException(String campo, String valor)
+  }
+}
+
+' ===== RELACIONES =====
+Empleado ||--|| EstadoEmpleado : "tiene estado"
+Empleado ||--|| RolSistema : "tiene rol"
+
+EmpleadoController --> EmpleadoService : "usa"
+EmpleadoService --> EmpleadoRepository : "usa"
+EmpleadoRepository --> Empleado : "gestiona"
+
+EmpleadoService --> EmpleadoDTO : "produce"
+EmpleadoService --> EmpleadoCreateDTO : "consume"
+EmpleadoService --> EmpleadoUpdateDTO : "consume"
+EmpleadoService --> EmpleadoListDTO : "produce"
+
+EmpleadoController --> EmpleadoDTO : "retorna"
+EmpleadoController --> EmpleadoCreateDTO : "recibe"
+EmpleadoController --> EmpleadoUpdateDTO : "recibe"
+EmpleadoController --> EmpleadoListDTO : "retorna"
+
+EmpleadoService --> EmpleadoNoEncontradoException : "lanza"
+EmpleadoService --> DuplicatedEmpleadoException : "lanza"
+
+' ===== NOTAS =====
+note top of Empleado : Entidad central del sistema\nConecta con todos los dominios
+
+note right of EmpleadoService : Lógica de negocio\nValidaciones y transformaciones
+
+note bottom of EmpleadoRepository : Acceso a datos\nOperaciones CRUD y consultas
+
+note left of EmpleadoController : API REST\nEndpoints públicos segurizados
+
+@enduml

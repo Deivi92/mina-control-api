@@ -1,0 +1,32 @@
+@startuml sequence_consultar_produccion_empleado
+!theme plain
+
+title "Flujo de Consultar Producción por Empleado"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Producción" as ProduccionService
+participant "Base de Datos" as DB
+
+Usuario -> Cliente: Solicita consultar producción (idEmpleado, fechaDesde, fechaHasta)
+Cliente -> Gateway: GET /api/produccion?empleadoId={id}&fechaDesde={fecha}&fechaHasta={fecha}
+Gateway -> ProduccionService: GET /api/produccion?...
+
+ProduccionService -> DB: Buscar registros de producción con filtros aplicados
+DB --> ProduccionService: Retorna lista de registros de producción
+
+alt Registros encontrados
+    ProduccionService -> ProduccionService: Convertir entidades a DTOs
+    ProduccionService -> DB: Obtener datos adicionales (nombres de empleado, turno)
+    DB --> ProduccionService: Retorna datos relacionados
+    ProduccionService --> Gateway: Devuelve lista de RegistroProduccionDTO
+    Gateway --> Cliente: 200 OK (Lista de registros)
+    Cliente -> Usuario: Muestra datos de producción filtrados
+else No hay registros
+    ProduccionService --> Gateway: Devuelve lista vacía
+    Gateway --> Cliente: 200 OK (Lista vacía)
+    Cliente -> Usuario: Muestra mensaje "No hay registros en el período"
+end
+
+@enduml

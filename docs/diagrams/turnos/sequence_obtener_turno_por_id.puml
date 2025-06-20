@@ -1,0 +1,45 @@
+@startuml sequence_obtener_turno_por_id
+!theme materia-outline
+title Diagrama de Secuencia - Obtener Turno por ID
+
+' ===== PARTICIPANTES =====
+actor "Usuario\nAdministrador" as Usuario
+participant "TurnoController" as Controller
+participant "TurnoService" as Service
+participant "TurnoRepository" as Repository
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : GET /api/turnos/{id}
+
+activate Controller
+Controller -> Service : obtenerTurnoPorId(id)
+activate Service
+
+Service -> Repository : findById(id)
+activate Repository
+Repository -> DB : SELECT * FROM turnos WHERE id = {id}
+activate DB
+DB --> Repository : Optional<Turno>
+deactivate DB
+Repository --> Service : Optional<Turno>
+deactivate Repository
+
+alt Turno encontrado
+    Service -> Service : convertir entidad a DTO
+    note right: Mapear Turno a TurnoDTO, incluyendo capacidad disponible.
+    Service --> Controller : TurnoDTO
+    deactivate Service
+    Controller --> Usuario : 200 OK (TurnoDTO)
+else Turno no encontrado
+    Service --> Controller : throw RecursoNoEncontradoException
+    deactivate Service
+    Controller -> ManejadorExcepcionesGlobal : handleRecursoNoEncontrado
+    activate ManejadorExcepcionesGlobal
+    ManejadorExcepcionesGlobal --> Usuario : 404 Not Found
+    deactivate ManejadorExcepcionesGlobal
+end
+
+deactivate Controller
+
+@enduml

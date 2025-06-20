@@ -1,0 +1,184 @@
+@startuml class_diagram_autenticacion
+!theme materia-outline
+title Diagrama de Clases - Dominio Autenticación
+
+' ===== CONFIGURACIÓN =====
+!define ENTITY(x) class x << (E,#E8F5E8) Entity >>
+!define DTO(x) class x << (D,#E8E8F5) DTO >>
+!define SERVICE(x) class x << (S,#F5F5E8) Service >>
+!define CONTROLLER(x) class x << (C,#F5E8E8) Controller >>
+!define REPOSITORY(x) interface x << (R,#E8F5F5) Repository >>
+
+package "com.minacontrol.auth" {
+
+  ' ===== ENTIDADES =====
+  ENTITY(Usuario) {
+    - Long id
+    - String numeroIdentificacion
+    - String passwordHash
+    - Boolean passwordTemporal
+    - LocalDateTime ultimoAcceso
+    - String tokenRecuperacion
+    - LocalDateTime fechaExpiracionToken
+    - Integer intentosFallidos
+    - Boolean cuentaBloqueada
+    - LocalDateTime createdAt
+    - LocalDateTime updatedAt
+    --
+    + Boolean esPasswordTemporal()
+    + Boolean cuentaEstaBloqueada()
+    + Boolean tokenEsValido()
+    + void incrementarIntentosFallidos()
+    + void resetearIntentosFallidos()
+  }
+
+  ' ===== DTOs =====
+  DTO(LoginRequestDTO) {
+    - String numeroIdentificacion
+    - String password
+    --
+    + void validarDatos()
+  }
+
+  DTO(LoginResponseDTO) {
+    - String token
+    - String tipoToken
+    - Long empleadoId
+    - String rolSistema
+    - Boolean passwordTemporal
+    - LocalDateTime expiracion
+    --
+    + Boolean requiereCambioPassword()
+  }
+
+  DTO(CambioPasswordDTO) {
+    - String passwordActual
+    - String passwordNueva
+    - String confirmacionPassword
+    --
+    + void validarDatos()
+    + Boolean passwordsCoinciden()
+  }
+
+  DTO(RecuperarPasswordDTO) {
+    - String numeroIdentificacion
+    - String passwordTemporal
+    --
+    + void validarDatos()
+  }
+
+  ' ===== REPOSITORIO =====
+  REPOSITORY(UsuarioRepository) {
+    + Optional<Usuario> findById(Long id)
+    + Optional<Usuario> findByNumeroIdentificacion(String numeroIdentificacion)
+    + Boolean existsByNumeroIdentificacion(String numeroIdentificacion)
+    + Usuario save(Usuario usuario)
+    + void updatePasswordByUsuarioId(Long usuarioId, String passwordHash)
+    + void updateUltimoAcceso(Long usuarioId, LocalDateTime fechaAcceso)
+    + void updateTokenRecuperacion(Long usuarioId, String token, LocalDateTime expiracion)
+    + void updateIntentosFallidos(Long usuarioId, Integer intentos)
+    + void updateCuentaBloqueada(Long usuarioId, Boolean bloqueada)
+  }
+
+  ' ===== SERVICIO =====
+  SERVICE(AuthService) {
+    - UsuarioRepository usuarioRepository
+    - PasswordEncoder passwordEncoder
+    - JwtTokenProvider jwtTokenProvider
+    --
+    + LoginResponseDTO login(LoginRequestDTO loginRequest)
+    + void logout(String token)
+    + void cambiarPassword(Long empleadoId, CambioPasswordDTO cambioPassword)
+    + RecuperarPasswordDTO recuperarPassword(String numeroIdentificacion)
+    + Boolean validarToken(String token)
+    + void invalidarToken(String token)
+    + String generarPasswordTemporal()
+    + Boolean validarCredenciales(String numeroIdentificacion, String password)
+    + void actualizarUltimoAcceso(Long usuarioId)
+    + void bloquearCuenta(Long usuarioId)
+    + void desbloquearCuenta(Long usuarioId)
+  }
+
+  ' ===== CONTROLADOR =====
+  CONTROLLER(AuthController) {
+    - AuthService authService
+    --
+    + ResponseEntity<LoginResponseDTO> login(LoginRequestDTO loginRequest)
+    + ResponseEntity<Void> logout(HttpServletRequest request)
+    + ResponseEntity<Void> cambiarPassword(CambioPasswordDTO cambioPassword, Authentication auth)
+    + ResponseEntity<RecuperarPasswordDTO> recuperarPassword(String numeroIdentificacion)
+    + ResponseEntity<Boolean> validarToken(String token)
+    + ResponseEntity<Void> refresh(HttpServletRequest request)
+  }
+
+  ' ===== COMPONENTES DE SEGURIDAD =====
+  SERVICE(JwtTokenProvider) {
+    - String secretKey
+    - Long validityInMilliseconds
+    --
+    + String createToken(String numeroIdentificacion, String rol, Long empleadoId)
+    + Boolean validateToken(String token)
+    + String getNumeroIdentificacion(String token)
+    + String getRol(String token)
+    + Long getEmpleadoId(String token)
+    + Date getExpirationDate(String token)
+    + Boolean isTokenExpired(String token)
+  }
+
+  SERVICE(PasswordEncoder) {
+    + String encode(String rawPassword)
+    + Boolean matches(String rawPassword, String encodedPassword)
+    + String generateRandomPassword()
+  }
+
+  ' ===== EXCEPCIONES =====
+  class CredencialesInvalidasException {
+    + CredencialesInvalidasException(String mensaje)
+  }
+
+  class CuentaBloqueadaException {
+    + CuentaBloqueadaException(String numeroIdentificacion)
+  }
+
+  class TokenInvalidoException {
+    + TokenInvalidoException(String mensaje)
+  }
+
+  class PasswordTemporalException {
+    + PasswordTemporalException(String mensaje)
+  }
+}
+
+' ===== RELACIONES =====
+AuthController --> AuthService : "usa"
+AuthService --> UsuarioRepository : "usa"
+AuthService --> PasswordEncoder : "usa"
+AuthService --> JwtTokenProvider : "usa"
+
+UsuarioRepository --> Usuario : "gestiona"
+
+AuthService --> LoginResponseDTO : "produce"
+AuthService --> LoginRequestDTO : "consume"
+AuthService --> CambioPasswordDTO : "consume"
+AuthService --> RecuperarPasswordDTO : "produce"
+
+AuthController --> LoginRequestDTO : "recibe"
+AuthController --> LoginResponseDTO : "retorna"
+AuthController --> CambioPasswordDTO : "recibe"
+AuthController --> RecuperarPasswordDTO : "retorna"
+
+AuthService --> CredencialesInvalidasException : "lanza"
+AuthService --> CuentaBloqueadaException : "lanza"
+AuthService --> TokenInvalidoException : "lanza"
+AuthService --> PasswordTemporalException : "lanza"
+
+' ===== NOTAS =====
+note top of Usuario : Entidad de autenticación\nCredenciales y control de acceso
+
+note right of AuthService : Lógica de seguridad\nValidación y generación de tokens
+
+note bottom of JwtTokenProvider : Gestión de tokens JWT\nCreación y validación
+
+note left of AuthController : API de autenticación\nEndpoints de seguridad
+
+@enduml

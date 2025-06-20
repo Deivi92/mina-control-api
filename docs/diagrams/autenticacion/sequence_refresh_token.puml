@@ -1,0 +1,26 @@
+@startuml sequence_refresh_token
+!theme plain
+
+title "Flujo de Refresco de Token de Acceso"
+
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Autenticación" as AuthServer
+
+Cliente -> Gateway: POST /auth/refresh (con Refresh Token)
+Gateway -> AuthServer: POST /auth/refresh (con Refresh Token)
+
+AuthServer -> AuthServer: Valida el Refresh Token
+
+alt Refresh Token es válido
+    AuthServer -> AuthServer: Genera un nuevo Access Token
+    AuthServer --> Gateway: Devuelve el nuevo Access Token
+    Gateway --> Cliente: 200 OK (Nuevo Access Token)
+    Cliente -> Cliente: Actualiza el Access Token para futuras peticiones
+else Refresh Token es inválido o ha expirado
+    AuthServer --> Gateway: Devuelve error de autorización
+    Gateway --> Cliente: 401 Unauthorized (Token de refresco inválido)
+    Cliente -> Cliente: Redirige al usuario a la página de login
+end
+
+@enduml

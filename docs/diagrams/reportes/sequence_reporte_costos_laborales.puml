@@ -1,0 +1,49 @@
+@startuml sequence_reporte_costos_laborales
+!theme plain
+
+title "Flujo de Generar Reporte de Costos Laborales"
+
+actor Gerente
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Reportes" as ReportesService
+participant "Servicio de Nómina" as NominaService
+participant "Servicio de Producción" as ProduccionService
+participant "Servicio de Turnos" as TurnosService
+participant "Base de Datos" as DB
+
+Gerente -> Cliente: Solicita reporte de costos laborales para período específico
+Cliente -> Gateway: POST /api/reportes/costos-laborales (fechaDesde, fechaHasta, formato)
+Gateway -> ReportesService: POST /api/reportes/costos-laborales
+
+ReportesService -> NominaService: Obtener datos de nómina del período
+NominaService --> ReportesService: Retorna pagos realizados y costos por empleado
+
+ReportesService -> ProduccionService: Obtener datos de producción del período
+ProduccionService --> ReportesService: Retorna toneladas producidas
+
+ReportesService -> TurnosService: Obtener datos de horas trabajadas
+TurnosService --> ReportesService: Retorna horas totales trabajadas
+
+ReportesService -> ReportesService: Calcular ratios de eficiencia
+note right: - Costo por tonelada producida\n- Costo por hora trabajada\n- Productividad por empleado\n- Análisis de rentabilidad
+
+ReportesService -> ReportesService: Generar análisis comparativo con períodos anteriores
+
+alt Reporte ejecutivo (PDF)
+    ReportesService -> ReportesService: Generar dashboard ejecutivo con KPIs
+    ReportesService -> DB: Almacenar reporte ejecutivo
+    DB --> ReportesService: Retorna URL del reporte
+    ReportesService --> Gateway: Devuelve reporte con análisis financiero
+    Gateway --> Cliente: 200 OK (Reporte ejecutivo listo)
+    Cliente -> Gerente: Muestra análisis de costos y rentabilidad
+else Reporte detallado (Excel)
+    ReportesService -> ReportesService: Generar archivo con datos detallados y múltiples hojas
+    ReportesService -> DB: Almacenar reporte detallado
+    DB --> ReportesService: Retorna URL del archivo
+    ReportesService --> Gateway: Devuelve archivo para análisis profundo
+    Gateway --> Cliente: 200 OK (Reporte detallado listo)
+    Cliente -> Gerente: Proporciona datos para análisis financiero
+end
+
+@enduml

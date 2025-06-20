@@ -1,0 +1,55 @@
+@startuml sequence_actualizar_empleado
+!theme materia-outline
+title Diagrama de Secuencia - Actualizar Empleado
+
+' ===== PARTICIPANTES =====
+actor "Usuario\nAdministrador" as Usuario
+participant "EmpleadoController" as Controller
+participant "EmpleadoService" as Service
+participant "EmpleadoRepository" as Repository
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : PUT /api/empleados/{id}\n(EmpleadoUpdateDTO)
+note right : Request JSON:\n{\n  "cargo": "Operador Senior",\n  "salarioBase": 2800000,\n  "estado": "ACTIVO"\n}
+
+activate Controller
+Controller -> Controller : Validar datos de entrada
+
+alt Datos válidos
+    Controller -> Service : actualizarEmpleado(id, dto)
+    activate Service
+
+    Service -> Repository : findById(id)
+    activate Repository
+    Repository -> DB : SELECT * FROM empleados WHERE id = ?
+    DB --> Repository : Optional<Empleado>
+    deactivate Repository
+
+    alt Empleado existe
+        Service -> Service : Actualizar campos del empleado
+        note left: Se actualizan solo los campos\npermitidos desde el DTO.
+
+        Service -> Repository : save(empleadoActualizado)
+        activate Repository
+        Repository -> DB : UPDATE empleados SET ... WHERE id = ?
+        DB --> Repository : Empleado
+        deactivate Repository
+        Repository --> Service : Empleado actualizado
+
+        Service -> Service : convertir entidad a EmpleadoDetalleDTO
+        Service --> Controller : EmpleadoDetalleDTO
+        deactivate Service
+
+        Controller --> Usuario : 200 OK\n(EmpleadoDetalleDTO)
+    else Empleado no existe
+        Service --> Controller : throw RecursoNoEncontradoException
+        deactivate Service
+        Controller --> Usuario : 404 Not Found
+    end
+else Datos inválidos
+    Controller --> Usuario : 400 Bad Request
+end
+
+deactivate Controller
+@enduml

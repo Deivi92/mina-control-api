@@ -1,0 +1,39 @@
+@startuml sequence_actualizar_produccion
+!theme plain
+
+title "Flujo de Actualizar Registro de Producción"
+
+actor Administrador
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Producción" as ProduccionService
+participant "Base de Datos" as DB
+
+Administrador -> Cliente: Selecciona registro y modifica datos (cantidad, ubicación, observaciones)
+Cliente -> Gateway: PUT /api/produccion/{id} (datosActualizados)
+Gateway -> ProduccionService: PUT /api/produccion/{id} (datosActualizados)
+
+ProduccionService -> DB: Buscar registro de producción por ID
+DB --> ProduccionService: Retorna registro existente
+
+alt Registro existe
+    ProduccionService -> ProduccionService: Validar datos de entrada
+    alt Datos válidos
+        ProduccionService -> DB: Actualizar registro de producción
+        DB --> ProduccionService: Confirma actualización
+        ProduccionService -> ProduccionService: Convertir entidad a DTO
+        ProduccionService --> Gateway: Devuelve RegistroProduccionDTO actualizado
+        Gateway --> Cliente: 200 OK (Registro actualizado)
+        Cliente -> Administrador: Muestra confirmación de actualización
+    else Datos inválidos
+        ProduccionService --> Gateway: Devuelve error de validación
+        Gateway --> Cliente: 400 Bad Request (Datos inválidos)
+        Cliente -> Administrador: Muestra errores de validación
+    end
+else Registro no existe
+    ProduccionService --> Gateway: Devuelve error
+    Gateway --> Cliente: 404 Not Found (Registro no encontrado)
+    Cliente -> Administrador: Muestra mensaje de error
+end
+
+@enduml

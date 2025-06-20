@@ -1,0 +1,38 @@
+@startuml sequence_eliminar_produccion
+!theme plain
+
+title "Flujo de Eliminar Registro de Producción"
+
+actor Administrador
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Producción" as ProduccionService
+participant "Base de Datos" as DB
+
+Administrador -> Cliente: Selecciona registro y confirma eliminación
+Cliente -> Gateway: DELETE /api/produccion/{id}
+Gateway -> ProduccionService: DELETE /api/produccion/{id}
+
+ProduccionService -> DB: Buscar registro de producción por ID
+DB --> ProduccionService: Retorna registro existente
+
+alt Registro existe
+    ProduccionService -> ProduccionService: Validar que se puede eliminar (sin dependencias)
+    alt Eliminación permitida
+        ProduccionService -> DB: Eliminar registro de producción
+        DB --> ProduccionService: Confirma eliminación
+        ProduccionService --> Gateway: Devuelve confirmación
+        Gateway --> Cliente: 204 No Content (Registro eliminado)
+        Cliente -> Administrador: Muestra confirmación de eliminación
+    else Eliminación no permitida
+        ProduccionService --> Gateway: Devuelve error de conflicto
+        Gateway --> Cliente: 409 Conflict (No se puede eliminar)
+        Cliente -> Administrador: Muestra mensaje explicativo
+    end
+else Registro no existe
+    ProduccionService --> Gateway: Devuelve error
+    Gateway --> Cliente: 404 Not Found (Registro no encontrado)
+    Cliente -> Administrador: Muestra mensaje de error
+end
+
+@enduml

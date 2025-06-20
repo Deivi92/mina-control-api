@@ -1,0 +1,31 @@
+@startuml sequence_registrar_despacho
+!theme plain
+
+title "Flujo de Registrar Nuevo Despacho"
+
+actor Administrador
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Logística" as LogisticaService
+participant "Base de Datos" as DB
+
+Administrador -> Cliente: Ingresa datos del despacho (conductor, vehículo, cantidad, destino)
+Cliente -> Gateway: POST /api/despachos (datosDespacho)
+Gateway -> LogisticaService: POST /api/despachos (datosDespacho)
+
+LogisticaService -> LogisticaService: Validar datos de entrada
+alt Datos válidos
+    LogisticaService -> LogisticaService: Generar número de despacho único
+    LogisticaService -> DB: Crear registro de despacho
+    DB --> LogisticaService: Confirma creación con ID generado
+    LogisticaService -> LogisticaService: Convertir entidad a DTO
+    LogisticaService --> Gateway: Devuelve DespachoDTO creado
+    Gateway --> Cliente: 201 Created (Despacho registrado)
+    Cliente -> Administrador: Muestra confirmación con número de despacho
+else Datos inválidos
+    LogisticaService --> Gateway: Devuelve error de validación
+    Gateway --> Cliente: 400 Bad Request (Datos inválidos)
+    Cliente -> Administrador: Muestra errores de validación
+end
+
+@enduml

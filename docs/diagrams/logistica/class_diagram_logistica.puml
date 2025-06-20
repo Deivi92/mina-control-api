@@ -1,0 +1,234 @@
+@startuml class_diagram_logistica
+!theme materia-outline
+title Diagrama de Clases - Dominio Logística
+
+' ===== CONFIGURACIÓN =====
+!define ENTITY(x) class x << (E,#E8F5E8) Entity >>
+!define DTO(x) class x << (D,#E8E8F5) DTO >>
+!define SERVICE(x) class x << (S,#F5F5E8) Service >>
+!define CONTROLLER(x) class x << (C,#F5E8E8) Controller >>
+!define REPOSITORY(x) interface x << (R,#E8F5F5) Repository >>
+
+package "com.minacontrol.logistica" {
+
+  ' ===== ENTIDADES =====
+  ENTITY(Despacho) {
+    - Long id
+    - String numeroDespacho
+    - String nombreConductor
+    - String numeroLicencia
+    - String telefonoConductor
+    - String placaVehiculo
+    - String modeloVehiculo
+    - BigDecimal capacidadToneladas
+    - BigDecimal cantidadDespachadaToneladas
+    - String destino
+    - LocalDate fechaProgramada
+    - LocalDateTime fechaSalida
+    - LocalDateTime fechaEntrega
+    - EstadoDespacho estado
+    - String observaciones
+    - Long registradoPor
+    - LocalDateTime createdAt
+    - LocalDateTime updatedAt
+    --
+    + String getDescripcionCompleta()
+    + Boolean puedeModificar()
+    + Boolean estaEnTransito()
+    + Boolean estaEntregado()
+    + BigDecimal getCapacidadDisponible()
+    + Duration getTiempoEnTransito()
+  }
+
+  ' ===== ENUMS =====
+  enum EstadoDespacho {
+    PROGRAMADO
+    EN_TRANSITO
+    ENTREGADO
+    CANCELADO
+    --
+    + String getDescripcion()
+    + Boolean puedeModificar()
+    + Boolean esFinal()
+  }
+
+  ' ===== DTOs =====
+  DTO(DespachoDTO) {
+    - Long id
+    - String numeroDespacho
+    - String nombreConductor
+    - String numeroLicencia
+    - String telefonoConductor
+    - String placaVehiculo
+    - String modeloVehiculo
+    - BigDecimal capacidadToneladas
+    - BigDecimal cantidadDespachadaToneladas
+    - String destino
+    - LocalDate fechaProgramada
+    - LocalDateTime fechaSalida
+    - LocalDateTime fechaEntrega
+    - String estado
+    - String observaciones
+    - BigDecimal capacidadDisponible
+    --
+    + static DespachoDTO fromEntity(Despacho despacho)
+  }
+
+  DTO(DespachoCreateDTO) {
+    - String nombreConductor
+    - String numeroLicencia
+    - String telefonoConductor
+    - String placaVehiculo
+    - String modeloVehiculo
+    - BigDecimal capacidadToneladas
+    - BigDecimal cantidadDespachadaToneladas
+    - String destino
+    - LocalDate fechaProgramada
+    - String observaciones
+    --
+    + Despacho toEntity()
+    + void validarDatos()
+  }
+
+  DTO(DespachoUpdateDTO) {
+    - String nombreConductor
+    - String numeroLicencia
+    - String telefonoConductor
+    - BigDecimal cantidadDespachadaToneladas
+    - String destino
+    - LocalDate fechaProgramada
+    - String observaciones
+    --
+    + void aplicarCambios(Despacho despacho)
+  }
+
+  DTO(DespachoListDTO) {
+    - Long id
+    - String numeroDespacho
+    - String nombreConductor
+    - String placaVehiculo
+    - BigDecimal cantidadDespachadaToneladas
+    - String destino
+    - LocalDate fechaProgramada
+    - String estado
+    --
+    + static List<DespachoListDTO> fromEntityList(List<Despacho> despachos)
+  }
+
+  DTO(ResumenDespachosDTO) {
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - Integer totalDespachos
+    - BigDecimal totalToneladas
+    - Integer despachosEntregados
+    - Integer despachosEnTransito
+    - Integer despachosProgramados
+    - BigDecimal promedioDiario
+    --
+    + static ResumenDespachosDTO fromDespachos(List<Despacho> despachos)
+  }
+
+  ' ===== REPOSITORIO =====
+  REPOSITORY(DespachoRepository) {
+    + Optional<Despacho> findById(Long id)
+    + List<Despacho> findAll()
+    + Optional<Despacho> findByNumeroDespacho(String numeroDespacho)
+    + List<Despacho> findByEstado(EstadoDespacho estado)
+    + List<Despacho> findByFechaProgramada(LocalDate fecha)
+    + List<Despacho> findByFechaProgramadaBetween(LocalDate inicio, LocalDate fin)
+    + List<Despacho> findByDestino(String destino)
+    + List<Despacho> findByNombreConductor(String nombreConductor)
+    + List<Despacho> findByPlacaVehiculo(String placaVehiculo)
+    + BigDecimal sumCantidadByFechaBetween(LocalDate inicio, LocalDate fin)
+    + Integer countByEstadoAndFechaBetween(EstadoDespacho estado, LocalDate inicio, LocalDate fin)
+    + Boolean existsByNumeroDespacho(String numeroDespacho)
+    + Despacho save(Despacho despacho)
+    + void deleteById(Long id)
+  }
+
+  ' ===== SERVICIO =====
+  SERVICE(LogisticaService) {
+    - DespachoRepository despachoRepository
+    --
+    + DespachoDTO registrarDespacho(DespachoCreateDTO dto)
+    + DespachoDTO actualizarDespacho(Long id, DespachoUpdateDTO dto)
+    + DespachoDTO obtenerDespachoPorId(Long id)
+    + DespachoDTO obtenerDespachoPorNumero(String numeroDespacho)
+    + List<DespachoListDTO> obtenerTodosDespachos()
+    + List<DespachoListDTO> obtenerDespachosPorEstado(EstadoDespacho estado)
+    + List<DespachoDTO> consultarDespachos(LocalDate inicio, LocalDate fin)
+    + List<DespachoListDTO> buscarDespachosPorDestino(String destino)
+    + List<DespachoListDTO> buscarDespachosPorConductor(String nombreConductor)
+    + DespachoDTO actualizarEstadoDespacho(Long id, EstadoDespacho nuevoEstado)
+    + void eliminarDespacho(Long id)
+    + ResumenDespachosDTO obtenerResumenPeriodo(LocalDate inicio, LocalDate fin)
+    + String generarNumeroDespacho()
+    + Boolean validarNumeroDespachoUnico(String numeroDespacho)
+  }
+
+  ' ===== CONTROLADOR =====
+  CONTROLLER(LogisticaController) {
+    - LogisticaService logisticaService
+    --
+    + ResponseEntity<DespachoDTO> registrarDespacho(DespachoCreateDTO dto)
+    + ResponseEntity<DespachoDTO> actualizarDespacho(Long id, DespachoUpdateDTO dto)
+    + ResponseEntity<DespachoDTO> obtenerDespachoPorId(Long id)
+    + ResponseEntity<DespachoDTO> obtenerDespachoPorNumero(String numeroDespacho)
+    + ResponseEntity<List<DespachoListDTO>> obtenerTodosDespachos()
+    + ResponseEntity<List<DespachoListDTO>> obtenerDespachosPorEstado(String estado)
+    + ResponseEntity<List<DespachoDTO>> consultarDespachos(String fechaInicio, String fechaFin)
+    + ResponseEntity<List<DespachoListDTO>> buscarDespachosPorDestino(String destino)
+    + ResponseEntity<List<DespachoListDTO>> buscarDespachosPorConductor(String nombreConductor)
+    + ResponseEntity<DespachoDTO> actualizarEstadoDespacho(Long id, String estado)
+    + ResponseEntity<Void> eliminarDespacho(Long id)
+    + ResponseEntity<ResumenDespachosDTO> obtenerResumenPeriodo(String fechaInicio, String fechaFin)
+  }
+
+  ' ===== EXCEPCIONES =====
+  class DespachoNoEncontradoException {
+    + DespachoNoEncontradoException(String mensaje)
+    + DespachoNoEncontradoException(Long id)
+  }
+
+  class NumeroDespachoExistenteException {
+    + NumeroDespachoExistenteException(String numeroDespacho)
+  }
+
+  class EstadoDespachoInvalidoException {
+    + EstadoDespachoInvalidoException(String estadoActual, String estadoNuevo)
+  }
+}
+
+' ===== RELACIONES =====
+Despacho ||--|| EstadoDespacho : "tiene estado"
+
+LogisticaController --> LogisticaService : "usa"
+LogisticaService --> DespachoRepository : "usa"
+DespachoRepository --> Despacho : "gestiona"
+
+LogisticaService --> DespachoDTO : "produce"
+LogisticaService --> DespachoCreateDTO : "consume"
+LogisticaService --> DespachoUpdateDTO : "consume"
+LogisticaService --> DespachoListDTO : "produce"
+LogisticaService --> ResumenDespachosDTO : "produce"
+
+LogisticaController --> DespachoDTO : "retorna"
+LogisticaController --> DespachoCreateDTO : "recibe"
+LogisticaController --> DespachoUpdateDTO : "recibe"
+LogisticaController --> DespachoListDTO : "retorna"
+LogisticaController --> ResumenDespachosDTO : "retorna"
+
+LogisticaService --> DespachoNoEncontradoException : "lanza"
+LogisticaService --> NumeroDespachoExistenteException : "lanza"
+LogisticaService --> EstadoDespachoInvalidoException : "lanza"
+
+' ===== NOTAS =====
+note top of Despacho : Entidad principal del dominio\nControl de salida de carbón
+
+note right of LogisticaService : Lógica de negocio\nValidaciones y generación de números
+
+note bottom of DespachoRepository : Acceso a datos\nConsultas por estado y fechas
+
+note left of LogisticaController : API REST\nEndpoints según casos de uso
+
+@enduml

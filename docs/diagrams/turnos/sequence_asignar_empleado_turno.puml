@@ -1,0 +1,190 @@
+@startuml sequence_asignar_empleado_turno
+!theme materia-outline
+title Diagrama de Secuencia - Asignar Empleado a Turno
+
+' ===== PARTICIPANTES =====
+actor "Administrador\no Gerente" as Admin
+participant "TurnoController" as Controller
+participant "AsignacionTurnoService" as AsignService
+participant "TurnoRepository" as TurnoRepo
+participant "AsignacionTurnoRepository" as AsignRepo
+participant "EmpleadoRepository" as EmpleadoRepo
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Admin -> Controller : POST /api/turnos/{turnoId}/asignaciones\n(AsignacionCreateDTO)
+note right : Request JSON:\n{\n  "empleadoId": 123,\n  "observaciones": "Asignación regular"\n}\n\nPath: turnoId = 456
+
+activate Controller
+Controller -> Controller : Validar parámetros\n(turnoId, empleadoId)
+
+alt Parámetros válidos
+    Controller -> AsignService : asignarEmpleado(dto)
+    activate AsignService
+    
+    ' ===== VALIDAR EXISTENCIA DEL TURNO =====
+    AsignService -> TurnoRepo : findById(turnoId)
+    activate TurnoRepo
+    TurnoRepo -> DB : SELECT * FROM turnos WHERE id = ?
+    activate DB
+    DB --> TurnoRepo : Turno encontrado
+    deactivate DB
+    TurnoRepo --> AsignService : Optional<Turno>
+    deactivate TurnoRepo
+    
+    alt Turno existe y está activo
+        ' ===== VALIDAR EXISTENCIA DEL EMPLEADO =====
+        AsignService -> EmpleadoRepo : findById(empleadoId)
+        activate EmpleadoRepo
+        EmpleadoRepo -> DB : SELECT * FROM empleados WHERE id = ?
+        activate DB
+        DB --> EmpleadoRepo : Empleado encontrado
+        deactivate DB
+        EmpleadoRepo --> AsignService : Optional<Empleado>
+        deactivate EmpleadoRepo
+        
+        alt Empleado existe y está activo
+            ' ===== VALIDAR CAPACIDAD DEL TURNO =====
+            AsignService -> AsignService : validarCapacidadTurno(turnoId)
+            AsignService -> AsignRepo : countByTurnoIdAndEstadoIn(turnoId, [ASIGNADO, CONFIRMADO])
+            activate AsignRepo
+            AsignRepo -> DB : SELECT COUNT(*) FROM asignaciones_turno\nWHERE turno_id = ? AND estado IN ('ASIGNADO', 'CONFIRMADO')
+            activate DB
+            DB --> AsignRepo : Cantidad actual asignados
+            deactivate DB
+            AsignRepo --> AsignService : Integer (empleados actuales)
+            deactivate AsignRepo
+            
+            alt Capacidad disponible
+                ' ===== VALIDAR DISPONIBILIDAD DEL EMPLEADO =====
+                AsignService -> AsignService : validarDisponibilidadEmpleado(empleadoId, fechaInicio, fechaFin)
+                AsignService -> AsignRepo : hasConflictoHorario(empleadoId, fechaInicio, fechaFin)
+                activate AsignRepo
+                AsignRepo -> DB : SELECT COUNT(*) FROM asignaciones_turno a\nJOIN turnos t ON a.turno_id = t.id\nWHERE a.empleado_id = ?\nAND a.estado IN ('ASIGNADO', 'CONFIRMADO')\nAND ((t.fecha_inicio <= ? AND t.fecha_fin > ?)\nOR (t.fecha_inicio < ? AND t.fecha_fin >= ?))
+                activate DB
+                DB --> AsignRepo : 0 (sin conflictos)
+                deactivate DB
+                AsignRepo --> AsignService : false
+                deactivate AsignRepo
+                
+                alt Empleado disponible
+                    ' ===== VERIFICAR DUPLICADOS =====
+                    AsignService -> AsignRepo : existsByEmpleadoAndTurno(empleadoId, turnoId)
+                    activate AsignRepo
+                    AsignRepo -> DB : SELECT COUNT(*) FROM asignaciones_turno\nWHERE empleado_id = ? AND turno_id = ?\nAND estado != 'CANCELADO'
+                    activate DB
+                    DB --> AsignRepo : 0 (no existe)
+                    deactivate DB
+                    AsignRepo --> AsignService : false
+                    deactivate AsignRepo
+                    
+                    alt No hay asignación duplicada
+                        ' ===== CREAR ASIGNACIÓN =====
+                        AsignService -> AsignService : crear AsignacionTurno
+                        note right : - Estado inicial: ASIGNADO\n- Fecha asignación: ahora\n- Confirmado: false\n- Timestamps automáticos
+                        
+                        ' ===== PERSISTIR =====
+                        AsignService -> AsignRepo : save(asignacion)
+                        activate AsignRepo
+                        AsignRepo -> DB : INSERT INTO asignaciones_turno (\n  empleado_id, turno_id, fecha_asignacion,\n  estado, observaciones, confirmado,\n  created_at, updated_at\n) VALUES (...)
+                        activate DB
+                        DB --> AsignRepo : AsignacionTurno con ID
+                        deactivate DB
+                        AsignRepo --> AsignService : AsignacionTurno persistida
+                        deactivate AsignRepo
+                        
+                        ' ===== OBTENER DATOS COMPLETOS PARA RESPUESTA =====
+                        AsignService -> AsignService : cargar datos completos (empleado, turno)
+                        
+                        ' ===== RESPUESTA =====
+                        AsignService -> AsignService : convertir a AsignacionTurnoDTO
+                        AsignService --> Controller : AsignacionTurnoDTO
+                        deactivate AsignService
+                        
+                        Controller --> Admin : 201 Created\n(AsignacionTurnoDTO)
+                        note left : Response JSON:\n{\n  "id": 789,\n  "empleadoId": 123,\n  "nombreEmpleado": "Juan Carlos García",\n  "turnoId": 456,\n  "fechaInicio": "2024-01-15T06:00:00",\n  "fechaFin": "2024-01-15T14:00:00",\n  "area": "EXTRACCION",\n  "estado": "ASIGNADO",\n  "confirmado": false,\n  "observaciones": "Asignación regular"\n}
+                    
+                    else Ya está asignado a este turno
+                        AsignService --> Controller : DuplicatedAsignacionException
+                        deactivate AsignService
+                        Controller --> Admin : 409 Conflict\n{"error": "El empleado ya está\nasignado a este turno"}
+                    end
+                
+                else Empleado no disponible (conflicto horario)
+                    AsignService --> Controller : EmpleadoNoDisponibleException
+                    deactivate AsignService
+                    Controller --> Admin : 409 Conflict\n{"error": "El empleado tiene otro\nturno en ese horario"}
+                end
+                
+            else Capacidad excedida
+                AsignService --> Controller : CapacidadExcedidaException
+                deactivate AsignService
+                Controller --> Admin : 409 Conflict\n{"error": "El turno ha alcanzado\nsu capacidad máxima"}
+            end
+            
+        else Empleado no encontrado o inactivo
+            AsignService --> Controller : EmpleadoNoEncontradoException
+            deactivate AsignService
+            Controller --> Admin : 404 Not Found\n{"error": "Empleado no encontrado\no inactivo"}
+        end
+        
+    else Turno no encontrado o no disponible
+        AsignService --> Controller : TurnoNoEncontradoException
+        deactivate AsignService
+        Controller --> Admin : 404 Not Found\n{"error": "Turno no encontrado\no no disponible para asignaciones"}
+    end
+    
+else Parámetros inválidos
+    Controller --> Admin : 400 Bad Request\n{"error": "IDs de turno o empleado inválidos"}
+end
+
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo Alternativo: Asignación Múltiple ==
+
+Admin -> Controller : POST /api/turnos/{turnoId}/asignaciones/multiple\n(List<AsignacionCreateDTO>)
+note right : Request JSON:\n{\n  "asignaciones": [\n    {"empleadoId": 123, "observaciones": "Regular"},\n    {"empleadoId": 124, "observaciones": "Reemplazo"},\n    {"empleadoId": 125, "observaciones": "Extra"}\n  ]\n}
+
+activate Controller
+Controller -> AsignService : asignarMultiplesEmpleados(turnoId, dtos)
+activate AsignService
+
+loop Para cada AsignacionCreateDTO
+    AsignService -> AsignService : ejecutar validaciones individuales
+    
+    alt Validaciones exitosas
+        AsignService -> AsignRepo : save(asignacion)
+        AsignService -> AsignService : agregar a lista de éxitos
+    else Error en validación
+        AsignService -> AsignService : agregar a lista de errores
+    end
+end
+
+AsignService --> Controller : AsignacionMultipleResultDTO\n(éxitos + errores)
+deactivate AsignService
+
+Controller --> Admin : 207 Multi-Status\n{\n  "exitosas": [...],\n  "errores": [{"empleadoId": 125, "error": "Capacidad excedida"}]\n}
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo de Error: Base de Datos No Disponible ==
+
+Admin -> Controller : POST /api/turnos/{turnoId}/asignaciones
+activate Controller
+Controller -> AsignService : asignarEmpleado(dto)
+activate AsignService
+AsignService -> TurnoRepo : findById(turnoId)
+activate TurnoRepo
+TurnoRepo -> DB : SELECT * FROM turnos WHERE id = ?
+activate DB
+DB --> TurnoRepo : Connection timeout
+deactivate DB
+TurnoRepo --> AsignService : DataAccessException
+deactivate TurnoRepo
+AsignService --> Controller : RuntimeException
+deactivate AsignService
+Controller --> Admin : 500 Internal Server Error\n{"error": "Error de conectividad con base de datos"}
+deactivate Controller
+
+@enduml

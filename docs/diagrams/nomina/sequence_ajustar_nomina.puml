@@ -1,0 +1,40 @@
+@startuml sequence_ajustar_nomina
+!theme plain
+
+title "Flujo de Ajustar Cálculos de Nómina"
+
+actor Gerente
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Nómina" as NominaService
+participant "Base de Datos" as DB
+
+Gerente -> Cliente: Identifica empleado y tipo de ajuste (bono, descuento, corrección)
+Cliente -> Gateway: PATCH /api/nomina/{id}/ajustar (tipoAjuste, monto, justificacion)
+Gateway -> NominaService: PATCH /api/nomina/{id}/ajustar
+
+NominaService -> DB: Buscar registro de nómina por ID
+DB --> NominaService: Retorna registro actual
+
+alt Registro existe y no está pagado
+    NominaService -> NominaService: Validar tipo de ajuste y monto
+    alt Ajuste válido
+        NominaService -> DB: Crear registro de ajuste y actualizar total de nómina
+        DB --> NominaService: Confirma ajuste
+        NominaService -> DB: Registrar justificación del ajuste
+        DB --> NominaService: Confirma registro de auditoría
+        NominaService --> Gateway: Devuelve nómina ajustada
+        Gateway --> Cliente: 200 OK (Ajuste aplicado)
+        Cliente -> Gerente: Muestra confirmación del ajuste
+    else Ajuste inválido
+        NominaService --> Gateway: Devuelve error de validación
+        Gateway --> Cliente: 400 Bad Request (Ajuste inválido)
+        Cliente -> Gerente: Muestra errores de validación
+    end
+else Registro no existe o ya está pagado
+    NominaService --> Gateway: Devuelve error
+    Gateway --> Cliente: 409 Conflict (No se puede ajustar)
+    Cliente -> Gerente: Muestra mensaje de error
+end
+
+@enduml

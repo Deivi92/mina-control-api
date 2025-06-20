@@ -1,0 +1,45 @@
+@startuml sequence_eliminar_empleado
+!theme materia-outline
+title Diagrama de Secuencia - Eliminar (Desactivar) Empleado
+
+' ===== PARTICIPANTES =====
+actor "Usuario\nAdministrador" as Usuario
+participant "EmpleadoController" as Controller
+participant "EmpleadoService" as Service
+participant "EmpleadoRepository" as Repository
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : DELETE /api/empleados/{id}
+activate Controller
+
+Controller -> Service : desactivarEmpleado(id)
+activate Service
+
+Service -> Repository : findById(id)
+activate Repository
+Repository -> DB : SELECT * FROM empleados WHERE id = ?
+DB --> Repository : Optional<Empleado>
+deactivate Repository
+
+alt Empleado existe y está activo
+    Service -> Service : Cambiar estado a INACTIVO
+    note left: Borrado lógico, no físico.\nEl registro se mantiene.
+
+    Service -> Repository : save(empleado)
+    activate Repository
+    Repository -> DB : UPDATE empleados SET estado = 'INACTIVO' WHERE id = ?
+    DB --> Repository : Empleado
+    deactivate Repository
+    Repository --> Service : Empleado actualizado
+    deactivate Service
+
+    Controller --> Usuario : 204 No Content
+else Empleado no existe o ya está inactivo
+    Service --> Controller : throw RecursoNoEnconftradoException
+    deactivate Service
+    Controller --> Usuario : 404 Not Found
+end
+
+deactivate Controller
+@enduml

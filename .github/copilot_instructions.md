@@ -37,6 +37,78 @@ public class EmpleadoController {
 - **Enfoque:** Solo extracción de carbón, gestión simplificada de conductores/vehículos
 - **Estado:** Dominio Empleado completamente implementado con tests
 
+## 1.1. Metodología de Desarrollo Progresivo
+
+**MinaControl Pro se construye siguiendo una metodología PROGRESIVA y SECUENCIAL donde cada fase se fundamenta en la anterior, garantizando coherencia arquitectónica y evitando retrocesos:**
+
+### 🏗️ Fases de Construcción (ORDEN OBLIGATORIO)
+
+#### **Fase 1: Fundación Conceptual** ✅ COMPLETADA
+
+1. **Casos de Uso de Alto Nivel** (`docs/casos_de_uso/casos_de_uso_alto_nivel.md`)
+   - Define TODOS los dominios, roles y flujos del sistema
+   - Establece la base funcional completa
+   - **Base para:** Diagramas de arquitectura y diseño de base de datos
+
+2. **Diagrama Entidad-Relación Completo** (`docs/diagrams/general/er_diagram_completo.puml`)
+   - Diseña TODA la estructura de base de datos
+   - Normaliza relaciones entre dominios
+   - **Base para:** Diagramas de clases y entidades JPA
+
+3. **Diagrama de Clases Completo** (`docs/diagrams/general/class_diagram_completo.puml`)
+   - Define TODA la estructura de código Java
+   - Establece DTOs, servicios, controllers y repositorios
+   - **Base para:** Implementación de código actual y futura
+
+4. **Diagrama de Arquitectura General** (`docs/diagrams/general/architecture_overview.puml`)
+   - Define la arquitectura completa del sistema
+   - Establece comunicación entre capas y componentes
+   - **Base para:** Implementación de cada dominio
+
+#### **Fase 2: Implementación por Dominios** 🚧 EN CURSO
+
+1. **Dominio Empleado** ✅ COMPLETADA
+   - Implementación completa con tests
+   - **Patrón de referencia** para todos los demás dominios
+
+2. **Próximos dominios** (siguiendo el patrón de Empleado):
+   - Turnos → Producción → Nómina → Logística → Reportes → Autenticación
+
+#### **Fase 3: Integración y Refinamiento** 📋 PLANIFICADA
+
+- Integración entre dominios
+- Optimizaciones transversales
+- Frontend React (futuro)
+
+### 🎯 Principios de la Metodología
+
+1. **NO RETROCEDER**: Cada fase completa es inmutable y sirve de base
+2. **COHERENCIA TOTAL**: Código debe seguir EXACTAMENTE los diagramas
+3. **PROGRESIÓN ORDENADA**: No saltar fases ni implementar fuera de orden
+4. **DOCUMENTACIÓN PRIMERO**: Casos de uso → Diagramas → Código
+5. **DOMINIO EMPLEADO = PATRÓN**: Replicar su estructura en todos los dominios
+
+### 📋 Estado Actual del Proyecto
+
+```text
+✅ Casos de Uso Alto Nivel      (Fundación funcional completa)
+✅ Diagrama ER Completo         (Base de datos completa) 
+✅ Diagrama Clases Completo     (Arquitectura de código completa)
+✅ Diagrama Arquitectura        (Comunicación entre componentes)
+✅ Dominio Empleado             (Patrón de implementación establecido)
+🚧 Próximo: Dominio Turnos      (Siguiendo patrón de Empleado)
+```
+
+### ⚠️ REGLAS CRÍTICAS para GitHub Copilot
+
+1. **SIEMPRE CONSULTAR** casos de uso antes de implementar funcionalidad
+2. **SIEMPRE SEGUIR** los diagramas ER y de clases existentes
+3. **SIEMPRE REPLICAR** el patrón del dominio Empleado
+4. **NUNCA MODIFICAR** fases completadas sin justificación arquitectónica
+5. **NUNCA IMPLEMENTAR** funcionalidad no definida en casos de uso
+
+**Esta metodología garantiza un desarrollo profesional, escalable y sin contradicciones arquitectónicas.**
+
 ## 2. Entorno de Desarrollo
 
 - **IDE:** Visual Studio Code

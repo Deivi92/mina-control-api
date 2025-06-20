@@ -1,0 +1,199 @@
+@startuml sequence_registrar_produccion
+!theme materia-outline
+title Diagrama de Secuencia - Registrar Producción
+
+' ===== PARTICIPANTES =====
+actor "Supervisor\no Operador" as Supervisor
+participant "ProduccionController" as Controller
+participant "ProduccionService" as Service
+participant "RegistroProduccionRepository" as RegistroRepo
+participant "TipoMaterialRepository" as MaterialRepo
+participant "TurnoRepository" as TurnoRepo
+participant "EmpleadoRepository" as EmpleadoRepo
+participant "MetricaService" as MetricaService
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Supervisor -> Controller : POST /api/produccion/registros\n(RegistroProduccionCreateDTO)
+note right : Request JSON:\n{\n  "fecha": "2024-01-15",\n  "turnoId": 456,\n  "empleadoId": 123,\n  "materialId": 5,\n  "cantidad": 2500.50,\n  "area": "EXTRACCION",\n  "equipoUtilizado": "EXC-001",\n  "observaciones": "Producción normal"\n}
+
+activate Controller
+Controller -> Controller : Validar formato JSON\ny campos requeridos
+
+alt Datos válidos
+    Controller -> Service : crearRegistro(dto)
+    activate Service
+    
+    ' ===== VALIDACIONES BÁSICAS =====
+    Service -> Service : validarDatosBasicos(dto)
+    note right : - Fecha no futura\n- Cantidad > 0\n- Área válida\n- Campos obligatorios
+    
+    ' ===== VALIDAR TURNO =====
+    Service -> TurnoRepo : findById(turnoId)
+    activate TurnoRepo
+    TurnoRepo -> DB : SELECT * FROM turnos WHERE id = ?
+    activate DB
+    DB --> TurnoRepo : Turno encontrado
+    deactivate DB
+    TurnoRepo --> Service : Optional<Turno>
+    deactivate TurnoRepo
+    
+    alt Turno existe y es válido para registro
+        ' ===== VALIDAR EMPLEADO =====
+        Service -> EmpleadoRepo : findById(empleadoId)
+        activate EmpleadoRepo
+        EmpleadoRepo -> DB : SELECT * FROM empleados WHERE id = ?
+        activate DB
+        DB --> EmpleadoRepo : Empleado encontrado
+        deactivate DB
+        EmpleadoRepo --> Service : Optional<Empleado>
+        deactivate EmpleadoRepo
+        
+        alt Empleado existe y está activo
+            ' ===== VALIDAR MATERIAL =====
+            Service -> MaterialRepo : findById(materialId)
+            activate MaterialRepo
+            MaterialRepo -> DB : SELECT * FROM tipos_material WHERE id = ?
+            activate DB
+            DB --> MaterialRepo : Material encontrado
+            deactivate DB
+            MaterialRepo --> Service : Optional<TipoMaterial>
+            deactivate MaterialRepo
+            
+            alt Material existe y está activo
+                ' ===== VALIDAR ASIGNACIÓN EMPLEADO-TURNO =====
+                Service -> Service : validarEmpleadoEnTurno(empleadoId, turnoId)
+                note right : Verificar que el empleado\nestá asignado al turno
+                
+                alt Empleado asignado al turno
+                    ' ===== VALIDAR DUPLICADOS =====
+                    Service -> RegistroRepo : existsByEmpleadoAndTurnoAndMaterial(empleadoId, turnoId, materialId)
+                    activate RegistroRepo
+                    RegistroRepo -> DB : SELECT COUNT(*) FROM registros_produccion\nWHERE empleado_id = ? AND turno_id = ?\nAND material_id = ? AND estado != 'RECHAZADO'
+                    activate DB
+                    DB --> RegistroRepo : 0 (no existe)
+                    deactivate DB
+                    RegistroRepo --> Service : false
+                    deactivate RegistroRepo
+                    
+                    alt No hay duplicados
+                        ' ===== CREAR REGISTRO =====
+                        Service -> Service : crear RegistroProduccion
+                        note right : - Estado inicial: REGISTRADO\n- Hora registro: ahora\n- Calcular valor estimado\n- Validar unidad de medida
+                        
+                        ' ===== PERSISTIR =====
+                        Service -> RegistroRepo : save(registro)
+                        activate RegistroRepo
+                        RegistroRepo -> DB : INSERT INTO registros_produccion (\n  fecha, turno_id, empleado_id, material_id,\n  cantidad, unidad_medida, area, equipo_utilizado,\n  observaciones, estado, hora_registro,\n  registrado_por_id, created_at, updated_at\n) VALUES (...)
+                        activate DB
+                        DB --> RegistroRepo : Registro con ID generado
+                        deactivate DB
+                        RegistroRepo --> Service : RegistroProduccion persistido
+                        deactivate RegistroRepo
+                        
+                        ' ===== ACTUALIZAR MÉTRICAS =====
+                        Service -> MetricaService : actualizarMetricasProduccion(fecha, area, materialId)
+                        activate MetricaService
+                        note right : Recalcular métricas\ndel día y período
+                        MetricaService -> MetricaService : calcular nuevas métricas
+                        MetricaService --> Service : métricas actualizadas
+                        deactivate MetricaService
+                        
+                        ' ===== CARGAR DATOS COMPLETOS =====
+                        Service -> Service : cargar datos para respuesta\n(empleado, turno, material)
+                        
+                        ' ===== RESPUESTA =====
+                        Service -> Service : convertir a RegistroProduccionDTO
+                        Service --> Controller : RegistroProduccionDTO
+                        deactivate Service
+                        
+                        Controller --> Supervisor : 201 Created\n(RegistroProduccionDTO)
+                        note left : Response JSON:\n{\n  "id": 789,\n  "fecha": "2024-01-15",\n  "nombreEmpleado": "Juan Carlos García",\n  "turnoDescripcion": "Turno matutino 06:00-14:00",\n  "nombreMaterial": "Carbón Antracita",\n  "cantidad": 2500.50,\n  "unidadMedida": "kg",\n  "area": "EXTRACCION",\n  "equipoUtilizado": "EXC-001",\n  "observaciones": "Producción normal",\n  "estado": "REGISTRADO",\n  "horaRegistro": "2024-01-15T10:30:00",\n  "valorEstimado": 1875000.00\n}
+                    
+                    else Ya existe registro similar
+                        Service --> Controller : DuplicatedRegistroException
+                        deactivate Service
+                        Controller --> Supervisor : 409 Conflict\n{"error": "Ya existe un registro\npara este empleado, turno y material"}
+                    end
+                
+                else Empleado no asignado al turno
+                    Service --> Controller : EmpleadoNoAsignadoException
+                    deactivate Service
+                    Controller --> Supervisor : 400 Bad Request\n{"error": "El empleado no está\nasignado a este turno"}
+                end
+                
+            else Material no encontrado o inactivo
+                Service --> Controller : MaterialNoEncontradoException
+                deactivate Service
+                Controller --> Supervisor : 404 Not Found\n{"error": "Material no encontrado\no inactivo"}
+            end
+            
+        else Empleado no encontrado o inactivo
+            Service --> Controller : EmpleadoNoEncontradoException
+            deactivate Service
+            Controller --> Supervisor : 404 Not Found\n{"error": "Empleado no encontrado\no inactivo"}
+        end
+        
+    else Turno no encontrado o no válido
+        Service --> Controller : TurnoNoEncontradoException
+        deactivate Service
+        Controller --> Supervisor : 404 Not Found\n{"error": "Turno no encontrado\no no está en estado válido"}
+    end
+    
+else Datos inválidos
+    Controller --> Supervisor : 400 Bad Request\n{"error": "Datos de registro inválidos"}
+end
+
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo Alternativo: Registro Múltiple ==
+
+Supervisor -> Controller : POST /api/produccion/registros/multiple\n(List<RegistroProduccionCreateDTO>)
+note right : Request JSON:\n{\n  "registros": [\n    {"turnoId": 456, "empleadoId": 123, "materialId": 5, "cantidad": 2500.50, ...},\n    {"turnoId": 456, "empleadoId": 124, "materialId": 5, "cantidad": 1800.75, ...},\n    {"turnoId": 456, "empleadoId": 123, "materialId": 7, "cantidad": 500.00, ...}\n  ]\n}
+
+activate Controller
+Controller -> Service : crearRegistrosMultiples(dtos)
+activate Service
+
+loop Para cada RegistroProduccionCreateDTO
+    Service -> Service : ejecutar validaciones individuales
+    
+    alt Validaciones exitosas
+        Service -> RegistroRepo : save(registro)
+        Service -> Service : agregar a lista de éxitos
+    else Error en validación
+        Service -> Service : agregar a lista de errores
+        note right : Continuar con el siguiente\nsin interrumpir el proceso
+    end
+end
+
+alt Algún registro fue exitoso
+    Service -> MetricaService : actualizarMetricasProduccion(fecha, areas, materiales)
+    activate MetricaService
+    MetricaService -> MetricaService : recalcular métricas para todos los cambios
+    MetricaService --> Service : métricas actualizadas
+    deactivate MetricaService
+end
+
+Service --> Controller : RegistroMultipleResultDTO\n(éxitos + errores)
+deactivate Service
+
+Controller --> Supervisor : 207 Multi-Status\n{\n  "exitosos": [...],\n  "errores": [\n    {"indice": 2, "error": "Material no encontrado"},\n    {"indice": 4, "error": "Empleado no asignado al turno"}\n  ],\n  "totalProcesados": 5,\n  "totalExitosos": 3,\n  "totalErrores": 2\n}
+deactivate Controller
+
+' ===== SEPARADOR =====
+== Flujo de Error: Validación de Cantidad Excesiva ==
+
+Supervisor -> Controller : POST /api/produccion/registros\n(cantidad: 100000.00)
+activate Controller
+Controller -> Service : crearRegistro(dto)
+activate Service
+Service -> Service : validarDatosBasicos(dto)
+note right : Cantidad excede límites\nrazonables para el material\n(ej: > 50 toneladas por registro)
+Service --> Controller : DatosProduccionInvalidosException("Cantidad excede límite")
+deactivate Service
+Controller --> Supervisor : 400 Bad Request\n{"error": "La cantidad registrada\nexcede los límites permitidos"}
+deactivate Controller
+
+@enduml

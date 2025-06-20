@@ -1,0 +1,404 @@
+@startuml class_diagram_produccion
+!theme materia-outline
+title Diagrama de Clases - Dominio Producción
+
+' ===== CONFIGURACIÓN =====
+!define ENTITY(x) class x << (E,#E8F5E8) Entity >>
+!define DTO(x) class x << (D,#E8E8F5) DTO >>
+!define SERVICE(x) class x << (S,#F5F5E8) Service >>
+!define CONTROLLER(x) class x << (C,#F5E8E8) Controller >>
+!define REPOSITORY(x) interface x << (R,#E8F5F5) Repository >>
+
+package "com.minacontrol.produccion" {
+
+  ' ===== ENTIDADES =====
+  ENTITY(RegistroProduccion) {
+    - Long id
+    - Long empleadoId
+    - Long tipoTurnoId
+    - LocalDate fechaRegistro
+    - BigDecimal cantidadExtraidaToneladas
+    - String ubicacionExtraccion
+    - String observaciones
+    - Boolean validado
+    - Long registradoPor
+    - LocalDateTime createdAt
+    - LocalDateTime updatedAt
+    --
+    + String getDescripcionCompleta()
+    + Boolean puedeModificar()
+    + Boolean estaValidado()
+  }
+
+  ' ===== DTOs =====
+  DTO(RegistroProduccionDTO) {
+    - Long id
+    - Long empleadoId
+    - String nombreEmpleado
+    - Long tipoTurnoId
+    - String nombreTurno
+    - LocalDate fechaRegistro
+    - BigDecimal cantidadExtraidaToneladas
+    - String ubicacionExtraccion
+    - String observaciones
+    - Boolean validado
+    --
+    + static RegistroProduccionDTO fromEntity(RegistroProduccion registro)
+  }
+
+  DTO(RegistroProduccionCreateDTO) {
+    - Long empleadoId
+    - Long tipoTurnoId
+    - LocalDate fechaRegistro
+    - BigDecimal cantidadExtraidaToneladas
+    - String ubicacionExtraccion
+    - String observaciones
+    --
+    + RegistroProduccion toEntity()
+    + void validarDatos()
+  }
+
+  DTO(ProduccionEmpleadoDTO) {
+    - Long empleadoId
+    - String nombreEmpleado
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - BigDecimal totalToneladas
+    - Integer totalRegistros
+    - BigDecimal promedioDiario
+    --
+    + static List<ProduccionEmpleadoDTO> fromRegistros(List<RegistroProduccion> registros)
+  }
+
+  DTO(ProduccionFechaDTO) {
+    - LocalDate fecha
+    - BigDecimal totalToneladas
+    - Integer totalRegistros
+    - Integer empleadosInvolucrados
+    - List<RegistroProduccionDTO> registros
+    --
+    + static ProduccionFechaDTO fromRegistros(LocalDate fecha, List<RegistroProduccion> registros)
+  }
+
+  ' ===== REPOSITORIO =====
+  REPOSITORY(RegistroProduccionRepository) {
+    + Optional<RegistroProduccion> findById(Long id)
+    + List<RegistroProduccion> findAll()
+    + List<RegistroProduccion> findByEmpleadoId(Long empleadoId)
+    + List<RegistroProduccion> findByFechaRegistro(LocalDate fecha)
+    + List<RegistroProduccion> findByEmpleadoIdAndFechaBetween(Long empleadoId, LocalDate inicio, LocalDate fin)
+    + List<RegistroProduccion> findByFechaBetween(LocalDate inicio, LocalDate fin)
+    + List<RegistroProduccion> findByValidado(Boolean validado)
+    + BigDecimal sumCantidadByEmpleadoAndFechaBetween(Long empleadoId, LocalDate inicio, LocalDate fin)
+    + BigDecimal sumCantidadByFechaBetween(LocalDate inicio, LocalDate fin)
+    + RegistroProduccion save(RegistroProduccion registro)
+    + void deleteById(Long id)
+  }
+
+  ' ===== SERVICIO =====
+  SERVICE(ProduccionService) {
+    - RegistroProduccionRepository registroRepository
+    --
+    + RegistroProduccionDTO registrarProduccion(RegistroProduccionCreateDTO dto)
+    + RegistroProduccionDTO actualizarRegistroProduccion(Long id, RegistroProduccionCreateDTO dto)
+    + RegistroProduccionDTO obtenerRegistroPorId(Long id)
+    + List<RegistroProduccionDTO> obtenerTodosRegistros()
+    + List<ProduccionEmpleadoDTO> consultarProduccionPorEmpleado(Long empleadoId, LocalDate inicio, LocalDate fin)
+    + List<ProduccionFechaDTO> consultarProduccionPorFecha(LocalDate inicio, LocalDate fin)
+    + ProduccionFechaDTO consultarProduccionDiaria(LocalDate fecha)
+    + void eliminarRegistroProduccion(Long id)
+    + RegistroProduccionDTO validarRegistro(Long id)
+    + BigDecimal calcularTotalProduccionEmpleado(Long empleadoId, LocalDate inicio, LocalDate fin)
+    + BigDecimal calcularTotalProduccionPeriodo(LocalDate inicio, LocalDate fin)
+  }
+
+  ' ===== CONTROLADOR =====
+  CONTROLLER(ProduccionController) {
+    - ProduccionService produccionService
+    --
+    + ResponseEntity<RegistroProduccionDTO> registrarProduccion(RegistroProduccionCreateDTO dto)
+    + ResponseEntity<RegistroProduccionDTO> actualizarRegistroProduccion(Long id, RegistroProduccionCreateDTO dto)
+    + ResponseEntity<RegistroProduccionDTO> obtenerRegistroPorId(Long id)
+    + ResponseEntity<List<RegistroProduccionDTO>> obtenerTodosRegistros()
+    + ResponseEntity<List<ProduccionEmpleadoDTO>> consultarProduccionPorEmpleado(Long empleadoId, String fechaInicio, String fechaFin)
+    + ResponseEntity<List<ProduccionFechaDTO>> consultarProduccionPorFecha(String fechaInicio, String fechaFin)
+    + ResponseEntity<ProduccionFechaDTO> consultarProduccionDiaria(String fecha)
+    + ResponseEntity<Void> eliminarRegistroProduccion(Long id)
+    + ResponseEntity<RegistroProduccionDTO> validarRegistro(Long id)
+  }
+
+  ' ===== EXCEPCIONES =====
+  class RegistroProduccionNoEncontradoException {
+    + RegistroProduccionNoEncontradoException(String mensaje)
+    + RegistroProduccionNoEncontradoException(Long id)
+  }
+
+  class DatosProduccionInvalidosException {
+    + DatosProduccionInvalidosException(String campo, String valor)
+  }
+}
+
+' ===== RELACIONES =====
+ProduccionController --> ProduccionService : "usa"
+ProduccionService --> RegistroProduccionRepository : "usa"
+RegistroProduccionRepository --> RegistroProduccion : "gestiona"
+
+ProduccionService --> RegistroProduccionDTO : "produce"
+ProduccionService --> RegistroProduccionCreateDTO : "consume"
+ProduccionService --> ProduccionEmpleadoDTO : "produce"
+ProduccionService --> ProduccionFechaDTO : "produce"
+
+ProduccionController --> RegistroProduccionDTO : "retorna"
+ProduccionController --> RegistroProduccionCreateDTO : "recibe"
+ProduccionController --> ProduccionEmpleadoDTO : "retorna"
+ProduccionController --> ProduccionFechaDTO : "retorna"
+
+ProduccionService --> RegistroProduccionNoEncontradoException : "lanza"
+ProduccionService --> DatosProduccionInvalidosException : "lanza"
+
+' ===== NOTAS =====
+note top of RegistroProduccion : Entidad principal del dominio\nSolo extracción de carbón (toneladas)
+
+note right of ProduccionService : Lógica de negocio del dominio\nCálculos y validaciones
+
+note bottom of RegistroProduccionRepository : Acceso a datos\nConsultas agregadas para reportes
+
+note left of ProduccionController : API REST\nEndpoints según casos de uso
+
+@enduml
+  ' ===== DTOs =====
+  DTO(RegistroProduccionDTO) {
+    - Long id
+    - Long empleadoId
+    - String nombreEmpleado
+    - Long tipoTurnoId
+    - String nombreTurno
+    - LocalDate fechaRegistro
+    - BigDecimal cantidadExtraidaToneladas
+    - String ubicacionExtraccion
+    - String observaciones
+    - Boolean validado
+    --
+    + static RegistroProduccionDTO fromEntity(RegistroProduccion registro)
+  }
+
+  DTO(RegistroProduccionCreateDTO) {
+    - Long empleadoId
+    - Long tipoTurnoId
+    - LocalDate fechaRegistro
+    - BigDecimal cantidadExtraidaToneladas
+    - String ubicacionExtraccion
+    - String observaciones
+    --
+    + RegistroProduccion toEntity()
+    + void validarDatos()
+  }
+
+  DTO(ProduccionEmpleadoDTO) {
+    - Long empleadoId
+    - String nombreEmpleado
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - BigDecimal totalToneladas
+    - Integer totalRegistros
+    - BigDecimal promedioDiario
+    --
+    + static List<ProduccionEmpleadoDTO> fromRegistros(List<RegistroProduccion> registros)
+  }
+
+  DTO(ProduccionFechaDTO) {
+    - LocalDate fecha
+    - BigDecimal totalToneladas
+    - Integer totalRegistros
+    - Integer empleadosInvolucrados
+    - List<RegistroProduccionDTO> registros
+    --
+    + static ProduccionFechaDTO fromRegistros(LocalDate fecha, List<RegistroProduccion> registros)
+  }
+
+  ' ===== REPOSITORIOS =====
+  REPOSITORY(RegistroProduccionRepository) {
+    + Optional<RegistroProduccion> findById(Long id)
+    + List<RegistroProduccion> findAll()
+    + List<RegistroProduccion> findByFecha(LocalDate fecha)
+    + List<RegistroProduccion> findByTurnoId(Long turnoId)
+    + List<RegistroProduccion> findByEmpleadoId(Long empleadoId)
+    + List<RegistroProduccion> findByMaterialId(Long materialId)
+    + List<RegistroProduccion> findByArea(String area)
+    + List<RegistroProduccion> findByFechaBetween(LocalDate inicio, LocalDate fin)
+    + List<RegistroProduccion> findByEstado(EstadoRegistro estado)
+    + BigDecimal sumCantidadByMaterialAndFechaBetween(Long materialId, LocalDate inicio, LocalDate fin)
+    + RegistroProduccion save(RegistroProduccion registro)
+    + void deleteById(Long id)
+  }
+
+  REPOSITORY(TipoMaterialRepository) {
+    + Optional<TipoMaterial> findById(Long id)
+    + List<TipoMaterial> findAll()
+    + List<TipoMaterial> findByActivo(Boolean activo)
+    + Optional<TipoMaterial> findByNombre(String nombre)
+    + List<TipoMaterial> findByCategoria(String categoria)
+    + Boolean existsByNombre(String nombre)
+    + TipoMaterial save(TipoMaterial material)
+    + void deleteById(Long id)
+  }
+
+  REPOSITORY(MetricaProduccionRepository) {
+    + Optional<MetricaProduccion> findById(Long id)
+    + List<MetricaProduccion> findByFecha(LocalDate fecha)
+    + List<MetricaProduccion> findByPeriodo(String periodo)
+    + List<MetricaProduccion> findByArea(String area)
+    + List<MetricaProduccion> findByFechaBetween(LocalDate inicio, LocalDate fin)
+    + Optional<MetricaProduccion> findByFechaAndAreaAndMaterialId(LocalDate fecha, String area, Long materialId)
+    + MetricaProduccion save(MetricaProduccion metrica)
+    + void deleteByFechaBefore(LocalDate fecha)
+  }
+
+  REPOSITORY(EquipoProduccionRepository) {
+    + Optional<EquipoProduccion> findById(Long id)
+    + List<EquipoProduccion> findAll()
+    + List<EquipoProduccion> findByActivo(Boolean activo)
+    + List<EquipoProduccion> findByEstado(EstadoEquipo estado)
+    + List<EquipoProduccion> findByTipo(String tipo)
+    + Optional<EquipoProduccion> findByCodigo(String codigo)
+    + EquipoProduccion save(EquipoProduccion equipo)
+  }
+
+  ' ===== SERVICIOS =====
+  SERVICE(ProduccionService) {
+    - RegistroProduccionRepository registroRepository
+    - TipoMaterialRepository materialRepository
+    - MetricaProduccionRepository metricaRepository
+    --
+    + RegistroProduccionDTO crearRegistro(RegistroProduccionCreateDTO dto)
+    + RegistroProduccionDTO actualizarRegistro(Long id, RegistroProduccionCreateDTO dto)
+    + RegistroProduccionDTO obtenerRegistroPorId(Long id)
+    + List<RegistroProduccionDTO> obtenerRegistrosPorFecha(LocalDate fecha)
+    + List<RegistroProduccionDTO> obtenerRegistrosPorTurno(Long turnoId)
+    + List<RegistroProduccionDTO> obtenerRegistrosPorEmpleado(Long empleadoId)
+    + RegistroProduccionDTO aprobarRegistro(Long id)
+    + RegistroProduccionDTO rechazarRegistro(Long id, String motivo)
+    + void eliminarRegistro(Long id)
+    + Boolean validarDatosRegistro(RegistroProduccionCreateDTO dto)
+  }
+
+  SERVICE(MaterialService) {
+    - TipoMaterialRepository materialRepository
+    --
+    + TipoMaterialDTO crearMaterial(TipoMaterialCreateDTO dto)
+    + TipoMaterialDTO actualizarMaterial(Long id, TipoMaterialCreateDTO dto)
+    + TipoMaterialDTO obtenerMaterialPorId(Long id)
+    + List<TipoMaterialDTO> obtenerTodosMateriales()
+    + List<TipoMaterialDTO> obtenerMaterialesActivos()
+    + List<TipoMaterialDTO> obtenerMaterialesPorCategoria(String categoria)
+    + TipoMaterialDTO cambiarEstadoMaterial(Long id, Boolean activo)
+    + void eliminarMaterial(Long id)
+    + Boolean validarNombreUnico(String nombre, Long materialId)
+  }
+
+  SERVICE(MetricaService) {
+    - MetricaProduccionRepository metricaRepository
+    - RegistroProduccionRepository registroRepository
+    --
+    + List<MetricaProduccionDTO> calcularMetricasDiarias(LocalDate fecha)
+    + List<MetricaProduccionDTO> calcularMetricasPeriodo(LocalDate inicio, LocalDate fin, TipoPeriodo tipo)
+    + MetricaProduccionDTO obtenerMetricaPorArea(String area, LocalDate fecha)
+    + ResumenProduccionDTO generarResumenPeriodo(LocalDate inicio, LocalDate fin)
+    + ReporteProduccionDTO generarReporte(LocalDate inicio, LocalDate fin, List<String> areas)
+    + void recalcularMetricas(LocalDate fecha)
+    + void actualizarMetricasAutomaticamente()
+    + List<MetricaProduccionDTO> obtenerTendencias(TipoPeriodo periodo, Integer ultimosPeriodos)
+  }
+
+  ' ===== CONTROLADORES =====
+  CONTROLLER(ProduccionController) {
+    - ProduccionService produccionService
+    --
+    + ResponseEntity<RegistroProduccionDTO> crearRegistro(RegistroProduccionCreateDTO dto)
+    + ResponseEntity<List<RegistroProduccionDTO>> obtenerRegistros(LocalDate fecha, String area)
+    + ResponseEntity<RegistroProduccionDTO> obtenerRegistroPorId(Long id)
+    + ResponseEntity<List<RegistroProduccionDTO>> obtenerRegistrosPorTurno(Long turnoId)
+    + ResponseEntity<RegistroProduccionDTO> aprobarRegistro(Long id)
+    + ResponseEntity<Void> eliminarRegistro(Long id)
+  }
+
+  CONTROLLER(MaterialController) {
+    - MaterialService materialService
+    --
+    + ResponseEntity<TipoMaterialDTO> crearMaterial(TipoMaterialCreateDTO dto)
+    + ResponseEntity<List<TipoMaterialDTO>> obtenerMateriales()
+    + ResponseEntity<TipoMaterialDTO> obtenerMaterialPorId(Long id)
+    + ResponseEntity<List<TipoMaterialDTO>> obtenerMaterialesPorCategoria(String categoria)
+    + ResponseEntity<TipoMaterialDTO> actualizarMaterial(Long id, TipoMaterialCreateDTO dto)
+    + ResponseEntity<Void> eliminarMaterial(Long id)
+  }
+
+  CONTROLLER(MetricaController) {
+    - MetricaService metricaService
+    --
+    + ResponseEntity<List<MetricaProduccionDTO>> obtenerMetricasDiarias(LocalDate fecha)
+    + ResponseEntity<ResumenProduccionDTO> obtenerResumenPeriodo(LocalDate inicio, LocalDate fin)
+    + ResponseEntity<ReporteProduccionDTO> generarReporte(LocalDate inicio, LocalDate fin, List<String> areas)
+    + ResponseEntity<List<MetricaProduccionDTO>> obtenerTendencias(String periodo, Integer ultimosPeriodos)
+    + ResponseEntity<Void> recalcularMetricas(LocalDate fecha)
+  }
+
+  ' ===== EXCEPCIONES =====
+  class RegistroProduccionNoEncontradoException {
+    + RegistroProduccionNoEncontradoException(Long id)
+  }
+
+  class MaterialNoEncontradoException {
+    + MaterialNoEncontradoException(Long id)
+  }
+
+  class DatosProduccionInvalidosException {
+    + DatosProduccionInvalidosException(String mensaje)
+  }
+
+  class CalculoMetricasException {
+    + CalculoMetricasException(String mensaje, Throwable causa)
+  }
+}
+
+' ===== RELACIONES PRINCIPALES =====
+RegistroProduccion ||--|| EstadoRegistro : "tiene estado"
+RegistroProduccion }o--|| TipoMaterial : "tipo de material"
+RegistroProduccion }o--|| EquipoProduccion : "usa equipo"
+
+MetricaProduccion }o--|| TipoMaterial : "métrica de material"
+EquipoProduccion ||--|| EstadoEquipo : "tiene estado"
+
+' ===== RELACIONES DE DEPENDENCIA =====
+ProduccionController --> ProduccionService : "usa"
+MaterialController --> MaterialService : "usa"
+MetricaController --> MetricaService : "usa"
+
+ProduccionService --> RegistroProduccionRepository : "usa"
+ProduccionService --> TipoMaterialRepository : "usa"
+ProduccionService --> MetricaProduccionRepository : "usa"
+
+MaterialService --> TipoMaterialRepository : "usa"
+
+MetricaService --> MetricaProduccionRepository : "usa"
+MetricaService --> RegistroProduccionRepository : "usa"
+
+' ===== RELACIONES DTO =====
+ProduccionService --> RegistroProduccionDTO : "produce"
+ProduccionService --> RegistroProduccionCreateDTO : "consume"
+
+MaterialService --> TipoMaterialDTO : "produce"
+MetricaService --> MetricaProduccionDTO : "produce"
+MetricaService --> ResumenProduccionDTO : "produce"
+MetricaService --> ReporteProduccionDTO : "produce"
+
+' ===== NOTAS =====
+note top of RegistroProduccion : Registro principal\nDatos de producción por turno
+
+note right of TipoMaterial : Catálogo de materiales\nPrecios y características
+
+note bottom of MetricaProduccion : Métricas agregadas\nCalculadas automáticamente
+
+note left of EquipoProduccion : Equipos de extracción\nControl de estado y rendimiento
+
+@enduml

@@ -1,0 +1,43 @@
+@startuml sequence_reporte_produccion
+!theme plain
+
+title "Flujo de Generar Reporte de Producción"
+
+actor Gerente
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Reportes" as ReportesService
+participant "Servicio de Producción" as ProduccionService
+participant "Servicio de Empleados" as EmpleadoService
+participant "Base de Datos" as DB
+
+Gerente -> Cliente: Configura parámetros del reporte (fechas, empleados, formato)
+Cliente -> Gateway: POST /api/reportes/produccion (parametros)
+Gateway -> ReportesService: POST /api/reportes/produccion
+
+ReportesService -> ProduccionService: Obtener datos de producción según parámetros
+ProduccionService --> ReportesService: Retorna datos de producción agregados
+
+ReportesService -> EmpleadoService: Obtener información de empleados relevantes
+EmpleadoService --> ReportesService: Retorna datos de empleados
+
+ReportesService -> ReportesService: Procesar y analizar datos (totales, promedios, tendencias)
+ReportesService -> ReportesService: Generar visualizaciones (gráficos, tablas)
+
+alt Formato PDF
+    ReportesService -> ReportesService: Generar documento PDF
+    ReportesService -> DB: Almacenar reporte generado
+    DB --> ReportesService: Retorna URL del reporte
+    ReportesService --> Gateway: Devuelve URL de descarga
+    Gateway --> Cliente: 200 OK (Reporte PDF listo)
+    Cliente -> Gerente: Proporciona enlace de descarga
+else Formato Excel
+    ReportesService -> ReportesService: Generar archivo Excel con múltiples hojas
+    ReportesService -> DB: Almacenar reporte generado
+    DB --> ReportesService: Retorna URL del reporte
+    ReportesService --> Gateway: Devuelve URL de descarga
+    Gateway --> Cliente: 200 OK (Reporte Excel listo)
+    Cliente -> Gerente: Proporciona enlace de descarga
+end
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml sequence_consultar_perfil_personal
+!theme plain
+
+title "Flujo de Consultar Perfil Personal"
+
+actor Empleado
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Empleados" as EmpleadoService
+participant "Base de Datos" as DB
+
+Empleado -> Cliente: Solicita ver su perfil personal
+Cliente -> Gateway: GET /api/empleados/perfil (con JWT token)
+Gateway -> EmpleadoService: GET /api/empleados/perfil (extrae ID del token)
+
+EmpleadoService -> DB: Buscar empleado por ID extraído del token
+DB --> EmpleadoService: Retorna datos del empleado
+
+alt Empleado existe y token válido
+    EmpleadoService -> EmpleadoService: Convertir entidad a DTO (solo datos propios)
+    EmpleadoService --> Gateway: Devuelve EmpleadoDTO personal
+    Gateway --> Cliente: 200 OK (Datos del perfil)
+    Cliente -> Empleado: Muestra información personal
+else Token inválido o empleado no existe
+    EmpleadoService --> Gateway: Devuelve error de autorización
+    Gateway --> Cliente: 401 Unauthorized (Acceso denegado)
+    Cliente -> Empleado: Redirige a login
+end
+
+@enduml

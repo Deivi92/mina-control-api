@@ -1,0 +1,23 @@
+@startuml sequence_consultar_asistencia
+!theme plain
+
+title "Flujo de Consultar Asistencia"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Turnos" as TurnosService
+participant "Base de Datos" as DB
+
+Usuario -> Cliente: Solicita ver registros de asistencia (con filtros de fecha/empleado)
+Cliente -> Gateway: GET /turnos/asistencia?fechaDesde=...&fechaHasta=...&idEmpleado=...
+Gateway -> TurnosService: GET /turnos/asistencia?...
+
+TurnosService -> DB: Consultar registros de asistencia con los filtros aplicados
+DB --> TurnosService: Retorna lista de registros de asistencia
+
+TurnosService --> Gateway: Devuelve la lista de registros
+Gateway --> Cliente: 200 OK (Lista de registros)
+Cliente -> Usuario: Muestra la información de asistencia en la interfaz
+
+@enduml

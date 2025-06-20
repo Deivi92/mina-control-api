@@ -1,0 +1,41 @@
+@startuml sequence_obtener_empleado_por_id
+!theme materia-outline
+title Diagrama de Secuencia - Obtener Empleado por ID
+
+' ===== PARTICIPANTES =====
+actor "Usuario\n(Admin/Gerente)" as Usuario
+participant "EmpleadoController" as Controller
+participant "EmpleadoService" as Service
+participant "EmpleadoRepository" as Repository
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : GET /api/empleados/{id}
+activate Controller
+
+Controller -> Service : obtenerEmpleadoPorId(id)
+activate Service
+
+Service -> Repository : findById(id)
+activate Repository
+Repository -> DB : SELECT * FROM empleados WHERE id = ?
+activate DB
+DB --> Repository : Optional<Empleado>
+deactivate DB
+Repository --> Service : Optional<Empleado>
+deactivate Repository
+
+alt Empleado encontrado
+    Service -> Service : convertir entidad a EmpleadoDetalleDTO
+    Service --> Controller : EmpleadoDetalleDTO
+    deactivate Service
+    Controller --> Usuario : 200 OK\n(EmpleadoDetalleDTO)
+else Empleado no encontrado
+    Service --> Controller : throw RecursoNoEncontradoException
+    deactivate Service
+    Controller -> Controller : Manejar excepción
+    Controller --> Usuario : 404 Not Found\n{"error": "Empleado no encontrado"}
+end
+
+deactivate Controller
+@enduml

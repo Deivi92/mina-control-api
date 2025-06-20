@@ -1,0 +1,40 @@
+@startuml sequence_actualizar_estado_despacho
+!theme plain
+
+title "Flujo de Actualizar Estado de Despacho"
+
+actor Administrador
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Logística" as LogisticaService
+participant "Base de Datos" as DB
+
+Administrador -> Cliente: Selecciona despacho y nuevo estado (PROGRAMADO/EN_TRANSITO/ENTREGADO/CANCELADO)
+Cliente -> Gateway: PATCH /api/despachos/{id}/estado (nuevoEstado)
+Gateway -> LogisticaService: PATCH /api/despachos/{id}/estado (nuevoEstado)
+
+LogisticaService -> DB: Buscar despacho por ID
+DB --> LogisticaService: Retorna datos del despacho
+
+alt Despacho existe
+    LogisticaService -> LogisticaService: Validar transición de estado
+    alt Transición válida
+        LogisticaService -> LogisticaService: Actualizar timestamps según estado (fechaSalida, fechaEntrega)
+        LogisticaService -> DB: Actualizar estado y timestamps del despacho
+        DB --> LogisticaService: Confirma actualización
+        LogisticaService -> LogisticaService: Convertir entidad a DTO
+        LogisticaService --> Gateway: Devuelve DespachoDTO actualizado
+        Gateway --> Cliente: 200 OK (Estado actualizado)
+        Cliente -> Administrador: Muestra confirmación del cambio de estado
+    else Transición inválida
+        LogisticaService --> Gateway: Devuelve error de validación
+        Gateway --> Cliente: 400 Bad Request (Transición de estado inválida)
+        Cliente -> Administrador: Muestra mensaje de error
+    end
+else Despacho no existe
+    LogisticaService --> Gateway: Devuelve error
+    Gateway --> Cliente: 404 Not Found (Despacho no encontrado)
+    Cliente -> Administrador: Muestra mensaje de error
+end
+
+@enduml

@@ -1,0 +1,31 @@
+@startuml sequence_registrar_entrada_salida
+!theme plain
+
+title "Flujo de Registrar Entrada/Salida de Empleado"
+
+actor Administrador
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Turnos" as TurnosService
+participant "Base de Datos" as DB
+
+Administrador -> Cliente: Selecciona empleado y tipo de registro (Entrada/Salida)
+Cliente -> Gateway: POST /turnos/asistencia (idEmpleado, tipo)
+Gateway -> TurnosService: POST /turnos/asistencia (idEmpleado, tipo)
+
+TurnosService -> DB: Buscar turno actual del empleado
+DB --> TurnosService: Retorna turno
+
+alt Turno encontrado
+    TurnosService -> DB: Crea nuevo registro de asistencia (entrada/salida) con timestamp
+    DB --> TurnosService: Confirma creación
+    TurnosService --> Gateway: Devuelve mensaje de éxito
+    Gateway --> Cliente: 201 Created (Asistencia registrada)
+    Cliente -> Administrador: Muestra confirmación
+else Turno no encontrado
+    TurnosService --> Gateway: Devuelve error
+    Gateway --> Cliente: 404 Not Found (Turno no asignado)
+    Cliente -> Administrador: Muestra mensaje de error
+end
+
+@enduml

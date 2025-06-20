@@ -1,0 +1,62 @@
+@startuml sequence_actualizar_turno
+!theme materia-outline
+title Diagrama de Secuencia - Actualizar Turno
+
+' ===== PARTICIPANTES =====
+actor "Usuario\nAdministrador" as Usuario
+participant "TurnoController" as Controller
+participant "TurnoService" as Service
+participant "TurnoRepository" as Repository
+database "Base de Datos" as DB
+
+' ===== FLUJO PRINCIPAL =====
+Usuario -> Controller : PUT /api/turnos/{id} (TurnoCreateDTO)
+
+activate Controller
+Controller -> Controller : Validar DTO
+
+alt DTO válido
+    Controller -> Service : actualizarTurno(id, dto)
+    activate Service
+
+    Service -> Repository : findById(id)
+    activate Repository
+    Repository -> DB : SELECT * FROM turnos WHERE id = {id}
+    activate DB
+    DB --> Repository : Optional<Turno> (turnoExistente)
+    deactivate DB
+    Repository --> Service : Optional<Turno>
+    deactivate Repository
+
+    alt Turno existe
+        Service -> Service : actualizarDatos(turnoExistente, dto)
+        note right: Validar reglas de negocio (ej: no cambiar fechas si ya hay asignaciones).
+        
+        Service -> Repository : save(turnoActualizado)
+        activate Repository
+        Repository -> DB : UPDATE turnos SET ... WHERE id = {id}
+        activate DB
+        DB --> Repository : Turno (actualizado)
+        deactivate DB
+        Repository --> Service : Turno (actualizado)
+        deactivate Repository
+
+        Service -> Service : convertir entidad a DTO
+        Service --> Controller : TurnoDTO
+        deactivate Service
+
+        Controller --> Usuario : 200 OK (TurnoDTO)
+    else Turno no existe
+        Service --> Controller : throw RecursoNoEncontradoException
+        deactivate Service
+        Controller -> ManejadorExcepcionesGlobal : handleRecursoNoEncontrado
+        activate ManejadorExcepcionesGlobal
+        ManejadorExcepcionesGlobal --> Usuario : 404 Not Found
+        deactivate ManejadorExcepcionesGlobal
+    end
+else DTO inválido
+    Controller --> Usuario : 400 Bad Request
+end
+
+deactivate Controller
+@enduml

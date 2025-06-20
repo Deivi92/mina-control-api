@@ -1,0 +1,32 @@
+@startuml sequence_registro
+!theme plain
+
+title "Flujo de Registro de Nuevo Usuario"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Autenticación" as AuthServer
+participant "Base de Datos" as DB
+
+Usuario -> Cliente: Completa formulario de registro (nombre, email, contraseña)
+Cliente -> Gateway: POST /auth/register (datos de registro)
+Gateway -> AuthServer: POST /auth/register (datos de registro)
+
+AuthServer -> DB: Verificar si el email ya existe
+DB --> AuthServer: Retorna resultado de la verificación
+
+alt Email no existe
+    AuthServer -> AuthServer: Hashear contraseña
+    AuthServer -> DB: Crear nuevo usuario con contraseña hasheada
+    DB --> AuthServer: Confirma creación de usuario
+    AuthServer --> Gateway: Devuelve mensaje de éxito
+    Gateway --> Cliente: 201 Created (Usuario creado)
+    Cliente -> Usuario: Muestra mensaje de registro exitoso
+else Email ya existe
+    AuthServer --> Gateway: Devuelve error de conflicto
+    Gateway --> Cliente: 409 Conflict (El email ya está en uso)
+    Cliente -> Usuario: Muestra mensaje de error
+end
+
+@enduml

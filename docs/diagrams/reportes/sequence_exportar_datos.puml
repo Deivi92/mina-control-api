@@ -1,0 +1,68 @@
+@startuml sequence_exportar_datos
+!theme plain
+
+title "Flujo de Exportar Datos Operacionales"
+
+actor Gerente
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Reportes" as ReportesService
+participant "Servicio de Empleados" as EmpleadoService
+participant "Servicio de Turnos" as TurnosService
+participant "Servicio de Producción" as ProduccionService
+participant "Servicio de Nómina" as NominaService
+participant "Base de Datos" as DB
+
+Gerente -> Cliente: Selecciona datasets y configura exportación
+Cliente -> Gateway: POST /api/reportes/exportar-datos (datasets, formato, filtros)
+Gateway -> ReportesService: POST /api/reportes/exportar-datos
+
+ReportesService -> ReportesService: Validar permisos para datasets solicitados
+
+alt Empleados seleccionados
+    ReportesService -> EmpleadoService: Extraer datos de empleados
+    EmpleadoService --> ReportesService: Retorna dataset de empleados
+end
+
+alt Asistencia seleccionada
+    ReportesService -> TurnosService: Extraer datos de asistencia
+    TurnosService --> ReportesService: Retorna dataset de asistencia
+end
+
+alt Producción seleccionada
+    ReportesService -> ProduccionService: Extraer datos de producción
+    ProduccionService --> ReportesService: Retorna dataset de producción
+end
+
+alt Nómina seleccionada
+    ReportesService -> NominaService: Extraer datos de nómina
+    NominaService --> ReportesService: Retorna dataset de nómina
+end
+
+ReportesService -> ReportesService: Consolidar datasets según formato solicitado
+
+alt Formato CSV
+    ReportesService -> ReportesService: Generar archivos CSV por dataset
+    ReportesService -> ReportesService: Crear archivo ZIP con todos los CSVs
+    ReportesService -> DB: Almacenar archivo de exportación
+    DB --> ReportesService: Retorna URL de descarga
+    ReportesService --> Gateway: Devuelve URL del archivo ZIP
+    Gateway --> Cliente: 200 OK (Exportación CSV lista)
+    Cliente -> Gerente: Proporciona descarga de datos en CSV
+else Formato JSON
+    ReportesService -> ReportesService: Generar estructura JSON consolidada
+    ReportesService -> DB: Almacenar archivo JSON
+    DB --> ReportesService: Retorna URL de descarga
+    ReportesService --> Gateway: Devuelve URL del archivo JSON
+    Gateway --> Cliente: 200 OK (Exportación JSON lista)
+    Cliente -> Gerente: Proporciona descarga de datos en JSON
+else Formato Excel
+    ReportesService -> ReportesService: Generar archivo Excel con múltiples hojas por dataset
+    ReportesService -> DB: Almacenar archivo Excel
+    DB --> ReportesService: Retorna URL de descarga
+    ReportesService --> Gateway: Devuelve URL del archivo Excel
+    Gateway --> Cliente: 200 OK (Exportación Excel lista)
+    Cliente -> Gerente: Proporciona descarga de datos en Excel
+end
+
+@enduml

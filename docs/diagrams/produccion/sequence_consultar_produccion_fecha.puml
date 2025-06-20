@@ -1,0 +1,30 @@
+@startuml sequence_consultar_produccion_fecha
+!theme plain
+
+title "Flujo de Consultar Producción por Fecha"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Producción" as ProduccionService
+participant "Base de Datos" as DB
+
+Usuario -> Cliente: Solicita consultar producción agregada (fechaDesde, fechaHasta)
+Cliente -> Gateway: GET /api/produccion/fecha?fechaDesde={fecha}&fechaHasta={fecha}
+Gateway -> ProduccionService: GET /api/produccion/fecha?...
+
+ProduccionService -> DB: Consultar registros agrupados por fecha en el rango
+DB --> ProduccionService: Retorna datos agregados de producción
+
+alt Datos encontrados
+    ProduccionService -> ProduccionService: Procesar y calcular totales por fecha
+    ProduccionService --> Gateway: Devuelve datos agregados de producción
+    Gateway --> Cliente: 200 OK (Datos de producción agregados)
+    Cliente -> Usuario: Muestra métricas de producción por fecha
+else No hay datos
+    ProduccionService --> Gateway: Devuelve datos vacíos
+    Gateway --> Cliente: 200 OK (Sin datos)
+    Cliente -> Usuario: Muestra mensaje "No hay producción en el período"
+end
+
+@enduml

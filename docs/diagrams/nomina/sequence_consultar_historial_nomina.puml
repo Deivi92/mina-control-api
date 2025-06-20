@@ -1,0 +1,38 @@
+@startuml sequence_consultar_historial_nomina
+!theme plain
+
+title "Flujo de Consultar Histórico de Pagos"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Nómina" as NominaService
+participant "Base de Datos" as DB
+
+Usuario -> Cliente: Solicita ver histórico de pagos (con filtros opcionales)
+Cliente -> Gateway: GET /api/nomina/historial?empleadoId=...&fechaDesde=...&fechaHasta=...
+Gateway -> NominaService: GET /api/nomina/historial
+
+NominaService -> NominaService: Validar permisos del usuario (Gerente ve todo, Empleado solo propio)
+
+alt Usuario autorizado
+    NominaService -> DB: Consultar registros de nómina según filtros y permisos
+    DB --> NominaService: Retorna histórico de pagos
+    
+    alt Registros encontrados
+        NominaService -> NominaService: Formatear datos de respuesta (ocultar información sensible si es empleado)
+        NominaService --> Gateway: Devuelve histórico de pagos
+        Gateway --> Cliente: 200 OK (Histórico de nómina)
+        Cliente -> Usuario: Muestra tabla/gráficos de histórico de pagos
+    else Sin registros
+        NominaService --> Gateway: Devuelve lista vacía
+        Gateway --> Cliente: 200 OK (Lista vacía)
+        Cliente -> Usuario: Muestra mensaje "Sin registros de pago"
+    end
+else Usuario no autorizado
+    NominaService --> Gateway: Devuelve error de autorización
+    Gateway --> Cliente: 403 Forbidden (Sin permisos)
+    Cliente -> Usuario: Muestra mensaje de acceso denegado
+end
+
+@enduml

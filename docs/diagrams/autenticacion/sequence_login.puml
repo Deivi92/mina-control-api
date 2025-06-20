@@ -1,0 +1,30 @@
+@startuml sequence_login
+!theme plain
+
+title "Flujo de Autenticación de Usuario (Login)"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Autenticación" as AuthServer
+participant "Base de Datos" as DB
+
+Usuario -> Cliente: Ingresa credenciales (email, contraseña)
+Cliente -> Gateway: POST /auth/login (credenciales)
+Gateway -> AuthServer: POST /auth/login (credenciales)
+
+AuthServer -> DB: Buscar usuario por email
+DB --> AuthServer: Retorna datos del usuario (hash de contraseña)
+
+alt Usuario existe y contraseña es correcta
+    AuthServer -> AuthServer: Generar Token JWT (Access Token y Refresh Token)
+    AuthServer --> Gateway: Devuelve Tokens
+    Gateway --> Cliente: 200 OK (Tokens)
+    Cliente -> Usuario: Muestra mensaje de éxito y redirige
+else Usuario no existe o contraseña es incorrecta
+    AuthServer --> Gateway: Devuelve error de autenticación
+    Gateway --> Cliente: 401 Unauthorized
+    Cliente -> Usuario: Muestra mensaje de error
+end
+
+@enduml

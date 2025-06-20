@@ -1,0 +1,42 @@
+@startuml sequence_reporte_asistencia
+!theme plain
+
+title "Flujo de Generar Reporte de Asistencia"
+
+actor Usuario
+participant "Cliente (Frontend)" as Cliente
+participant "API Gateway" as Gateway
+participant "Servicio de Reportes" as ReportesService
+participant "Servicio de Turnos" as TurnosService
+participant "Servicio de Empleados" as EmpleadoService
+participant "Base de Datos" as DB
+
+Usuario -> Cliente: Configura parámetros del reporte de asistencia
+Cliente -> Gateway: POST /api/reportes/asistencia (fechaDesde, fechaHasta, empleadoId?, formato)
+Gateway -> ReportesService: POST /api/reportes/asistencia
+
+ReportesService -> TurnosService: Obtener registros de asistencia del período
+TurnosService --> ReportesService: Retorna datos de entradas/salidas y excepciones
+
+ReportesService -> EmpleadoService: Obtener información de empleados involucrados
+EmpleadoService --> ReportesService: Retorna datos de empleados
+
+ReportesService -> ReportesService: Calcular métricas de asistencia
+note right: - Horas trabajadas por empleado\n- Días de asistencia vs ausencias\n- Puntualidad promedio\n- Excepciones y justificaciones
+
+ReportesService -> ReportesService: Generar análisis de puntualidad y ausentismo
+
+alt Formato Dashboard Web
+    ReportesService --> Gateway: Devuelve datos para dashboard interactivo
+    Gateway --> Cliente: 200 OK (Datos de dashboard)
+    Cliente -> Usuario: Muestra dashboard con gráficos interactivos
+else Formato PDF/Excel
+    ReportesService -> ReportesService: Generar documento con tablas y gráficos
+    ReportesService -> DB: Almacenar reporte generado
+    DB --> ReportesService: Retorna URL del archivo
+    ReportesService --> Gateway: Devuelve URL de descarga
+    Gateway --> Cliente: 200 OK (Reporte listo para descarga)
+    Cliente -> Usuario: Proporciona enlace de descarga
+end
+
+@enduml
