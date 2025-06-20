@@ -1,0 +1,288 @@
+@startuml class_diagram_turnos
+!theme materia-outline
+title Diagrama de Clases - Dominio Turnos
+
+' ===== CONFIGURACIÓN =====
+!define ENTITY(x) class x << (E,#E8F5E8) Entity >>
+!define DTO(x) class x << (D,#E8E8F5) DTO >>
+!define SERVICE(x) class x << (S,#F5F5E8) Service >>
+!define CONTROLLER(x) class x << (C,#F5E8E8) Controller >>
+!define REPOSITORY(x) interface x << (R,#E8F5F5) Repository >>
+
+package "com.minacontrol.turno" {
+
+  ' ===== ENTIDADES =====
+  ENTITY(TipoTurno) {
+    - Long id
+    - String nombre
+    - LocalTime horaInicio
+    - LocalTime horaFin
+    - String descripcion
+    - Boolean activo
+    - LocalDateTime createdAt
+    --
+    + Duration getDuracion()
+    + Boolean estaActivo()
+    + String getDescripcionCompleta()
+  }
+
+  ENTITY(AsignacionTurno) {
+    - Long id
+    - Long empleadoId
+    - Long tipoTurnoId
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - Boolean activo
+    - LocalDateTime createdAt
+    --
+    + Boolean estaActiva()
+    + Boolean esValidaEnFecha(LocalDate fecha)
+    + Duration getDuracionAsignacion()
+  }
+
+  ENTITY(RegistroAsistencia) {
+    - Long id
+    - Long empleadoId
+    - Long tipoTurnoId
+    - LocalDate fecha
+    - LocalDateTime horaEntrada
+    - LocalDateTime horaSalida
+    - BigDecimal horasTrabajadas
+    - String observaciones
+    - EstadoAsistencia estado
+    - Long registradoPor
+    - LocalDateTime createdAt
+    - LocalDateTime updatedAt
+    --
+    + BigDecimal calcularHorasTrabajadas()
+    + Boolean estaCompleto()
+    + Boolean tieneTardanza()
+    + Duration getTiempoTrabajado()
+  }
+
+  ' ===== ENUMS =====
+  enum EstadoAsistencia {
+    PRESENTE
+    AUSENTE
+    TARDANZA
+    PERMISO
+    --
+    + String getDescripcion()
+    + Boolean cuentaComoTrabajado()
+  }
+
+  ' ===== DTOs =====
+  DTO(TipoTurnoDTO) {
+    - Long id
+    - String nombre
+    - LocalTime horaInicio
+    - LocalTime horaFin
+    - String descripcion
+    - Boolean activo
+    - String duracion
+    --
+    + static TipoTurnoDTO fromEntity(TipoTurno tipoTurno)
+  }
+
+  DTO(TipoTurnoCreateDTO) {
+    - String nombre
+    - LocalTime horaInicio
+    - LocalTime horaFin
+    - String descripcion
+    --
+    + TipoTurno toEntity()
+    + void validarDatos()
+  }
+
+  DTO(AsignacionTurnoDTO) {
+    - Long id
+    - Long empleadoId
+    - String nombreEmpleado
+    - Long tipoTurnoId
+    - String nombreTurno
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - Boolean activo
+    --
+    + static AsignacionTurnoDTO fromEntity(AsignacionTurno asignacion)
+  }
+
+  DTO(AsignacionTurnoCreateDTO) {
+    - Long empleadoId
+    - Long tipoTurnoId
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    --
+    + AsignacionTurno toEntity()
+    + void validarDatos()
+  }
+
+  DTO(RegistroAsistenciaDTO) {
+    - Long id
+    - Long empleadoId
+    - String nombreEmpleado
+    - Long tipoTurnoId
+    - String nombreTurno
+    - LocalDate fecha
+    - LocalDateTime horaEntrada
+    - LocalDateTime horaSalida
+    - BigDecimal horasTrabajadas
+    - String estado
+    - String observaciones
+    --
+    + static RegistroAsistenciaDTO fromEntity(RegistroAsistencia registro)
+  }
+
+  DTO(RegistrarAsistenciaDTO) {
+    - Long empleadoId
+    - Long tipoTurnoId
+    - String tipoRegistro
+    - String observaciones
+    --
+    + RegistroAsistencia toEntity()
+    + void validarDatos()
+  }
+
+  DTO(ExcepcionAsistenciaDTO) {
+    - Long empleadoId
+    - LocalDate fecha
+    - String tipoExcepcion
+    - String motivo
+    - String observaciones
+    --
+    + void validarDatos()
+  }
+
+  ' ===== REPOSITORIOS =====
+  REPOSITORY(TipoTurnoRepository) {
+    + Optional<TipoTurno> findById(Long id)
+    + List<TipoTurno> findAll()
+    + List<TipoTurno> findByActivo(Boolean activo)
+    + Optional<TipoTurno> findByNombre(String nombre)
+    + Boolean existsByNombre(String nombre)
+    + TipoTurno save(TipoTurno tipoTurno)
+    + void deleteById(Long id)
+  }
+
+  REPOSITORY(AsignacionTurnoRepository) {
+    + Optional<AsignacionTurno> findById(Long id)
+    + List<AsignacionTurno> findByEmpleadoId(Long empleadoId)
+    + List<AsignacionTurno> findByTipoTurnoId(Long tipoTurnoId)
+    + List<AsignacionTurno> findByEmpleadoIdAndActivo(Long empleadoId, Boolean activo)
+    + Optional<AsignacionTurno> findByEmpleadoIdAndFecha(Long empleadoId, LocalDate fecha)
+    + AsignacionTurno save(AsignacionTurno asignacion)
+    + void deleteById(Long id)
+  }
+
+  REPOSITORY(RegistroAsistenciaRepository) {
+    + Optional<RegistroAsistencia> findById(Long id)
+    + List<RegistroAsistencia> findByEmpleadoId(Long empleadoId)
+    + List<RegistroAsistencia> findByFecha(LocalDate fecha)
+    + List<RegistroAsistencia> findByEmpleadoIdAndFechaBetween(Long empleadoId, LocalDate inicio, LocalDate fin)
+    + List<RegistroAsistencia> findByFechaBetween(LocalDate inicio, LocalDate fin)
+    + Optional<RegistroAsistencia> findByEmpleadoIdAndFecha(Long empleadoId, LocalDate fecha)
+    + List<RegistroAsistencia> findByEstado(EstadoAsistencia estado)
+    + BigDecimal sumHorasTrabajadasByEmpleadoAndFechaBetween(Long empleadoId, LocalDate inicio, LocalDate fin)
+    + RegistroAsistencia save(RegistroAsistencia registro)
+    + void deleteById(Long id)
+  }
+
+  ' ===== SERVICIOS =====
+  SERVICE(TurnoService) {
+    - TipoTurnoRepository tipoTurnoRepository
+    - AsignacionTurnoRepository asignacionRepository
+    - RegistroAsistenciaRepository asistenciaRepository
+    --
+    + TipoTurnoDTO configurarTurno(TipoTurnoCreateDTO dto)
+    + TipoTurnoDTO actualizarTurno(Long id, TipoTurnoCreateDTO dto)
+    + List<TipoTurnoDTO> obtenerTodosTurnos()
+    + List<TipoTurnoDTO> obtenerTurnosActivos()
+    + TipoTurnoDTO obtenerTurnoPorId(Long id)
+    + void eliminarTurno(Long id)
+    + AsignacionTurnoDTO asignarTurno(AsignacionTurnoCreateDTO dto)
+    + List<AsignacionTurnoDTO> obtenerAsignacionesPorEmpleado(Long empleadoId)
+    + RegistroAsistenciaDTO registrarEntradaSalida(RegistrarAsistenciaDTO dto)
+    + RegistroAsistenciaDTO gestionarExcepcion(ExcepcionAsistenciaDTO dto)
+    + List<RegistroAsistenciaDTO> consultarAsistencia(Long empleadoId, LocalDate inicio, LocalDate fin)
+    + List<RegistroAsistenciaDTO> consultarAsistenciaDiaria(LocalDate fecha)
+    + BigDecimal calcularHorasTrabajadasEmpleado(Long empleadoId, LocalDate inicio, LocalDate fin)
+  }
+
+  ' ===== CONTROLADOR =====
+  CONTROLLER(TurnoController) {
+    - TurnoService turnoService
+    --
+    + ResponseEntity<TipoTurnoDTO> configurarTurno(TipoTurnoCreateDTO dto)
+    + ResponseEntity<TipoTurnoDTO> actualizarTurno(Long id, TipoTurnoCreateDTO dto)
+    + ResponseEntity<List<TipoTurnoDTO>> obtenerTodosTurnos()
+    + ResponseEntity<List<TipoTurnoDTO>> obtenerTurnosActivos()
+    + ResponseEntity<TipoTurnoDTO> obtenerTurnoPorId(Long id)
+    + ResponseEntity<Void> eliminarTurno(Long id)
+    + ResponseEntity<AsignacionTurnoDTO> asignarTurno(AsignacionTurnoCreateDTO dto)
+    + ResponseEntity<List<AsignacionTurnoDTO>> obtenerAsignacionesPorEmpleado(Long empleadoId)
+    + ResponseEntity<RegistroAsistenciaDTO> registrarEntradaSalida(RegistrarAsistenciaDTO dto)
+    + ResponseEntity<RegistroAsistenciaDTO> gestionarExcepcion(ExcepcionAsistenciaDTO dto)
+    + ResponseEntity<List<RegistroAsistenciaDTO>> consultarAsistencia(Long empleadoId, String fechaInicio, String fechaFin)
+    + ResponseEntity<List<RegistroAsistenciaDTO>> consultarAsistenciaDiaria(String fecha)
+  }
+
+  ' ===== EXCEPCIONES =====
+  class TurnoNoEncontradoException {
+    + TurnoNoEncontradoException(String mensaje)
+    + TurnoNoEncontradoException(Long id)
+  }
+
+  class AsignacionTurnoInvalidaException {
+    + AsignacionTurnoInvalidaException(String mensaje)
+  }
+
+  class RegistroAsistenciaInvalidoException {
+    + RegistroAsistenciaInvalidoException(String mensaje)
+  }
+}
+
+' ===== RELACIONES =====
+TipoTurno ||--o{ AsignacionTurno : "tiene asignaciones"
+AsignacionTurno }o--|| TipoTurno : "es de tipo"
+RegistroAsistencia }o--|| TipoTurno : "en turno"
+RegistroAsistencia ||--|| EstadoAsistencia : "tiene estado"
+
+TurnoController --> TurnoService : "usa"
+TurnoService --> TipoTurnoRepository : "usa"
+TurnoService --> AsignacionTurnoRepository : "usa"
+TurnoService --> RegistroAsistenciaRepository : "usa"
+
+TipoTurnoRepository --> TipoTurno : "gestiona"
+AsignacionTurnoRepository --> AsignacionTurno : "gestiona"
+RegistroAsistenciaRepository --> RegistroAsistencia : "gestiona"
+
+TurnoService --> TipoTurnoDTO : "produce"
+TurnoService --> AsignacionTurnoDTO : "produce"
+TurnoService --> RegistroAsistenciaDTO : "produce"
+TurnoService --> TipoTurnoCreateDTO : "consume"
+TurnoService --> AsignacionTurnoCreateDTO : "consume"
+TurnoService --> RegistrarAsistenciaDTO : "consume"
+TurnoService --> ExcepcionAsistenciaDTO : "consume"
+
+TurnoController --> TipoTurnoDTO : "retorna"
+TurnoController --> AsignacionTurnoDTO : "retorna"
+TurnoController --> RegistroAsistenciaDTO : "retorna"
+TurnoController --> TipoTurnoCreateDTO : "recibe"
+TurnoController --> AsignacionTurnoCreateDTO : "recibe"
+TurnoController --> RegistrarAsistenciaDTO : "recibe"
+TurnoController --> ExcepcionAsistenciaDTO : "recibe"
+
+TurnoService --> TurnoNoEncontradoException : "lanza"
+TurnoService --> AsignacionTurnoInvalidaException : "lanza"
+TurnoService --> RegistroAsistenciaInvalidoException : "lanza"
+
+' ===== NOTAS =====
+note top of TipoTurno : Configuración de turnos\nHorarios estándar
+
+note right of AsignacionTurno : Relación empleado-turno\nPeriodo de asignación
+
+note bottom of RegistroAsistencia : Control diario de asistencia\nBase para cálculos de nómina
+
+note left of TurnoController : API REST\nEndpoints según casos de uso
+
+@enduml

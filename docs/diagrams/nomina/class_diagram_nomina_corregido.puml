@@ -1,0 +1,288 @@
+@startuml class_diagram_nomina
+!theme materia-outline
+title Diagrama de Clases - Dominio Nómina
+
+' ===== CONFIGURACIÓN =====
+!define ENTITY(x) class x << (E,#E8F5E8) Entity >>
+!define DTO(x) class x << (D,#E8E8F5) DTO >>
+!define SERVICE(x) class x << (S,#F5F5E8) Service >>
+!define CONTROLLER(x) class x << (C,#F5E8E8) Controller >>
+!define REPOSITORY(x) interface x << (R,#E8F5F5) Repository >>
+
+package "com.minacontrol.nomina" {
+
+  ' ===== ENTIDADES =====
+  ENTITY(PeriodoNomina) {
+    - Long id
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - Integer numeroSemana
+    - Integer año
+    - EstadoPeriodo estado
+    - Long calculadoPor
+    - LocalDateTime createdAt
+    - LocalDateTime updatedAt
+    --
+    + String getDescripcionPeriodo()
+    + Boolean puedeCalcular()
+    + Boolean estaCerrado()
+    + Duration getDuracionPeriodo()
+  }
+
+  ENTITY(CalculoNomina) {
+    - Long id
+    - Long periodoNominaId
+    - Long empleadoId
+    - BigDecimal horasTrabajadas
+    - BigDecimal horasExtras
+    - BigDecimal cantidadProducidaToneladas
+    - BigDecimal salarioBase
+    - BigDecimal bonificacionProduccion
+    - BigDecimal bonificacionAsistencia
+    - BigDecimal descuentos
+    - BigDecimal totalBruto
+    - BigDecimal deducciones
+    - BigDecimal totalNeto
+    - String observaciones
+    - LocalDateTime createdAt
+    - LocalDateTime updatedAt
+    --
+    + BigDecimal calcularTotalBruto()
+    + BigDecimal calcularTotalNeto()
+    + BigDecimal calcularBonificaciones()
+    + String generarResumen()
+  }
+
+  ENTITY(ComprobantePago) {
+    - Long id
+    - Long calculoNominaId
+    - String numeroComprobante
+    - LocalDateTime fechaGeneracion
+    - LocalDate fechaPago
+    - String rutaArchivoPdf
+    - EstadoComprobante estado
+    - LocalDateTime createdAt
+    --
+    + String getNombreArchivo()
+    + Boolean estaGenerado()
+    + Boolean estaEntregado()
+    + Boolean estaPagado()
+  }
+
+  ' ===== ENUMS =====
+  enum EstadoPeriodo {
+    ABIERTO
+    CALCULADO
+    PAGADO
+    CERRADO
+    --
+    + String getDescripcion()
+    + Boolean puedeModificar()
+  }
+
+  enum EstadoComprobante {
+    GENERADO
+    ENTREGADO
+    PAGADO
+    --
+    + String getDescripcion()
+    + Boolean esFinal()
+  }
+
+  ' ===== DTOs =====
+  DTO(PeriodoNominaDTO) {
+    - Long id
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - Integer numeroSemana
+    - Integer año
+    - String estado
+    - String calculadoPor
+    - Integer totalEmpleados
+    - BigDecimal montoTotal
+    --
+    + static PeriodoNominaDTO fromEntity(PeriodoNomina periodo)
+  }
+
+  DTO(CalcularNominaDTO) {
+    - LocalDate fechaInicio
+    - LocalDate fechaFin
+    - List<Long> empleadosIds
+    - Boolean incluirHorasExtras
+    - Boolean incluirBonificaciones
+    --
+    + void validarDatos()
+  }
+
+  DTO(CalculoNominaDTO) {
+    - Long id
+    - Long empleadoId
+    - String nombreEmpleado
+    - String numeroIdentificacion
+    - BigDecimal horasTrabajadas
+    - BigDecimal horasExtras
+    - BigDecimal cantidadProducidaToneladas
+    - BigDecimal salarioBase
+    - BigDecimal bonificacionProduccion
+    - BigDecimal bonificacionAsistencia
+    - BigDecimal descuentos
+    - BigDecimal totalBruto
+    - BigDecimal deducciones
+    - BigDecimal totalNeto
+    - String observaciones
+    --
+    + static CalculoNominaDTO fromEntity(CalculoNomina calculo)
+  }
+
+  DTO(AjusteNominaDTO) {
+    - String concepto
+    - BigDecimal monto
+    - Boolean esDeduccion
+    - String justificacion
+    --
+    + void validarDatos()
+  }
+
+  DTO(ComprobantePagoDTO) {
+    - Long id
+    - String numeroComprobante
+    - String nombreEmpleado
+    - String periodo
+    - LocalDateTime fechaGeneracion
+    - LocalDate fechaPago
+    - String estado
+    - String urlDescarga
+    --
+    + static ComprobantePagoDTO fromEntity(ComprobantePago comprobante)
+  }
+
+  ' ===== REPOSITORIOS =====
+  REPOSITORY(PeriodoNominaRepository) {
+    + Optional<PeriodoNomina> findById(Long id)
+    + List<PeriodoNomina> findAll()
+    + List<PeriodoNomina> findByEstado(EstadoPeriodo estado)
+    + List<PeriodoNomina> findByAño(Integer año)
+    + Optional<PeriodoNomina> findByNumeroSemanaAndAño(Integer semana, Integer año)
+    + List<PeriodoNomina> findByFechaBetween(LocalDate inicio, LocalDate fin)
+    + PeriodoNomina save(PeriodoNomina periodo)
+    + void deleteById(Long id)
+  }
+
+  REPOSITORY(CalculoNominaRepository) {
+    + Optional<CalculoNomina> findById(Long id)
+    + List<CalculoNomina> findByPeriodoNominaId(Long periodoId)
+    + List<CalculoNomina> findByEmpleadoId(Long empleadoId)
+    + Optional<CalculoNomina> findByPeriodoNominaIdAndEmpleadoId(Long periodoId, Long empleadoId)
+    + List<CalculoNomina> findByEmpleadoIdAndFechaBetween(Long empleadoId, LocalDateTime inicio, LocalDateTime fin)
+    + BigDecimal sumTotalNetoByPeriodoNominaId(Long periodoId)
+    + CalculoNomina save(CalculoNomina calculo)
+    + void deleteById(Long id)
+  }
+
+  REPOSITORY(ComprobantePagoRepository) {
+    + Optional<ComprobantePago> findById(Long id)
+    + Optional<ComprobantePago> findByCalculoNominaId(Long calculoId)
+    + Optional<ComprobantePago> findByNumeroComprobante(String numero)
+    + List<ComprobantePago> findByEstado(EstadoComprobante estado)
+    + List<ComprobantePago> findByFechaGeneracionBetween(LocalDateTime inicio, LocalDateTime fin)
+    + Boolean existsByNumeroComprobante(String numero)
+    + ComprobantePago save(ComprobantePago comprobante)
+    + void deleteById(Long id)
+  }
+
+  ' ===== SERVICIO =====
+  SERVICE(NominaService) {
+    - PeriodoNominaRepository periodoRepository
+    - CalculoNominaRepository calculoRepository
+    - ComprobantePagoRepository comprobanteRepository
+    - ProduccionService produccionService
+    - TurnoService turnoService
+    --
+    + List<CalculoNominaDTO> calcularNominaSemanal(CalcularNominaDTO dto)
+    + CalculoNominaDTO ajustarCalculoNomina(Long calculoId, AjusteNominaDTO ajuste)
+    + List<ComprobantePagoDTO> generarComprobantesPago(Long periodoId)
+    + List<CalculoNominaDTO> consultarHistorialPagos(Long empleadoId, LocalDate inicio, LocalDate fin)
+    + PeriodoNominaDTO crearPeriodoNomina(LocalDate inicio, LocalDate fin)
+    + List<PeriodoNominaDTO> obtenerTodosPeriodos()
+    + PeriodoNominaDTO obtenerPeriodoPorId(Long id)
+    + PeriodoNominaDTO cerrarPeriodo(Long periodoId)
+    + ComprobantePagoDTO obtenerComprobantePorId(Long comprobanteId)
+    + String generarNumeroComprobante()
+    + BigDecimal calcularBonificacionProduccion(Long empleadoId, BigDecimal cantidadProducida)
+    + BigDecimal calcularBonificacionAsistencia(Long empleadoId, BigDecimal horasTrabajadas)
+  }
+
+  ' ===== CONTROLADOR =====
+  CONTROLLER(NominaController) {
+    - NominaService nominaService
+    --
+    + ResponseEntity<List<CalculoNominaDTO>> calcularNominaSemanal(CalcularNominaDTO dto)
+    + ResponseEntity<CalculoNominaDTO> ajustarCalculoNomina(Long calculoId, AjusteNominaDTO ajuste)
+    + ResponseEntity<List<ComprobantePagoDTO>> generarComprobantesPago(Long periodoId)
+    + ResponseEntity<List<CalculoNominaDTO>> consultarHistorialPagos(Long empleadoId, String fechaInicio, String fechaFin)
+    + ResponseEntity<PeriodoNominaDTO> crearPeriodoNomina(String fechaInicio, String fechaFin)
+    + ResponseEntity<List<PeriodoNominaDTO>> obtenerTodosPeriodos()
+    + ResponseEntity<PeriodoNominaDTO> obtenerPeriodoPorId(Long id)
+    + ResponseEntity<PeriodoNominaDTO> cerrarPeriodo(Long periodoId)
+    + ResponseEntity<ComprobantePagoDTO> obtenerComprobantePorId(Long comprobanteId)
+    + ResponseEntity<Resource> descargarComprobante(Long comprobanteId)
+  }
+
+  ' ===== EXCEPCIONES =====
+  class PeriodoNominaNoEncontradoException {
+    + PeriodoNominaNoEncontradoException(String mensaje)
+    + PeriodoNominaNoEncontradoException(Long id)
+  }
+
+  class CalculoNominaInvalidoException {
+    + CalculoNominaInvalidoException(String mensaje)
+  }
+
+  class ComprobanteNoEncontradoException {
+    + ComprobanteNoEncontradoException(String mensaje)
+  }
+}
+
+' ===== RELACIONES =====
+PeriodoNomina ||--|| EstadoPeriodo : "tiene estado"
+PeriodoNomina ||--o{ CalculoNomina : "contiene cálculos"
+CalculoNomina }o--|| PeriodoNomina : "pertenece a"
+CalculoNomina ||--|| ComprobantePago : "genera comprobante"
+ComprobantePago }o--|| CalculoNomina : "corresponde a"
+ComprobantePago ||--|| EstadoComprobante : "tiene estado"
+
+NominaController --> NominaService : "usa"
+NominaService --> PeriodoNominaRepository : "usa"
+NominaService --> CalculoNominaRepository : "usa"
+NominaService --> ComprobantePagoRepository : "usa"
+
+PeriodoNominaRepository --> PeriodoNomina : "gestiona"
+CalculoNominaRepository --> CalculoNomina : "gestiona"
+ComprobantePagoRepository --> ComprobantePago : "gestiona"
+
+NominaService --> PeriodoNominaDTO : "produce"
+NominaService --> CalculoNominaDTO : "produce"
+NominaService --> ComprobantePagoDTO : "produce"
+NominaService --> CalcularNominaDTO : "consume"
+NominaService --> AjusteNominaDTO : "consume"
+
+NominaController --> PeriodoNominaDTO : "retorna"
+NominaController --> CalculoNominaDTO : "retorna"
+NominaController --> ComprobantePagoDTO : "retorna"
+NominaController --> CalcularNominaDTO : "recibe"
+NominaController --> AjusteNominaDTO : "recibe"
+
+NominaService --> PeriodoNominaNoEncontradoException : "lanza"
+NominaService --> CalculoNominaInvalidoException : "lanza"
+NominaService --> ComprobanteNoEncontradoException : "lanza"
+
+' ===== NOTAS =====
+note top of PeriodoNomina : Período de nómina semanal\nControl de estados
+
+note right of CalculoNomina : Cálculo individual por empleado\nIntegra asistencia y producción
+
+note bottom of ComprobantePago : Documento de pago\nGeneración de PDF
+
+note left of NominaController : API REST\nEndpoints según casos de uso
+
+@enduml
