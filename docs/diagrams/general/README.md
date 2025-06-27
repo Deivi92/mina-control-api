@@ -6,7 +6,9 @@ Este directorio contiene diagramas UML generales que abarcan múltiples módulos
 
 | Nombre de archivo | Descripción |
 |------------------|-------------|
-| `class_diagram_fase1.puml` | Diagrama de clases general para la Fase 1 del proyecto MinaControl Pro |
+| `architecture_overview.puml` | Vista general de la arquitectura del sistema |
+| `class_diagram_completo.puml` | Diagrama de clases completo del sistema |
+| `er_diagram_completo.puml` | Diagrama entidad-relación completo del sistema |
 
 ## Relación con el proyecto
 

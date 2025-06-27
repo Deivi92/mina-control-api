@@ -60,16 +60,20 @@ POST   /api/logistica/ordenes-compra                # Crear orden compra
 ## Diagramas Específicos del Dominio
 
 ### 1. `class_diagram_logistica.puml`
-- **Estado**: ⏳ Pendiente
+- **Estado**: ✅ Completado
 - **Contenido**: Clases de inventario, transporte y proveedores
 
-### 2. `sequence_movimiento_inventario.puml`
-- **Estado**: ⏳ Pendiente
-- **Contenido**: Flujo de registro de movimientos de inventario
+### 2. `sequence_registrar_despacho.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para registrar un nuevo despacho.
 
-### 3. `sequence_programar_transporte.puml`
-- **Estado**: ⏳ Pendiente
-- **Contenido**: Proceso de programación de transporte
+### 3. `sequence_consultar_despachos.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Proceso de consulta de despachos existentes.
+
+### 4. `sequence_actualizar_estado_despacho.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para actualizar el estado de un despacho.
 
 ## Integración con Otros Dominios
 

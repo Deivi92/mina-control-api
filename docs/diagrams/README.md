@@ -82,20 +82,18 @@ Para mantener esta documentación:
 
 ## Estado Actual de los Diagramas por Dominio
 
-- **empleados/**: ✅ Completado (class_diagram, 2 sequence_diagrams, README detallado)
-- **turnos/**: ✅ Completado (class_diagram, 2 sequence_diagrams, README detallado)
-- **produccion/**: ✅ Completado (class_diagram, 1 sequence_diagram, README detallado)
-- **nomina/**: ✅ Completado (class_diagram, README básico) 
-- **logistica/**: 📋 Pendiente (README creado, diagramas por desarrollar)
-- **reportes/**: 📋 Pendiente (README creado, diagramas por desarrollar)
+- **autenticacion/**: ✅ Completado (class_diagram, 6 sequence_diagrams, README detallado)
+- **empleados/**: ✅ Completado (class_diagram, 7 sequence_diagrams, README detallado)
+- **logistica/**: ✅ Completado (class_diagram, 3 sequence_diagrams, README detallado)
+- **nomina/**: ✅ Completado (class_diagram, 4 sequence_diagrams, README detallado)
+- **produccion/**: ✅ Completado (class_diagram, 5 sequence_diagrams, README detallado)
+- **reportes/**: ✅ Completado (class_diagram, 4 sequence_diagrams, README detallado)
+- **turnos/**: ✅ Completado (class_diagram, 9 sequence_diagrams, README detallado)
 
 ### Próximos Pasos
 
-1. Completar diagramas de secuencia para nómina
-2. Desarrollar diagramas completos para logística
-3. Desarrollar diagramas completos para reportes
-4. Validar que todos los diagramas estén alineados con los casos de uso
-5. Iniciar implementación progresiva basada en los diagramas
+1. Validar que todos los diagramas estén alineados con los casos de uso
+2. Iniciar implementación progresiva basada en los diagramas
 
 ## Importante: Metodología y Relación con Casos de Uso
 

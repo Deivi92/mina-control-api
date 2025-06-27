@@ -104,18 +104,28 @@ GET    /api/dashboards/{id}/export/pdf              # Dashboard a PDF
 
 ### 1. `class_diagram_reportes.puml`
 
-- **Estado**: ⏳ Pendiente
+- **Estado**: ✅ Completado
 - **Contenido**: Clases de reportes, dashboards y métricas
 
-### 2. `sequence_generar_reporte.puml`
+### 2. `sequence_reporte_produccion.puml`
 
-- **Estado**: ⏳ Pendiente
-- **Contenido**: Flujo de generación de reportes consolidados
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo de generación de reporte de producción.
 
-### 3. `sequence_dashboard_tiempo_real.puml`
+### 3. `sequence_reporte_asistencia.puml`
 
-- **Estado**: ⏳ Pendiente
-- **Contenido**: Actualización de dashboards en tiempo real
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo de generación de reporte de asistencia.
+
+### 4. `sequence_reporte_costos_laborales.puml`
+
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo de generación de reporte de costos laborales.
+
+### 5. `sequence_exportar_datos.puml`
+
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para exportar datos operacionales.
 
 ## Integración con Otros Dominios
 

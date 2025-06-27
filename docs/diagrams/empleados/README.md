@@ -12,30 +12,51 @@ Este dominio maneja la gestión integral del personal de la mina, desde el regis
 
 ## Diagramas Incluidos
 
-### 1. empleado_class_diagram.puml
-Diagrama de clases específico del dominio empleados, mostrando:
-- Entidades principales (Empleado, Usuario)
-- DTOs de entrada y salida
-- Servicios y controladores
-- Enums de estado y roles
+### ✅ Diagrama de Clases del Dominio
+- **Archivo**: `class_diagram_empleados.puml`
+- **Propósito**: Define la estructura de clases específica del dominio de empleados
+- **Contenido**: Entidades (Empleado, Usuario), DTOs, Servicios, Controladores, Repositorios y componentes de seguridad
+- **Estado**: ✅ Completado y alineado con ER y casos de uso
 
-### 2. empleado_sequence_registrar.puml
+### ✅ Diagramas de Secuencia
+
+### 1. sequence_crear_empleado.puml
 Diagrama de secuencia para el registro de nuevos empleados (CU-EMP-001):
 - Flujo completo desde el controlador hasta la persistencia
 - Creación de usuario y empleado
 - Validaciones y respuestas
 
-### 3. empleado_sequence_consultar.puml
-Diagrama de secuencia para consulta de empleados (CU-EMP-003):
+### 2. sequence_listar_empleados.puml
+Diagrama de secuencia para listar empleados:
 - Filtros por estado, rol, etc.
 - Transformación a DTOs
 - Respuesta estructurada
 
-### 4. empleado_sequence_actualizar.puml
+### 3. sequence_obtener_empleado_por_id.puml
+Diagrama de secuencia para obtener un empleado por ID:
+- Consulta de un empleado específico por su identificador
+- Manejo de empleado no encontrado
+
+### 4. sequence_actualizar_empleado.puml
 Diagrama de secuencia para actualización de empleados (CU-EMP-002):
 - Validación de existencia
 - Actualización de campos
 - Manejo de excepciones
+
+### 5. sequence_cambiar_estado_empleado.puml
+Diagrama de secuencia para cambiar el estado de un empleado (CU-EMP-004):
+- Activación o desactivación de empleados
+- Validaciones de estado
+
+### 6. sequence_consultar_perfil_personal.puml
+Diagrama de secuencia para consultar información personal (CU-EMP-005):
+- Consulta de perfil por el propio empleado
+- Restricciones de acceso
+
+### 7. sequence_eliminar_empleado.puml
+Diagrama de secuencia para eliminar un empleado:
+- Eliminación lógica o física de un empleado
+- Manejo de dependencias y restricciones
 
 ## Relación con Diagramas Generales
 - Basado en el `class_diagram_completo.puml` y `er_diagram_completo.puml`

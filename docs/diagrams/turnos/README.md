@@ -107,29 +107,51 @@ PUT    /api/turnos/intercambios/{id}   # Aprobar/rechazar intercambio
 
 ## Diagramas Específicos del Dominio
 
-### 1. `class_diagram_turnos.puml`
-- **Estado**: ⏳ Pendiente
+### 1. `class_diagram_turnos_corregido.puml`
+- **Estado**: ✅ Completado
 - **Contenido**: Clases específicas del dominio turnos
 - **Enfoque**: Entidades, DTOs, servicios, controladores y repositorios
 - **Basado en**: Diagrama de clases completo (sección turnos)
 
 ### 2. `sequence_crear_turno.puml`
-- **Estado**: ⏳ Pendiente
+- **Estado**: ✅ Completado
 - **Contenido**: Flujo para crear un nuevo turno
 - **Actores**: Administrador → Controller → Service → Repository → DB
 - **Validaciones**: Horarios válidos, capacidad, conflictos
 
 ### 3. `sequence_asignar_empleado_turno.puml`
-- **Estado**: ⏳ Pendiente
+- **Estado**: ✅ Completado
 - **Contenido**: Proceso de asignación empleado-turno
 - **Actores**: Administrador → Controller → Service → Repository → DB
 - **Validaciones**: Disponibilidad, capacidad, restricciones
 
-### 4. `sequence_consultar_turnos_empleado.puml`
-- **Estado**: ⏳ Pendiente
-- **Contenido**: Consulta de turnos asignados a un empleado
-- **Actores**: Empleado/Admin → Controller → Service → Repository → DB
-- **Filtros**: Por fecha, estado, tipo de turno
+### 4. `sequence_consultar_asistencia.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Consulta de asistencia de empleados.
+
+### 5. `sequence_actualizar_turno.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para actualizar un turno existente.
+
+### 6. `sequence_eliminar_turno.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para eliminar un turno.
+
+### 7. `sequence_gestionar_excepciones.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para gestionar excepciones en turnos.
+
+### 8. `sequence_listar_turnos.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para listar todos los turnos.
+
+### 9. `sequence_obtener_turno_por_id.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para obtener un turno por su ID.
+
+### 10. `sequence_registrar_entrada_salida.puml`
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para registrar la entrada y salida de empleados.
 
 ## Metodología de Construcción
 

@@ -88,23 +88,35 @@ GET    /api/nomina/reportes/comparativo             # Reporte comparativo
 
 ## Diagramas Específicos del Dominio
 
-### 1. `class_diagram_nomina.puml`
+### 1. `class_diagram_nomina_corregido.puml`
 
-- **Estado**: ⏳ Pendiente
+- **Estado**: ✅ Completado
 - **Contenido**: Clases específicas del dominio nómina
 - **Enfoque**: Entidades, DTOs, servicios y controladores
 
-### 2. `sequence_calcular_nomina.puml`
+### 2. `sequence_calcular_nomina_semanal.puml`
 
-- **Estado**: ⏳ Pendiente
-- **Contenido**: Flujo para calcular nómina mensual
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para calcular nómina semanal
 - **Validaciones**: Período válido, empleados activos, conceptos
 
-### 3. `sequence_generar_comprobantes.puml`
+### 3. `sequence_ajustar_nomina.puml`
 
-- **Estado**: ⏳ Pendiente
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para ajustar cálculos de nómina
+- **Validaciones**: Aplicación de bonos, descuentos o correcciones
+
+### 4. `sequence_generar_comprobantes.puml`
+
+- **Estado**: ✅ Completado
 - **Contenido**: Proceso de generación de comprobantes
 - **Salidas**: PDFs, envío de emails, archivado
+
+### 5. `sequence_consultar_historial_nomina.puml`
+
+- **Estado**: ✅ Completado
+- **Contenido**: Flujo para consultar el historial de pagos
+- **Validaciones**: Filtros por empleado y fechas
 
 ## Integración con Otros Dominios
 
