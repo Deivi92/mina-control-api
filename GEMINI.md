@@ -61,6 +61,7 @@ Se debe seguir rigurosamente una **Arquitectura en Capas (Layered Architecture)*
 - **DTOs:** Deben ser implementados usando **Java Records** para garantizar la inmutabilidad y la claridad de intención. Esto es preferible a las clases con anotaciones de Lombok para este propósito específico.
 - **Entidades JPA:** Utilizar **Lombok** (`@NoArgsConstructor`, `@Getter`, `@Setter`, `@EqualsAndHashCode`, `@ToString`) para reducir el boilerplate y satisfacer los requisitos de persistencia.
 - **Entidades JPA:** Anotadas con `@Entity` y `@Table(name = "nombre_en_snake_case")`.
+- **Mensajes de Commit:** Todos los mensajes de commit deben ser escritos **exclusivamente en español**, siguiendo un formato claro y conciso.
 
 ## 6. Estrategia de Pruebas
 
