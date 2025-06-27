@@ -84,9 +84,120 @@ El desarrollo debe seguir un enfoque **TDD/BDD (Test/Behavior-Driven Development
 
 ## 8. Flujo de Trabajo de Desarrollo Iterativo
 
-1.  **Definir/Actualizar Artefactos de Diseño:** Casos de Uso, Diagramas ER, de Clases y de Secuencia.
-2.  **Crear/Actualizar Casos de Uso de Bajo Nivel:** Detallar todos los flujos, validaciones y errores.
-3.  **Escribir Pruebas (Unitarias y de Integración):** Basadas en los casos de uso de bajo nivel. Estas pruebas deben fallar inicialmente.
-4.  **Escribir el Código de Producción:** Implementar la lógica necesaria para que las pruebas pasen.
-5.  **Refactorizar:** Mejorar el código manteniendo las pruebas en verde.
-6.  **Repetir.**
+El desarrollo se realizará de forma iterativa, enfocándose en completar un dominio clave antes de pasar al siguiente, siguiendo este proceso para cada dominio:
+
+1.  **Definir/Actualizar Casos de Uso de Bajo Nivel para el Dominio:**
+    *   Para el dominio actual, se detallarán todos los casos de uso de bajo nivel (puntos finales/operaciones específicas).
+    *   Cada caso de uso de bajo nivel se documentará en un archivo Markdown (`.md`) separado, siguiendo la plantilla definida, especificando flujos (principal, alternativos, excepción), validaciones, DTOs, endpoints y referencias a diagramas.
+
+2.  **Escribir Pruebas (Unitarias y de Integración):**
+    *   Basadas en los casos de uso de bajo nivel definidos para el dominio.
+    *   Estas pruebas deben fallar inicialmente (enfoque TDD/BDD).
+
+3.  **Escribir el Código de Producción:**
+    *   Implementar la lógica necesaria en las capas de Controller, Service y Repository para que todas las pruebas del dominio pasen.
+
+4.  **Refactorizar:**
+    *   Mejorar el código del dominio, asegurando que todas las pruebas sigan en verde.
+
+5.  **Repetir:**
+    *   Una vez completado y verificado el dominio actual, se pasará al siguiente dominio prioritario, repitiendo los pasos del 1 al 4.
+
+## 9. Puntos Finales (Casos de Uso de Bajo Nivel) por Dominio
+
+Esta sección detalla la cantidad de puntos finales (operaciones o casos de uso de bajo nivel) identificados por cada dominio, basados en los diagramas de secuencia existentes. Estos son los elementos que se documentarán y construirán de forma iterativa.
+
+*   **Autenticación:** 6 (Login, Logout, Recuperar Contraseña, Refresh Token, Registro, Cambiar Contraseña)
+*   **Empleados:** 7 (Actualizar Empleado, Cambiar Estado Empleado, Consultar Perfil Personal, Crear Empleado, Eliminar Empleado, Listar Empleados, Obtener Empleado por ID)
+*   **General:** 0 (Contiene diagramas de alto nivel, no operaciones)
+*   **Logística:** 3 (Actualizar Estado Despacho, Consultar Despachos, Registrar Despacho)
+*   **Nómina:** 4 (Ajustar Nómina, Calcular Nómina Semanal, Consultar Historial Nómina, Generar Comprobantes)
+*   **Producción:** 5 (Actualizar Producción, Consultar Producción Empleado, Consultar Producción Fecha, Eliminar Producción, Registrar Producción)
+*   **Reportes:** 4 (Exportar Datos, Reporte Asistencia, Reporte Costos Laborales, Reporte Producción)
+*   **Turnos:** 9 (Actualizar Turno, Asignar Empleado Turno, Consultar Asistencia, Crear Turno, Eliminar Turno, Gestionar Excepciones, Listar Turnos, Obtener Turno por ID, Registrar Entrada/Salida)
+
+**Total de Puntos Finales (Casos de Uso de Bajo Nivel) identificados:** 38
+
+## 10. Plantilla de Caso de Uso de Bajo Nivel
+
+Cada caso de uso de bajo nivel se documentará en un archivo Markdown (`.md`) separado, siguiendo esta plantilla exhaustiva. Esta plantilla asegura la consistencia, la completitud y sirve como base directa para la escritura de pruebas y la implementación del código.
+
+```
+# CU-DOM-XXX: [Nombre del Caso de Uso]
+
+## 1. Dominio
+[Nombre del Dominio (ej. Autenticación, Empleados)]
+
+## 2. Descripción
+[Breve descripción de la funcionalidad que este caso de uso de bajo nivel implementa.]
+
+## 3. Actor(es)
+[Quién o qué interactúa con esta funcionalidad (ej. Administrador del Sistema, Empleado, Sistema Externo).]
+
+## 4. Precondiciones
+*   [Condición 1 que debe ser verdadera antes de que el caso de uso pueda comenzar.]
+*   [Condición 2...]
+
+## 5. Flujo Principal (Happy Path)
+
+1.  [Paso 1: Acción del Actor o del Sistema.]
+2.  [Paso 2: Respuesta del Sistema.]
+3.  [Paso 3...]
+    (Detallar la secuencia de interacciones esperada cuando todo sale bien.)
+
+## 6. Flujos Alternativos
+*   **6.1. [Nombre del Flujo Alternativo]:**
+    *   [Condición que dispara este flujo.]
+    *   [Pasos específicos de este flujo alternativo.]
+
+## 7. Flujos de Excepción
+
+*   **7.1. [Nombre de la Excepción/Error]:**
+    *   **Condición:** [Qué situación provoca este error.]
+    *   **Excepción:** `[NombreDeLaExcepcionPersonalizada]` (si aplica, extendiendo `RuntimeException`).
+    *   **Respuesta HTTP:** [Código de estado HTTP (ej. 400 Bad Request, 404 Not Found, 409 Conflict, 500 Internal Server Error).]
+    *   **Detalle:** [Mensaje de error específico o información adicional.]
+
+## 8. Validaciones (Ejemplos)
+
+*   `[nombreCampo]`: [Reglas de validación (ej. Obligatorio, no nulo, longitud min/max, formato específico, único).]
+*   `[otroCampo]`: [Reglas de validación.]
+
+## 9. Postcondiciones
+*   [Estado del sistema después de que el caso de uso se completa exitosamente.]
+*   [Qué datos se modifican o se crean.]
+
+## 10. DTOs Involucrados
+
+*   **Request DTO:** `[NombreDelRequestDTO]` (si aplica)
+    *   `[campo1]: [Tipo]`
+    *   `[campo2]: [Tipo]`
+*   **Response DTO:** `[NombreDelResponseDTO]` (si aplica)
+    *   `[campo1]: [Tipo]`
+    *   `[campo2]: [Tipo]`
+
+## 11. Endpoint REST
+
+*   **Método:** `[GET, POST, PUT, DELETE]`
+*   **URL:** `[/api/recurso]`
+*   **Ejemplo de Request Body:** (si aplica)
+    ```json
+    {
+        // ...
+    }
+    ```
+*   **Ejemplo de Response (Código HTTP):**
+    ```json
+    {
+        // ...
+    }
+    ```
+
+## 12. Referencias
+*   **Diagrama de Secuencia:** `docs/diagrams/[dominio]/sequence_[nombre_diagrama].puml`
+*   **Diagrama de Clases:** `docs/diagrams/[dominio]/class_diagram_[dominio].puml` (o específico si existe)
+*   **Diagrama ER:** `docs/diagrams/general/er_diagram_completo.puml` (o específico si existe)
+*   **Caso de Uso de Alto Nivel:** `docs/casos_de_uso/[NombreCasoUsoAltoNivel].md` (si aplica)
+
+```
+**
