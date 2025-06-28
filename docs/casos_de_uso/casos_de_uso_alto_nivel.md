@@ -29,8 +29,8 @@ MinaControl Pro es un sistema de gestión minera diseñado para optimizar las op
 #### Casos de Uso Principales:
 - **CU-AUTH-001**: Iniciar sesión
   - **Actor**: Empleado, Administrador, Gerente
-  - **Descripción**: Autenticarse en el sistema con credenciales
-  - **Flujo**: Ingresar número identificación/contraseña → Validar credenciales → Generar token JWT
+  - **Descripción**: Autenticarse en el sistema con credenciales (email/contraseña)
+  - **Flujo**: Ingresar email/contraseña → Validar credenciales → Generar token JWT
 
 - **CU-AUTH-002**: Cerrar sesión
   - **Actor**: Empleado, Administrador, Gerente
@@ -43,9 +43,9 @@ MinaControl Pro es un sistema de gestión minera diseñado para optimizar las op
   - **Flujo**: Validar contraseña actual → Ingresar nueva → Confirmar cambio → Notificar
 
 - **CU-AUTH-004**: Recuperar contraseña
-  - **Actor**: Administrador
-  - **Descripción**: Restablecer acceso cuando empleado olvida contraseña
-  - **Flujo**: Empleado solicita → Administrador resetea → Genera contraseña temporal → Notifica empleado
+  - **Actor**: Usuario
+  - **Descripción**: Restablecer acceso cuando el usuario olvida su contraseña
+  - **Flujo**: Usuario solicita (vía email) → Sistema envía enlace de reseteo → Usuario resetea contraseña
 
 ### Dominio 1: Empleados
 **Propósito**: Gestión integral del personal de la mina

@@ -47,83 +47,146 @@ Se debe seguir rigurosamente una **Arquitectura en Capas (Layered Architecture)*
     - Siempre se deben usar DTOs para las solicitudes (requests) y respuestas (responses).
     - Convención de nombres: `...DTO` para respuestas, `...CreateDTO` o `...UpdateDTO` para solicitudes.
 - **Repository Pattern:** Implementado a través de Spring Data JPA.
+- **Manejo de Concurrencia (Bloqueo Optimista):**
+    - Para prevenir condiciones de carrera en actualizaciones, las entidades JPA susceptibles a modificaciones concurrentes (ej. `Turno`, `Empleado`) **deben** incluir un campo de versión (`@Version private Integer version;`).
+    - Los DTOs de actualización (ej. `...UpdateDTO`) **deben** incluir este campo de versión.
+    - La capa de servicio **debe** validar que la versión del DTO coincida con la versión de la entidad en la base de datos antes de confirmar la actualización. Si no coinciden, se debe lanzar una `ObjectOptimisticLockingFailureException`, que resultará en una respuesta `409 Conflict`.
 - **Manejo de Excepciones Centralizado:**
     - Crear excepciones personalizadas y específicas del dominio (ej. `EmpleadoNotFoundException`) que extiendan `RuntimeException`.
-    - Gestionar estas excepciones en una clase global con `@ControllerAdvice` para devolver respuestas de error HTTP consistentes.
+    - Gestionar estas excepciones en una clase global con `@ControllerAdvice` para devolver respuestas de error HTTP consistentes y estandarizadas.
+    - **Todos los errores** deben responder con un `ErrorResponseDTO` estándar.
+      ```java
+      // Ubicado en un paquete común, ej: com.minacontrol.dto.error
+      public record ErrorResponseDTO(
+          Instant timestamp,
+          int status,
+          String error,       // ej. "Not Found"
+          String message,     // Mensaje específico de la excepción
+          String path         // URI de la solicitud
+      ) {}
+      ```
 
 ## 5. Convenciones de Código y Estilo
 
 - **Nomenclatura:**
-    - **Paquetes:** `com.minacontrol.dominio` (ej. `com.minacontrol.auth`).
+    - **Paquetes:** `com.minacontrol.dominio` (ej. `com.minacontrol.autenticacion`).
     - **Clases:** `CamelCase` (ej. `EmpleadoService`).
     - **Métodos:** `lowerCamelCase` (ej. `crearEmpleado`).
     - **Columnas DB:** `snake_case` (ej. `numero_identificacion`).
-- **DTOs:** Deben ser implementados usando **Java Records** para garantizar la inmutabilidad y la claridad de intención. Esto es preferible a las clases con anotaciones de Lombok para este propósito específico.
-- **Entidades JPA:** Utilizar **Lombok** (`@NoArgsConstructor`, `@Getter`, `@Setter`, `@EqualsAndHashCode`, `@ToString`) para reducir el boilerplate y satisfacer los requisitos de persistencia.
+- **DTOs:** Deben ser implementados usando **Java Records** para garantizar la inmutabilidad y la claridad de intención.
+- **Entidades JPA:** Utilizar **Lombok** (`@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`, `@Builder`) para reducir el boilerplate.
 - **Entidades JPA:** Anotadas con `@Entity` y `@Table(name = "nombre_en_snake_case")`.
-- **Mensajes de Commit:** Todos los mensajes de commit deben ser escritos **exclusivamente en español**, siguiendo un formato claro y conciso.
+- **Mensajes de Commit:** Todos los mensajes de commit deben ser escritos **exclusivamente en español**.
 
 ## 6. Estrategia de Pruebas
 
-El desarrollo debe seguir un enfoque **TDD/BDD (Test/Behavior-Driven Development)**.
+El desarrollo debe seguir un enfoque **TDD/BDD (Test/Behavior-Driven Development)**, priorizando las pruebas unitarias antes que las de integración para guiar el desarrollo de la lógica de negocio.
 
 - **Pruebas Unitarias:**
-    - Deben probar la lógica en las clases de **Servicio**.
-    - Usar **JUnit 5** y **Mockito**.
-    - **Todas las dependencias** (ej. repositorios) deben ser **simuladas (mocked)**.
+    - **Prioridad:** Se escriben primero para guiar el desarrollo de la lógica de negocio.
+    - **Alcance:** Deben probar la unidad más pequeña y aislada de código. El foco principal es la lógica de negocio en las clases de **Servicio**, pero también pueden aplicarse a otras unidades aisladas (ej. utilidades, componentes específicos).
+    - **Herramientas:** Usar **JUnit 5** y **Mockito**.
+    - **Dependencias:** **Todas las dependencias** (ej. repositorios) deben ser **simuladas (mocked)**.
 - **Pruebas de Integración:**
-    - Deben probar el flujo completo desde el **Controlador** hasta la base de datos.
-    - Usar `@SpringBootTest`.
-    - Utilizar una base de datos de prueba real, preferiblemente gestionada por **Testcontainers**.
+    - **Momento:** Se escriben una vez que la lógica de negocio ha sido probada unitariamente.
+    - **Alcance:** Deben probar el flujo completo desde el **Controlador** hasta la base de datos, verificando la interacción entre componentes.
+    - **Herramientas:** Usar `@SpringBootTest`.
+    - **Base de Datos:** Utilizar una base de datos de prueba real, gestionada por **Testcontainers**.
 
-## 7. Diseño de API RESTful
+## 7. Convenciones Detalladas de Pruebas
+
+Para asegurar la consistencia, legibilidad y mantenibilidad de las pruebas, se seguirán las siguientes convenciones y mejores prácticas:
+
+### 7.1. Organización y Nomenclatura
+
+*   **Estructura de Paquetes:**
+    *   Los paquetes de prueba deben **reflejar la estructura de paquetes del código de producción**. Por ejemplo, si una clase de servicio está en `com.minacontrol.dominio.service.NombreService`, sus pruebas unitarias se ubicarán en `com.minacontrol.dominio.unit.NombreServiceTest`.
+    *   Las pruebas de integración se ubicarán en un subpaquete `integration` dentro del dominio de prueba (ej. `com.minacontrol.dominio.integration.NombreControllerIT`).
+*   **Nomenclatura de Clases de Prueba:**
+    *   **Pruebas Unitarias:** Se añadirá `Test` al nombre de la clase que se está probando (ej. `NombreServiceTest`).
+    *   **Pruebas de Integración:** Se añadirá `IT` o `IntegrationTest` al nombre de la clase principal del flujo (ej. `NombreControllerIT` o `NombreRepositoryIntegrationTest`).
+*   **Nomenclatura de Métodos de Prueba:**
+    *   Deben ser descriptivos, explicando el escenario y el resultado esperado.
+    *   Patrones recomendados:
+        *   `shouldDoSomethingWhenConditionIsMet()`
+        *   `given_precondition_when_action_then_expectedResult()`
+        *   `testMethodName_scenario_expectedResult()`
+    *   Ejemplos: `shouldRegisterUserSuccessfully()`, `registerUser_existingEmail_throwsConflictException()`.
+
+### 7.2. Estructura Interna de Pruebas Unitarias
+
+*   **Foco:** Probar una única unidad de código (ej. un método en una clase de servicio) de forma aislada.
+*   **Dependencias:** Todas las dependencias externas (repositorios, otros servicios, APIs externas) deben ser **mockeadas** (simuladas) utilizando Mockito.
+*   **Anotaciones Clave:**
+    *   `@ExtendWith(MockitoExtension.class)`: Habilita las anotaciones de Mockito.
+    *   `@Mock`: Para crear mocks de las dependencias.
+    *   `@InjectMocks`: Para inyectar los mocks en la instancia de la clase bajo prueba.
+    *   `@BeforeEach`: Método de configuración que se ejecuta antes de cada prueba para inicializar objetos comunes.
+    *   `@Test`: Marca un método como una prueba.
+    *   `@DisplayName`: (Opcional) Para nombres más legibles en los reportes de prueba.
+*   **Patrón AAA (Arrange-Act-Assert):**
+    *   **Arrange (Preparar):** Configurar los datos de prueba, los mocks y el sistema bajo prueba.
+    *   **Act (Actuar):** Ejecutar el método o la acción que se está probando.
+    *   **Assert (Verificar):** Comprobar el resultado (valor de retorno, cambios de estado, interacciones con mocks).
+
+### 7.3. Estructura Interna de Pruebas de Integración
+
+*   **Foco:** Probar la interacción entre múltiples componentes (ej. Controlador -> Servicio -> Repositorio -> Base de Datos).
+*   **Dependencias:** Se utilizan dependencias reales donde sea apropiado (ej. una base de datos real a través de Testcontainers). Los sistemas externos que no son el foco de la integración pueden ser mockeados.
+*   **Anotaciones Clave:**
+    *   `@SpringBootTest`: Carga el contexto completo de la aplicación Spring.
+    *   `@AutoConfigureMockMvc`: Configura `MockMvc` para probar endpoints REST sin levantar un servidor HTTP real.
+    *   `@ActiveProfiles("test")`: Para usar un perfil específico de pruebas.
+    *   `@Testcontainers`: Habilita Testcontainers para gestionar contenedores de base de datos.
+    *   `@Container`: Define un contenedor de Testcontainers (ej. `PostgreSQLContainer`).
+    *   `@DynamicPropertySource`: Para configurar propiedades de Spring para usar la base de datos de Testcontainers.
+*   **`MockMvc`:** Se utiliza para realizar solicitudes HTTP simuladas a los endpoints del controlador y verificar las respuestas.
+*   **Limpieza de Datos:** Es crucial limpiar la base de datos antes de cada prueba (`@BeforeEach`) para asegurar la independencia de las pruebas.
+
+### 7.4. Mejores Prácticas Generales
+
+*   **Principio de Responsabilidad Única:** Cada método de prueba debe probar un escenario o aspecto específico de la funcionalidad.
+*   **Pruebas Rápidas:** Las pruebas unitarias deben ser muy rápidas. Las de integración serán más lentas, pero deben optimizarse.
+*   **Pruebas Independientes:** Las pruebas no deben depender del orden de ejecución ni del estado dejado por pruebas anteriores.
+*   **Evitar Lógica en Tests:** La lógica de prueba debe ser simple. Si se encuentran bucles o condicionales complejos, podría indicar la necesidad de refactorizar el código de producción o dividir la prueba.
+*   **Aserciones Significativas:** Utilizar aserciones específicas (ej. `assertEquals`, `assertTrue`, `assertThrows`).
+*   **Datos de Prueba:** Usar datos realistas pero mínimos. Para unitarias, crear datos directamente en el método de prueba o `setUp()`. Para integración, persistir datos directamente en la base de datos de prueba.
+*   **Pruebas de Manejo de Errores:** Probar explícitamente cómo el código maneja entradas inválidas, casos límite y excepciones esperadas.
+
+## 8. Diseño de API RESTful
 
 - **Contrato:** La API debe ser definida usando la especificación **OpenAPI 3.0**.
 - **Endpoints:** Usar sustantivos en plural para los recursos (ej. `/api/empleados`).
-- **Verbos HTTP:** Usar `GET` (leer), `POST` (crear), `PUT` (actualizar), `DELETE` (borrar) de forma estándar.
-- **Códigos de Estado HTTP:** Usar los códigos apropiados (200, 201, 400, 401, 403, 404, 500).
+- **Verbos HTTP:** Usar `GET`, `POST`, `PUT`, `DELETE` de forma estándar.
+- **Códigos de Estado HTTP:** Usar los códigos apropiados (200, 201, 400, 401, 403, 404, 409, 500).
 
 ## 8. Flujo de Trabajo de Desarrollo Iterativo
 
 El desarrollo se realizará de forma iterativa, enfocándose en completar un dominio clave antes de pasar al siguiente, siguiendo este proceso para cada dominio:
 
-1.  **Definir/Actualizar Casos de Uso de Bajo Nivel para el Dominio:**
-    *   Para el dominio actual, se detallarán todos los casos de uso de bajo nivel (puntos finales/operaciones específicas).
-    *   Cada caso de uso de bajo nivel se documentará en un archivo Markdown (`.md`) separado, siguiendo la plantilla definida, especificando flujos (principal, alternativos, excepción), validaciones, DTOs, endpoints y referencias a diagramas.
+1.  **Definir/Actualizar Casos de Uso de Bajo Nivel para el Dominio.**
+2.  **Escribir Pruebas (Unitarias y de Integración).**
+3.  **Escribir el Código de Producción.**
+4.  **Refactorizar.**
+5.  **Repetir.**
 
-2.  **Escribir Pruebas (Unitarias y de Integración):**
-    *   Basadas en los casos de uso de bajo nivel definidos para el dominio.
-    *   Estas pruebas deben fallar inicialmente (enfoque TDD/BDD).
+## 9. Puntos Finales por Dominio
 
-3.  **Escribir el Código de Producción:**
-    *   Implementar la lógica necesaria en las capas de Controller, Service y Repository para que todas las pruebas del dominio pasen.
-
-4.  **Refactorizar:**
-    *   Mejorar el código del dominio, asegurando que todas las pruebas sigan en verde.
-
-5.  **Repetir:**
-    *   Una vez completado y verificado el dominio actual, se pasará al siguiente dominio prioritario, repitiendo los pasos del 1 al 4.
-
-## 9. Puntos Finales (Casos de Uso de Bajo Nivel) por Dominio
-
-Esta sección detalla la cantidad de puntos finales (operaciones o casos de uso de bajo nivel) identificados por cada dominio, basados en los diagramas de secuencia existentes. Estos son los elementos que se documentarán y construirán de forma iterativa.
-
-*   **Autenticación:** 6 (Login, Logout, Recuperar Contraseña, Refresh Token, Registro, Cambiar Contraseña)
-*   **Empleados:** 7 (Actualizar Empleado, Cambiar Estado Empleado, Consultar Perfil Personal, Crear Empleado, Eliminar Empleado, Listar Empleados, Obtener Empleado por ID)
-*   **General:** 0 (Contiene diagramas de alto nivel, no operaciones)
-*   **Logística:** 3 (Actualizar Estado Despacho, Consultar Despachos, Registrar Despacho)
-*   **Nómina:** 4 (Ajustar Nómina, Calcular Nómina Semanal, Consultar Historial Nómina, Generar Comprobantes)
-*   **Producción:** 5 (Actualizar Producción, Consultar Producción Empleado, Consultar Producción Fecha, Eliminar Producción, Registrar Producción)
-*   **Reportes:** 4 (Exportar Datos, Reporte Asistencia, Reporte Costos Laborales, Reporte Producción)
-*   **Turnos:** 9 (Actualizar Turno, Asignar Empleado Turno, Consultar Asistencia, Crear Turno, Eliminar Turno, Gestionar Excepciones, Listar Turnos, Obtener Turno por ID, Registrar Entrada/Salida)
-
-**Total de Puntos Finales (Casos de Uso de Bajo Nivel) identificados:** 38
+- Autenticación simple: email del empleado
+*   **Empleados:** 7
+*   **Logística:** 3
+*   **Nómina:** 4
+*   **Producción:** 5
+*   **Reportes:** 4
+*   **Turnos:** 9
+*   **Total:** 38
 
 ## 10. Plantilla de Caso de Uso de Bajo Nivel
 
-Cada caso de uso de bajo nivel se documentará en un archivo Markdown (`.md`) separado, siguiendo esta plantilla exhaustiva. Esta plantilla asegura la consistencia, la completitud y sirve como base directa para la escritura de pruebas y la implementación del código.
+Cada caso de uso se documentará en un archivo `.md` individual, usando esta plantilla como base para guiar el desarrollo y las pruebas.
 
-```
+---
+
 # CU-DOM-XXX: [Nombre del Caso de Uso]
 
 ## 1. Dominio
@@ -133,72 +196,71 @@ Cada caso de uso de bajo nivel se documentará en un archivo Markdown (`.md`) se
 [Breve descripción de la funcionalidad que este caso de uso de bajo nivel implementa.]
 
 ## 3. Actor(es)
-[Quién o qué interactúa con esta funcionalidad (ej. Administrador del Sistema, Empleado, Sistema Externo).]
+[Quién o qué interactúa con esta funcionalidad (ej. Administrador, Empleado, Sistema Externo).]
 
 ## 4. Precondiciones
 *   [Condición 1 que debe ser verdadera antes de que el caso de uso pueda comenzar.]
 *   [Condición 2...]
 
-## 5. Flujo Principal (Happy Path)
+## 5. Seguridad y Autorización
+*   **Autenticación Requerida:** [Sí/No]
+*   **Roles Permitidos:** [Lista de roles que pueden ejecutar el endpoint (ej. `ADMIN`, `SUPERVISOR`, `EMPLEADO`).]
+*   **Condiciones de Propiedad:** [Reglas sobre la propiedad de los datos (ej. "Un `EMPLEADO` solo puede consultar su propio perfil").]
 
+## 6. Flujo Principal (Happy Path)
 1.  [Paso 1: Acción del Actor o del Sistema.]
 2.  [Paso 2: Respuesta del Sistema.]
-3.  [Paso 3...]
-    (Detallar la secuencia de interacciones esperada cuando todo sale bien.)
+3.  [...]
 
-## 6. Flujos Alternativos
-*   **6.1. [Nombre del Flujo Alternativo]:**
+## 7. Flujos Alternativos
+*   **7.1. [Nombre del Flujo Alternativo]:**
     *   [Condición que dispara este flujo.]
     *   [Pasos específicos de este flujo alternativo.]
 
-## 7. Flujos de Excepción
+## 8. Validaciones
 
-*   **7.1. [Nombre de la Excepción/Error]:**
+### 8.1. Validaciones de Formato/Sintaxis (Capa de DTO)
+*Se resuelven con anotaciones de `jakarta.validation` en el DTO.*
+*   `[nombreCampo]`: [Reglas (ej. `@NotNull`, `@Size(min=3, max=50)`).]
+*   `[email]`: [`@Email`.]
+
+### 8.2. Validaciones de Reglas de Negocio (Capa de Servicio)
+*Requieren lógica en la capa de servicio, a menudo con consultas a la BD.*
+*   [Regla 1 (ej. "No se puede registrar producción para un empleado sin turno activo").]
+*   [Regla 2 (ej. "El email debe existir para poder recuperar la contraseña").]
+
+## 9. Flujos de Excepción
+*   **9.1. [Nombre de la Excepción/Error]:**
     *   **Condición:** [Qué situación provoca este error.]
-    *   **Excepción:** `[NombreDeLaExcepcionPersonalizada]` (si aplica, extendiendo `RuntimeException`).
-    *   **Respuesta HTTP:** [Código de estado HTTP (ej. 400 Bad Request, 404 Not Found, 409 Conflict, 500 Internal Server Error).]
-    *   **Detalle:** [Mensaje de error específico o información adicional.]
+    *   **Excepción Java:** `[NombreDeLaExcepcionPersonalizada]`
+    *   **Respuesta HTTP:** `[Código]` `[Texto]` (ej. `404 Not Found`)
+    *   **Cuerpo de Respuesta (ErrorResponseDTO):**
+        ```json
+        {
+            "timestamp": "...",
+            "status": 404,
+            "error": "Not Found",
+            "message": "[Mensaje de error específico.]",
+            "path": "[URI de la solicitud]"
+        }
+        ```
 
-## 8. Validaciones (Ejemplos)
-
-*   `[nombreCampo]`: [Reglas de validación (ej. Obligatorio, no nulo, longitud min/max, formato específico, único).]
-*   `[otroCampo]`: [Reglas de validación.]
-
-## 9. Postcondiciones
+## 10. Postcondiciones
 *   [Estado del sistema después de que el caso de uso se completa exitosamente.]
-*   [Qué datos se modifican o se crean.]
+*   [Qué datos se modifican, crean o eliminan.]
 
-## 10. DTOs Involucrados
+## 11. DTOs Involucrados
+*   **Request DTO:** `[NombreDelRequestDTO]`
+*   **Response DTO:** `[NombreDelResponseDTO]`
 
-*   **Request DTO:** `[NombreDelRequestDTO]` (si aplica)
-    *   `[campo1]: [Tipo]`
-    *   `[campo2]: [Tipo]`
-*   **Response DTO:** `[NombreDelResponseDTO]` (si aplica)
-    *   `[campo1]: [Tipo]`
-    *   `[campo2]: [Tipo]`
-
-## 11. Endpoint REST
-
+## 12. Endpoint REST
 *   **Método:** `[GET, POST, PUT, DELETE]`
-*   **URL:** `[/api/recurso]`
-*   **Ejemplo de Request Body:** (si aplica)
-    ```json
-    {
-        // ...
-    }
-    ```
-*   **Ejemplo de Response (Código HTTP):**
-    ```json
-    {
-        // ...
-    }
-    ```
+*   **URL:** `[/api/recurso/{id}]`
 
-## 12. Referencias
-*   **Diagrama de Secuencia:** `docs/diagrams/[dominio]/sequence_[nombre_diagrama].puml`
-*   **Diagrama de Clases:** `docs/diagrams/[dominio]/class_diagram_[dominio].puml` (o específico si existe)
-*   **Diagrama ER:** `docs/diagrams/general/er_diagram_completo.puml` (o específico si existe)
-*   **Caso de Uso de Alto Nivel:** `docs/casos_de_uso/[NombreCasoUsoAltoNivel].md` (si aplica)
+## 13. Referencias
+*   **Diagrama de Secuencia:** `docs/diagrams/[dominio]/sequence_[...].puml`
+*   **Diagrama de Clases:** `docs/diagrams/[dominio]/class_diagram_[...].puml`
+*   **Diagrama ER:** `docs/diagrams/general/er_diagram_completo.puml`
 
-```
-**
+---
+

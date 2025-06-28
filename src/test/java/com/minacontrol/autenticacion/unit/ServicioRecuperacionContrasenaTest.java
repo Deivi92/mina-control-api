@@ -1,0 +1,74 @@
+package com.minacontrol.autenticacion.unit;
+
+import com.minacontrol.autenticacion.model.Usuario;
+import com.minacontrol.autenticacion.repository.UsuarioRepository;
+import com.minacontrol.autenticacion.service.ServicioRecuperacionContrasena;
+import com.minacontrol.autenticacion.dto.RecuperarContrasenaRequestDTO;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class ServicioRecuperacionContrasenaTest {
+
+    @Mock
+    private UsuarioRepository usuarioRepository;
+
+    // Asumimos que hay un servicio para enviar correos, lo mockeamos
+    @Mock
+    private ServicioCorreo servicioCorreo;
+
+    @InjectMocks
+    private ServicioRecuperacionContrasena servicioRecuperacionContrasena;
+
+    private RecuperarContrasenaRequestDTO recuperarContrasenaRequestDTO;
+    private Usuario usuario;
+
+    @BeforeEach
+    void setUp() {
+        recuperarContrasenaRequestDTO = new RecuperarContrasenaRequestDTO("usuario@example.com");
+        usuario = new Usuario();
+        usuario.setEmail("usuario@example.com");
+        // Asume que Usuario tiene un método para establecer el token de reseteo y su expiración
+    }
+
+    @Test
+    @DisplayName("deberiaIniciarRecuperacionContrasenaExitosamente - Debería iniciar la recuperación de contraseña exitosamente")
+    void deberiaIniciarRecuperacionContrasenaExitosamente() {
+        // Arrange
+        when(usuarioRepository.findByEmail(recuperarContrasenaRequestDTO.email())).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
+
+        // Act
+        servicioRecuperacionContrasena.iniciarRecuperacion(recuperarContrasenaRequestDTO);
+
+        // Assert
+        verify(usuarioRepository, times(1)).findByEmail(recuperarContrasenaRequestDTO.email());
+        verify(usuarioRepository, times(1)).save(any(Usuario.class)); // Verifica que el token se guarda
+        verify(servicioCorreo, times(1)).enviarCorreoRecuperacion(eq(usuario), anyString()); // Verifica que se envía el correo
+    }
+
+    @Test
+    @DisplayName("deberiaManejarEmailNoExistenteSilenciosamente - Debería manejar un email no existente silenciosamente")
+    void deberiaManejarEmailNoExistenteSilenciosamente() {
+        // Arrange
+        when(usuarioRepository.findByEmail(recuperarContrasenaRequestDTO.email())).thenReturn(Optional.empty());
+
+        // Act
+        servicioRecuperacionContrasena.iniciarRecuperacion(recuperarContrasenaRequestDTO);
+
+        // Assert
+        verify(usuarioRepository, times(1)).findByEmail(recuperarContrasenaRequestDTO.email());
+        verify(usuarioRepository, never()).save(any(Usuario.class)); // No debería guardar nada
+        verify(servicioCorreo, never()).enviarCorreoRecuperacion(any(Usuario.class), anyString()); // No debería enviar correo
+    }
+}

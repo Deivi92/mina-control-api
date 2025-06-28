@@ -10,7 +10,8 @@ title Diagrama Entidad-Relación Completo - MinaControl Pro
 entity Usuario {
   + id : BIGINT <<PK>>
   --
-  * numero_identificacion : VARCHAR(20) <<UK>>
+  * numero_identificacion : VARCHAR(20)
+  * email : VARCHAR(100) <<UK>>
   * password_hash : VARCHAR(255)
   * password_temporal : BOOLEAN
   * ultimo_acceso : TIMESTAMP

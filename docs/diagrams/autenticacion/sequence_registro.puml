@@ -9,7 +9,7 @@ participant "API Gateway" as Gateway
 participant "Servicio de Autenticación" as AuthServer
 participant "Base de Datos" as DB
 
-Usuario -> Cliente: Completa formulario de registro (nombre, email, contraseña)
+Usuario -> Cliente: Completa formulario de registro (email, contraseña)
 Cliente -> Gateway: POST /auth/register (datos de registro)
 Gateway -> AuthServer: POST /auth/register (datos de registro)
 

@@ -14,7 +14,7 @@ package "com.minacontrol.auth" {
   ' ===== ENTIDADES =====
   ENTITY(Usuario) {
     - Long id
-    - String numeroIdentificacion
+    - String email
     - String passwordHash
     - Boolean passwordTemporal
     - LocalDateTime ultimoAcceso
@@ -34,7 +34,7 @@ package "com.minacontrol.auth" {
 
   ' ===== DTOs =====
   DTO(LoginRequestDTO) {
-    - String numeroIdentificacion
+    - String email
     - String password
     --
     + void validarDatos()
@@ -61,17 +61,48 @@ package "com.minacontrol.auth" {
   }
 
   DTO(RecuperarPasswordDTO) {
-    - String numeroIdentificacion
+    - String email
     - String passwordTemporal
     --
     + void validarDatos()
   }
 
+  DTO(RegistroUsuarioCreateDTO) {
+    - String numeroIdentificacion
+    - String email
+    - String password
+    --
+    + void validarDatos()
+  }
+
+  DTO(UsuarioDTO) {
+    - Long id
+    - String email
+    - String rolSistema
+    --
+    + Boolean requiereCambioPassword()
+  }
+
+  DTO(RefreshTokenRequestDTO) {
+    - String refreshToken
+    --
+    + void validarDatos()
+  }
+
+  DTO(RefreshTokenResponseDTO) {
+    - String accessToken
+    - String refreshToken
+    - String tokenType
+    - Long expiresIn
+    --
+    + Boolean hasRefreshToken()
+  }
+
   ' ===== REPOSITORIO =====
   REPOSITORY(UsuarioRepository) {
     + Optional<Usuario> findById(Long id)
-    + Optional<Usuario> findByNumeroIdentificacion(String numeroIdentificacion)
-    + Boolean existsByNumeroIdentificacion(String numeroIdentificacion)
+    + Optional<Usuario> findByEmail(String email)
+    + Boolean existsByEmail(String email)
     + Usuario save(Usuario usuario)
     + void updatePasswordByUsuarioId(Long usuarioId, String passwordHash)
     + void updateUltimoAcceso(Long usuarioId, LocalDateTime fechaAcceso)
@@ -86,14 +117,16 @@ package "com.minacontrol.auth" {
     - PasswordEncoder passwordEncoder
     - JwtTokenProvider jwtTokenProvider
     --
+    + UsuarioDTO register(RegistroUsuarioCreateDTO registroDTO)
     + LoginResponseDTO login(LoginRequestDTO loginRequest)
     + void logout(String token)
-    + void cambiarPassword(Long empleadoId, CambioPasswordDTO cambioPassword)
-    + RecuperarPasswordDTO recuperarPassword(String numeroIdentificacion)
+    + void cambiarPassword(String email, CambioPasswordDTO cambioPassword)
+    + void recuperarPassword(String email)
+    + LoginResponseDTO refreshToken(String refreshToken)
     + Boolean validarToken(String token)
     + void invalidarToken(String token)
     + String generarPasswordTemporal()
-    + Boolean validarCredenciales(String numeroIdentificacion, String password)
+    + Boolean validarCredenciales(String email, String password)
     + void actualizarUltimoAcceso(Long usuarioId)
     + void bloquearCuenta(Long usuarioId)
     + void desbloquearCuenta(Long usuarioId)
@@ -103,12 +136,12 @@ package "com.minacontrol.auth" {
   CONTROLLER(AuthController) {
     - AuthService authService
     --
+    + ResponseEntity<UsuarioDTO> register(RegistroUsuarioCreateDTO registroDTO)
     + ResponseEntity<LoginResponseDTO> login(LoginRequestDTO loginRequest)
     + ResponseEntity<Void> logout(HttpServletRequest request)
     + ResponseEntity<Void> cambiarPassword(CambioPasswordDTO cambioPassword, Authentication auth)
-    + ResponseEntity<RecuperarPasswordDTO> recuperarPassword(String numeroIdentificacion)
-    + ResponseEntity<Boolean> validarToken(String token)
-    + ResponseEntity<Void> refresh(HttpServletRequest request)
+    + ResponseEntity<Void> recuperarPassword(String email)
+    + ResponseEntity<LoginResponseDTO> refreshToken(RefreshTokenRequestDTO refreshTokenRequest)
   }
 
   ' ===== COMPONENTES DE SEGURIDAD =====
@@ -116,9 +149,9 @@ package "com.minacontrol.auth" {
     - String secretKey
     - Long validityInMilliseconds
     --
-    + String createToken(String numeroIdentificacion, String rol, Long empleadoId)
+    + String createToken(String email, String rol, Long empleadoId)
     + Boolean validateToken(String token)
-    + String getNumeroIdentificacion(String token)
+    + String getEmail(String token)
     + String getRol(String token)
     + Long getEmpleadoId(String token)
     + Date getExpirationDate(String token)
@@ -160,12 +193,20 @@ UsuarioRepository --> Usuario : "gestiona"
 AuthService --> LoginResponseDTO : "produce"
 AuthService --> LoginRequestDTO : "consume"
 AuthService --> CambioPasswordDTO : "consume"
-AuthService --> RecuperarPasswordDTO : "produce"
+AuthService --> RecuperarPasswordDTO : "consume"
+AuthService --> RegistroUsuarioCreateDTO : "consume"
+AuthService --> UsuarioDTO : "produce"
+AuthService --> RefreshTokenRequestDTO : "consume"
+AuthService --> RefreshTokenResponseDTO : "produce"
 
 AuthController --> LoginRequestDTO : "recibe"
 AuthController --> LoginResponseDTO : "retorna"
 AuthController --> CambioPasswordDTO : "recibe"
-AuthController --> RecuperarPasswordDTO : "retorna"
+AuthController --> RecuperarPasswordDTO : "recibe"
+AuthController --> RegistroUsuarioCreateDTO : "recibe"
+AuthController --> UsuarioDTO : "retorna"
+AuthController --> RefreshTokenRequestDTO : "recibe"
+AuthController --> RefreshTokenResponseDTO : "retorna"
 
 AuthService --> CredencialesInvalidasException : "lanza"
 AuthService --> CuentaBloqueadaException : "lanza"
