@@ -42,21 +42,26 @@ Se debe seguir rigurosamente una **Arquitectura en Capas (Layered Architecture)*
 
 - **Controller-Service-Repository:** Es la base de la estructura del código.
 - **Inyección de Dependencias (DI):** Utilizar la inyección por constructor de Spring en todos los componentes.
+- **Programación Orientada a Interfaces (Desacoplamiento):**
+    - **Regla Crítica:** Los componentes de la capa de API (Controllers) **deben** depender de **interfaces** de servicio, no de sus implementaciones concretas.
+    - **Estructura:** Para cada servicio, se creará una interfaz (ej. `IServicioAutenticacion`) en el paquete `service` y su implementación (ej. `ServicioAutenticacionImpl`) en un subpaquete `service/impl`. Esto es fundamental para cumplir con el Principio de Inversión de Dependencias (SOLID).
 - **DTO (Data Transfer Object):**
-    - **Regla Crítica:** Las entidades JPA (`@Entity`) **NUNCA** deben ser expuestas en la capa de API.
-    - Siempre se deben usar DTOs para las solicitudes (requests) y respuestas (responses).
-    - Convención de nombres: `...DTO` para respuestas, `...CreateDTO` o `...UpdateDTO` para solicitudes.
+    - **Regla Crítica:** Las entidades JPA (`@Entity`) **NUNCA** deben ser expuestas ni recibidas directamente en la capa de API.
+    - **Organización:** Los DTOs deben residir en un paquete `dto` dentro de su dominio y estar organizados en subpaquetes `request` y `response`.
+    - **Convención de Nombres:**
+        - Solicitudes: `...CreateDTO`, `...UpdateDTO`, `...RequestDTO`.
+        - Respuestas: `...DTO`, `...ResponseDTO`.
 - **Repository Pattern:** Implementado a través de Spring Data JPA.
 - **Manejo de Concurrencia (Bloqueo Optimista):**
-    - Para prevenir condiciones de carrera en actualizaciones, las entidades JPA susceptibles a modificaciones concurrentes (ej. `Turno`, `Empleado`) **deben** incluir un campo de versión (`@Version private Integer version;`).
+    - Para prevenir condiciones de carrera, las entidades JPA susceptibles a modificaciones concurrentes (ej. `Turno`, `Empleado`) **deben** incluir un campo de versión (`@Version private Integer version;`).
     - Los DTOs de actualización (ej. `...UpdateDTO`) **deben** incluir este campo de versión.
-    - La capa de servicio **debe** validar que la versión del DTO coincida con la versión de la entidad en la base de datos antes de confirmar la actualización. Si no coinciden, se debe lanzar una `ObjectOptimisticLockingFailureException`, que resultará en una respuesta `409 Conflict`.
+    - La capa de servicio **debe** validar que la versión del DTO coincida con la de la entidad antes de actualizar, lanzando `ObjectOptimisticLockingFailureException` (resultando en `409 Conflict`) si no coinciden.
 - **Manejo de Excepciones Centralizado:**
-    - Crear excepciones personalizadas y específicas del dominio (ej. `EmpleadoNotFoundException`) que extiendan `RuntimeException`.
-    - Gestionar estas excepciones en una clase global con `@ControllerAdvice` para devolver respuestas de error HTTP consistentes y estandarizadas.
-    - **Todos los errores** deben responder con un `ErrorResponseDTO` estándar.
+    - Crear excepciones personalizadas. Las excepciones específicas de un dominio deben extender `RuntimeException` y ubicarse en un paquete `exception` dentro de su dominio (ej. `com.minacontrol.autenticacion.exception.UsuarioYaExisteException`). Las excepciones transversales a múltiples dominios pueden ubicarse en un paquete compartido (ej. `com.minacontrol.shared.exception`).
+    - Gestionar estas excepciones en una clase global con `@ControllerAdvice` ubicada en un paquete compartido (ej. `com.minacontrol.shared.exception`).
+    - **Todos los errores** deben responder con un `ErrorResponseDTO` estándar y consistente.
       ```java
-      // Ubicado en un paquete común, ej: com.minacontrol.dto.error
+      // Ubicado en un paquete compartido, ej: com.minacontrol.shared.dto
       public record ErrorResponseDTO(
           Instant timestamp,
           int status,
@@ -65,6 +70,22 @@ Se debe seguir rigurosamente una **Arquitectura en Capas (Layered Architecture)*
           String path         // URI de la solicitud
       ) {}
       ```
+
+## 5.1. Mejores Prácticas para el Manejo de Excepciones Personalizadas
+
+Para asegurar un manejo de errores robusto y consistente, se seguirán las siguientes directrices para la creación de excepciones personalizadas:
+
+*   **Extender `RuntimeException`:** Todas las excepciones de negocio personalizadas deben extender `java.lang.RuntimeException`. Esto las clasifica como "unchecked exceptions", lo que simplifica el código al no requerir que los métodos declaren `throws` y permite un manejo centralizado a través de `@ControllerAdvice`.
+*   **Constructores Estándar:** Cada excepción personalizada debe incluir al menos los siguientes constructores para flexibilidad y trazabilidad:
+    *   `public MyCustomException()`: Constructor por defecto.
+    *   `public MyCustomException(String message)`: Para proporcionar un mensaje descriptivo del error.
+    *   `public MyCustomException(String message, Throwable cause)`: Para encadenar la excepción actual con una causa subyacente, preservando el stack trace completo.
+    *   `public MyCustomException(Throwable cause)`: Para envolver una excepción existente sin un mensaje específico adicional.
+*   **Mensajes Claros y Concisos:** Los mensajes de las excepciones deben ser informativos, explicando la causa del error de manera clara. Deben ser útiles tanto para la depuración como, si es necesario, para ser expuestos al usuario final a través del `ErrorResponseDTO`.
+*   **Ubicación Consistente:** Las excepciones específicas de un dominio deben residir en un paquete `exception` dentro de su dominio (ej. `com.minacontrol.autenticacion.exception`). Las excepciones que son verdaderamente transversales a múltiples dominios pueden ubicarse en un paquete compartido (ej. `com.minacontrol.shared.exception`).
+*   **Mapeo a HTTP Status:** Cada excepción de negocio debe tener un mapeo claro a un código de estado HTTP apropiado (ej. `400 Bad Request`, `404 Not Found`, `409 Conflict`, `401 Unauthorized`, etc.) que será gestionado por el `@ControllerAdvice` global.
+*   **Evitar Lógica de Negocio en Excepciones:** Las clases de excepción deben ser simples contenedores de información sobre el error. La lógica para determinar si una excepción debe ser lanzada y cómo se maneja debe residir en la capa de servicio o en el `@ControllerAdvice`.
+
 
 ## 5. Convenciones de Código y Estilo
 
@@ -163,6 +184,19 @@ Para asegurar la consistencia, legibilidad y mantenibilidad de las pruebas, se s
 ## 8. Flujo de Trabajo de Desarrollo Iterativo
 
 El desarrollo se realizará de forma iterativa, enfocándose en completar un dominio clave antes de pasar al siguiente, siguiendo este proceso para cada dominio:
+
+### 8.1. Orden de Construcción de Componentes por Dominio
+
+Para cada dominio, la construcción de componentes debe seguir el siguiente orden recomendado, integrando el enfoque TDD/BDD:
+
+1.  **DTOs (Request y Response):** Definición del contrato de la API.
+2.  **Modelos/Entidades:** Representación de la estructura de datos del dominio.
+3.  **Repositorios:** Interfaces para la interacción con la base de datos.
+4.  **Interfaces de Servicio:** Establecimiento del contrato de la lógica de negocio.
+5.  **Implementación de Servicios y Pruebas Unitarias (TDD):** Desarrollo de la lógica de negocio, guiado por tests.
+6.  **Excepciones Personalizadas:** Definición de errores específicos del dominio.
+7.  **Controladores:** Exposición de la API REST.
+8.  **Pruebas de Integración:** Verificación del flujo completo de la aplicación.
 
 1.  **Definir/Actualizar Casos de Uso de Bajo Nivel para el Dominio.**
 2.  **Escribir Pruebas (Unitarias y de Integración).**

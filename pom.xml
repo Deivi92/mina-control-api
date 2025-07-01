@@ -34,6 +34,12 @@
         </dependency>
         
         <!-- ========== BASE DE DATOS (DESARROLLO) ========== -->
+        <!-- Spring Boot Data JPA: Abstracción para acceso a datos con JPA (Hibernate) -->
+        <!-- PARA QUÉ: Simplificar la interacción con la base de datos (Repositorios) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
         <!-- H2: Base de datos en memoria, perfecta para desarrollo y testing -->
         <!-- PARA QUÉ: Prototipar sin instalar PostgreSQL, datos se resetean al reiniciar -->
         <!-- CONSOLA: Disponible en http://localhost:8080/h2-console (JDBC URL: jdbc:h2:mem:testdb) -->
@@ -43,6 +49,14 @@
             <scope>runtime</scope>
         </dependency>
         
+        <!-- ========== SEGURIDAD ========== -->
+        <!-- Spring Boot Starter Security: Autenticación y autorización -->
+        <!-- PARA QUÉ: Proteger endpoints, gestionar usuarios, roles, contraseñas -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- ========== VALIDACIONES ========== -->
         <!-- Spring Boot Validation: Validaciones automáticas para DTOs y entidades -->
         <!-- PARA QUÉ: Validar datos de empleados (@NotNull, @Size, @Email, etc.) -->
@@ -56,7 +70,11 @@
         <!-- Lombok: Genera automáticamente getters, setters, constructores, toString -->
         <!-- PARA QUÉ: Reducir código boilerplate en entidades y DTOs -->
         <!-- EJEMPLO: @Data, @Builder, @AllArgsConstructor en clase Empleado -->
-        <!-- Eliminada dependencia de Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- ========== TESTING ========== -->
         <!-- Spring Boot Test: Framework completo de testing (JUnit 5, MockMvc, TestContainers) -->
