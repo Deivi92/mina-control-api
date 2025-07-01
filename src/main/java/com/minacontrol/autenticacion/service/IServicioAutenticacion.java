@@ -1,11 +1,11 @@
 package com.minacontrol.autenticacion.service;
 
-import com.minacontrol.autenticacion.dto.LoginRequestDTO;
-import com.minacontrol.autenticacion.dto.LoginResponseDTO;
-import com.minacontrol.autenticacion.dto.RefreshTokenRequestDTO;
-import com.minacontrol.autenticacion.dto.RefreshTokenResponseDTO;
-import com.minacontrol.autenticacion.dto.RegistroUsuarioCreateDTO;
-import com.minacontrol.autenticacion.dto.UsuarioDTO;
+import com.minacontrol.autenticacion.dto.request.LoginRequestDTO;
+import com.minacontrol.autenticacion.dto.response.LoginResponseDTO;
+import com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO;
+import com.minacontrol.autenticacion.dto.response.RefreshTokenResponseDTO;
+import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
+import com.minacontrol.autenticacion.dto.response.UsuarioDTO;
 
 public interface IServicioAutenticacion {
     UsuarioDTO registrarUsuario(RegistroUsuarioCreateDTO registroUsuarioCreateDTO);

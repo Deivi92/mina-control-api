@@ -1,13 +1,13 @@
 package com.minacontrol.autenticacion.controller;
 
-import com.minacontrol.autenticacion.dto.CambiarContrasenaRequestDTO;
-import com.minacontrol.autenticacion.dto.LoginRequestDTO;
-import com.minacontrol.autenticacion.dto.LoginResponseDTO;
-import com.minacontrol.autenticacion.dto.RefreshTokenRequestDTO;
-import com.minacontrol.autenticacion.dto.RefreshTokenResponseDTO;
-import com.minacontrol.autenticacion.dto.RegistroUsuarioCreateDTO;
-import com.minacontrol.autenticacion.dto.RecuperarContrasenaRequestDTO;
-import com.minacontrol.autenticacion.dto.UsuarioDTO;
+import com.minacontrol.autenticacion.dto.request.CambiarContrasenaRequestDTO;
+import com.minacontrol.autenticacion.dto.request.LoginRequestDTO;
+import com.minacontrol.autenticacion.dto.response.LoginResponseDTO;
+import com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO;
+import com.minacontrol.autenticacion.dto.response.RefreshTokenResponseDTO;
+import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
+import com.minacontrol.autenticacion.dto.request.RecuperarContrasenaRequestDTO;
+import com.minacontrol.autenticacion.dto.response.UsuarioDTO;
 import com.minacontrol.autenticacion.service.IServicioAutenticacion;
 import com.minacontrol.autenticacion.service.IServicioCambioContrasena;
 import com.minacontrol.autenticacion.service.IServicioRecuperacionContrasena;

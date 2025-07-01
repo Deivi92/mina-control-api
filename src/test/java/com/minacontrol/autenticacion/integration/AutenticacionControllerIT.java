@@ -1,7 +1,7 @@
 package com.minacontrol.autenticacion.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.minacontrol.autenticacion.dto.RegistroUsuarioCreateDTO;
+import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
 import com.minacontrol.empleado.model.Empleado;

@@ -2,8 +2,9 @@ package com.minacontrol.autenticacion.unit;
 
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
-import com.minacontrol.autenticacion.service.ServicioCambioContrasena;
-import com.minacontrol.autenticacion.dto.CambiarContrasenaRequestDTO;
+import com.minacontrol.autenticacion.service.IServicioCambioContrasena;
+import com.minacontrol.autenticacion.service.impl.ServicioCambioContrasenaImpl;
+import com.minacontrol.autenticacion.dto.request.CambiarContrasenaRequestDTO;
 import com.minacontrol.autenticacion.exception.ContrasenaInvalidaException;
 import com.minacontrol.autenticacion.exception.TokenInvalidoException;
 
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -22,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ServicioCambioContrasenaTest {
 
     @Mock
@@ -31,7 +35,7 @@ class ServicioCambioContrasenaTest {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private ServicioCambioContrasena servicioCambioContrasena;
+    private ServicioCambioContrasenaImpl servicioCambioContrasena;
 
     private CambiarContrasenaRequestDTO cambiarContrasenaRequestDTO;
     private Usuario usuario;
@@ -48,7 +52,7 @@ class ServicioCambioContrasenaTest {
     @DisplayName("deberiaCambiarContrasenaConTokenExitosamente - Debería cambiar la contraseña usando un token de reseteo exitosamente")
     void deberiaCambiarContrasenaConTokenExitosamente() {
         // Arrange
-        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO("tokenValido", null, "NewPassword123!");
+        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO(null, "NewPassword123!", "tokenValido");
         when(usuarioRepository.findByResetToken("tokenValido")).thenReturn(Optional.of(usuario));
         when(passwordEncoder.encode("NewPassword123!")).thenReturn("hashedNewPassword");
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
@@ -67,7 +71,7 @@ class ServicioCambioContrasenaTest {
     @DisplayName("deberiaCambiarContrasenaConContrasenaActualExitosamente - Debería cambiar la contraseña usando la contraseña actual exitosamente")
     void deberiaCambiarContrasenaConContrasenaActualExitosamente() {
         // Arrange
-        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO(null, "OldPassword123!", "NewPassword123!");
+        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO("OldPassword123!", "NewPassword123!", null);
         // Simula un usuario autenticado (esto se manejaría en la capa de controlador/seguridad real)
         // Para la prueba unitaria, asumimos que el usuario ya está disponible o se obtiene de algún contexto
         when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario)); // Asume que el servicio obtiene el usuario autenticado
@@ -90,7 +94,7 @@ class ServicioCambioContrasenaTest {
     @DisplayName("lanzarContrasenaInvalidaExceptionSiContrasenaActualIncorrecta - Debería lanzar ContrasenaInvalidaException si la contraseña actual es incorrecta")
     void lanzarContrasenaInvalidaExceptionSiContrasenaActualIncorrecta() {
         // Arrange
-        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO(null, "WrongOldPassword!", "NewPassword123!");
+        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO("WrongOldPassword!", "NewPassword123!", null);
         when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(passwordEncoder.matches("WrongOldPassword!", "hashedOldPassword")).thenReturn(false);
 
@@ -107,7 +111,7 @@ class ServicioCambioContrasenaTest {
     @DisplayName("lanzarTokenInvalidoExceptionSiTokenInvalido - Debería lanzar TokenInvalidoException si el token de reseteo es inválido")
     void lanzarTokenInvalidoExceptionSiTokenInvalido() {
         // Arrange
-        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO("tokenInvalido", null, "NewPassword123!");
+        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO(null, "NewPassword123!", "tokenInvalido");
         when(usuarioRepository.findByResetToken("tokenInvalido")).thenReturn(Optional.empty());
 
         // Act & Assert

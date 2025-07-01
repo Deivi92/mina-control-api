@@ -10,7 +10,7 @@ Este documento define las reglas, arquitecturas, patrones y convenciones que deb
 
 ## 2. Tecnologías y Lenguaje
 
-- **Backend:** Spring Boot
+- **Backend:** Spring Boot 3.2.0
 - **Lenguaje:** Java 17
 - **Base de Datos:** PostgreSQL
 - **Gestión de Dependencias:** Maven (`pom.xml`)

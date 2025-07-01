@@ -4,10 +4,12 @@ import com.minacontrol.empleado.model.Empleado;
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.empleado.repository.EmpleadoRepository;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
-import com.minacontrol.autenticacion.service.ServicioAutenticacion;
+import com.minacontrol.autenticacion.service.IServicioAutenticacion;
+import com.minacontrol.autenticacion.service.impl.ServicioAutenticacionImpl;
 import com.minacontrol.empleado.exception.EmpleadoNotFoundException;
 import com.minacontrol.autenticacion.exception.UsuarioYaExisteException;
-import com.minacontrol.autenticacion.dto.RegistroUsuarioCreateDTO;
+import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
+import com.minacontrol.autenticacion.dto.response.UsuarioDTO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +38,7 @@ class ServicioAutenticacionTest {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private ServicioAutenticacion servicioAutenticacion;
+    private ServicioAutenticacionImpl servicioAutenticacion;
 
     private RegistroUsuarioCreateDTO registroUsuarioCreateDTO;
     private Empleado empleado;
@@ -66,12 +68,11 @@ class ServicioAutenticacionTest {
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
 
         // Act
-        Usuario result = servicioAutenticacion.registrarUsuario(registroUsuarioCreateDTO);
+        UsuarioDTO result = servicioAutenticacion.registrarUsuario(registroUsuarioCreateDTO);
 
         // Assert
         assertNotNull(result);
-        assertEquals(registroUsuarioCreateDTO.email(), result.getEmail());
-        assertEquals("hashedPassword", result.getPassword());
+        assertEquals(registroUsuarioCreateDTO.email(), result.email());
         assertTrue(empleado.getTieneUsuario()); // Verifica que el empleado ahora tiene usuario
         verify(empleadoRepository, times(1)).findByEmail(registroUsuarioCreateDTO.email());
         verify(usuarioRepository, times(1)).findByEmail(registroUsuarioCreateDTO.email());

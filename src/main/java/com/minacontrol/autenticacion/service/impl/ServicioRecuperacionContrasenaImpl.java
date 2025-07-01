@@ -1,6 +1,6 @@
 package com.minacontrol.autenticacion.service.impl;
 
-import com.minacontrol.autenticacion.dto.RecuperarContrasenaRequestDTO;
+import com.minacontrol.autenticacion.dto.request.RecuperarContrasenaRequestDTO;
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
 import com.minacontrol.autenticacion.service.IServicioRecuperacionContrasena;
@@ -9,19 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-// TODO: PLACEHOLDER - Asumimos que existirá un ServicioCorreo para enviar emails.
-// Será reemplazado por la implementación real cuando se desarrolle el módulo de utilidades o comunicaciones.
-interface ServicioCorreo {
-    void enviarCorreoRecuperacion(Usuario usuario, String resetToken);
-}
+import com.minacontrol.shared.service.IServicioCorreo;
 
 @Service
 public class ServicioRecuperacionContrasenaImpl implements IServicioRecuperacionContrasena {
 
     private final UsuarioRepository usuarioRepository;
-    private final ServicioCorreo servicioCorreo; // Placeholder
+    private final IServicioCorreo servicioCorreo;
 
-    public ServicioRecuperacionContrasenaImpl(UsuarioRepository usuarioRepository, ServicioCorreo servicioCorreo) {
+    public ServicioRecuperacionContrasenaImpl(UsuarioRepository usuarioRepository, IServicioCorreo servicioCorreo) {
         this.usuarioRepository = usuarioRepository;
         this.servicioCorreo = servicioCorreo;
     }

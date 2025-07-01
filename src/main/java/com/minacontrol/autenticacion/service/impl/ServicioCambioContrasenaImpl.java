@@ -1,6 +1,6 @@
 package com.minacontrol.autenticacion.service.impl;
 
-import com.minacontrol.autenticacion.dto.CambiarContrasenaRequestDTO;
+import com.minacontrol.autenticacion.dto.request.CambiarContrasenaRequestDTO;
 import com.minacontrol.autenticacion.exception.ContrasenaInvalidaException;
 import com.minacontrol.autenticacion.exception.TokenInvalidoException;
 import com.minacontrol.autenticacion.model.Usuario;

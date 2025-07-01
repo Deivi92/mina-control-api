@@ -2,8 +2,10 @@ package com.minacontrol.autenticacion.unit;
 
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
-import com.minacontrol.autenticacion.service.ServicioRecuperacionContrasena;
-import com.minacontrol.autenticacion.dto.RecuperarContrasenaRequestDTO;
+import com.minacontrol.autenticacion.service.IServicioRecuperacionContrasena;
+import com.minacontrol.autenticacion.service.impl.ServicioRecuperacionContrasenaImpl;
+import com.minacontrol.autenticacion.dto.request.RecuperarContrasenaRequestDTO;
+import com.minacontrol.shared.service.IServicioCorreo;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,10 +27,10 @@ class ServicioRecuperacionContrasenaTest {
 
     // Asumimos que hay un servicio para enviar correos, lo mockeamos
     @Mock
-    private ServicioCorreo servicioCorreo;
+    private IServicioCorreo servicioCorreo;
 
     @InjectMocks
-    private ServicioRecuperacionContrasena servicioRecuperacionContrasena;
+    private ServicioRecuperacionContrasenaImpl servicioRecuperacionContrasena;
 
     private RecuperarContrasenaRequestDTO recuperarContrasenaRequestDTO;
     private Usuario usuario;
