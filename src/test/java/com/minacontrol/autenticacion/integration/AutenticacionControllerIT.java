@@ -114,6 +114,17 @@ public class AutenticacionControllerIT {
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message").value("El empleado con el email proporcionado no fue encontrado."));
         }
+
+        @Test
+        @DisplayName("Debería retornar 400 Bad Request para un email inválido")
+        void deberiaRetornarBadRequestParaEmailInvalido() throws Exception {
+            RegistroUsuarioCreateDTO registroDTO = new RegistroUsuarioCreateDTO("email-invalido", "Password123!");
+
+            mockMvc.perform(post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(registroDTO)))
+                    .andExpect(status().isBadRequest());
+        }
     }
 
     @Nested
@@ -160,6 +171,17 @@ public class AutenticacionControllerIT {
                             .content(objectMapper.writeValueAsString(loginDTO)))
                     .andExpect(status().isUnauthorized());
         }
+
+        @Test
+        @DisplayName("Debería retornar 400 Bad Request para un email inválido en login")
+        void deberiaRetornarBadRequestParaEmailInvalidoEnLogin() throws Exception {
+            LoginRequestDTO loginDTO = new LoginRequestDTO("email-invalido", "Password123!");
+
+            mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(loginDTO)))
+                    .andExpect(status().isBadRequest());
+        }
     }
     
     @Nested
@@ -195,6 +217,17 @@ public class AutenticacionControllerIT {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(recoverDTO)))
                     .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Debería retornar 400 Bad Request para un email inválido en recuperación")
+        void deberiaRetornarBadRequestParaEmailInvalidoEnRecuperacion() throws Exception {
+            RecuperarContrasenaRequestDTO recoverDTO = new RecuperarContrasenaRequestDTO("email-invalido");
+
+            mockMvc.perform(post("/api/auth/recover-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(recoverDTO)))
+                    .andExpect(status().isBadRequest());
         }
     }
 
