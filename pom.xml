@@ -40,12 +40,20 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-        <!-- H2: Base de datos en memoria, perfecta para desarrollo y testing -->
-        <!-- PARA QUÉ: Prototipar sin instalar PostgreSQL, datos se resetean al reiniciar -->
-        <!-- CONSOLA: Disponible en http://localhost:8080/h2-console (JDBC URL: jdbc:h2:mem:testdb) -->
+        <!-- H2: Base de datos en memoria, exclusiva para testing -->
+        <!-- PARA QUÉ: Pruebas de integración rápidas sin Docker ni PostgreSQL -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- ========== BASE DE DATOS (PRODUCCIÓN) ========== -->
+        <!-- Driver de PostgreSQL: Conector para la base de datos de producción -->
+        <!-- PARA QUÉ: Permitir que la aplicación se conecte a PostgreSQL -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
         
@@ -101,6 +109,23 @@
                         <!-- Eliminada exclusión de Lombok -->
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <!-- Plugin Failsafe para Pruebas de Integración -->
+            <!-- PARA QUÉ: Ejecutar pruebas que terminan en *IT.java -->
+            <!-- COMANDOS: Se activa automáticamente con 'mvn verify' -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.1.2</version> <!-- Usa una versión consistente con surefire -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

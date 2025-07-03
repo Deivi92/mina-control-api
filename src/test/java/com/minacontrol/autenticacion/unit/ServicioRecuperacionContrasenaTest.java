@@ -1,8 +1,8 @@
 package com.minacontrol.autenticacion.unit;
 
+import com.minacontrol.autenticacion.exception.UsuarioNoEncontradoException;
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
-import com.minacontrol.autenticacion.service.IServicioRecuperacionContrasena;
 import com.minacontrol.autenticacion.service.impl.ServicioRecuperacionContrasenaImpl;
 import com.minacontrol.autenticacion.dto.request.RecuperarContrasenaRequestDTO;
 import com.minacontrol.shared.service.IServicioCorreo;
@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,17 +61,18 @@ class ServicioRecuperacionContrasenaTest {
     }
 
     @Test
-    @DisplayName("deberiaManejarEmailNoExistenteSilenciosamente - Debería manejar un email no existente silenciosamente")
-    void deberiaManejarEmailNoExistenteSilenciosamente() {
+    @DisplayName("deberiaLanzarUsuarioNoEncontradoException - Debería lanzar UsuarioNoEncontradoException si el email no existe")
+    void deberiaLanzarUsuarioNoEncontradoException() {
         // Arrange
         when(usuarioRepository.findByEmail(recuperarContrasenaRequestDTO.email())).thenReturn(Optional.empty());
 
-        // Act
-        servicioRecuperacionContrasena.iniciarRecuperacion(recuperarContrasenaRequestDTO);
+        // Act & Assert
+        assertThrows(UsuarioNoEncontradoException.class, () ->
+                servicioRecuperacionContrasena.iniciarRecuperacion(recuperarContrasenaRequestDTO));
 
         // Assert
         verify(usuarioRepository, times(1)).findByEmail(recuperarContrasenaRequestDTO.email());
-        verify(usuarioRepository, never()).save(any(Usuario.class)); // No debería guardar nada
-        verify(servicioCorreo, never()).enviarCorreoRecuperacion(any(Usuario.class), anyString()); // No debería enviar correo
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+        verify(servicioCorreo, never()).enviarCorreoRecuperacion(any(Usuario.class), anyString());
     }
 }

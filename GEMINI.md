@@ -111,8 +111,11 @@ El desarrollo debe seguir un enfoque **TDD/BDD (Test/Behavior-Driven Development
 - **Pruebas de Integración:**
     - **Momento:** Se escriben una vez que la lógica de negocio ha sido probada unitariamente.
     - **Alcance:** Deben probar el flujo completo desde el **Controlador** hasta la base de datos, verificando la interacción entre componentes.
+    - **Nota sobre Autenticación:** Para el dominio de Autenticación, las pruebas de integración se centran inicialmente en los flujos de registro, login y recuperación de contraseña. Los endpoints de `logout` y `refresh-token` se probarán una vez que la infraestructura de gestión de JWT (JSON Web Tokens) esté completamente implementada, ya que su funcionalidad depende directamente de esta capa de seguridad avanzada.
     - **Herramientas:** Usar `@SpringBootTest`.
-    - **Base de Datos:** Utilizar una base de datos de prueba real, gestionada por **Testcontainers**.
+    - **Base de Datos:** Se utiliza una estrategia híbrida:
+    - **Para desarrollo y pruebas locales (entorno `test`):** Se usará una base de datos en memoria **H2** en modo de compatibilidad con PostgreSQL (`MODE=PostgreSQL`). Esta decisión se toma debido a restricciones del entorno de desarrollo local (ej. ausencia de Docker) para no bloquear la creación de pruebas de integración.
+    - **Para entornos de CI/CD y Producción:** La estrategia preferida y definitiva es el uso de una base de datos real gestionada por **Testcontainers** para garantizar la máxima fidelidad con el entorno de producción.
 
 ## 7. Convenciones Detalladas de Pruebas
 
@@ -153,14 +156,13 @@ Para asegurar la consistencia, legibilidad y mantenibilidad de las pruebas, se s
 ### 7.3. Estructura Interna de Pruebas de Integración
 
 *   **Foco:** Probar la interacción entre múltiples componentes (ej. Controlador -> Servicio -> Repositorio -> Base de Datos).
-*   **Dependencias:** Se utilizan dependencias reales donde sea apropiado (ej. una base de datos real a través de Testcontainers). Los sistemas externos que no son el foco de la integración pueden ser mockeados.
-*   **Anotaciones Clave:**
+*   **Dependencias:** Se utilizan dependencias reales donde sea apropiado. Para la base de datos, se aplicará la estrategia híbrida definida en la sección 6.
+*   **Anotaciones Clave (con H2 para entorno local):**
     *   `@SpringBootTest`: Carga el contexto completo de la aplicación Spring.
     *   `@AutoConfigureMockMvc`: Configura `MockMvc` para probar endpoints REST sin levantar un servidor HTTP real.
-    *   `@ActiveProfiles("test")`: Para usar un perfil específico de pruebas.
-    *   `@Testcontainers`: Habilita Testcontainers para gestionar contenedores de base de datos.
-    *   `@Container`: Define un contenedor de Testcontainers (ej. `PostgreSQLContainer`).
-    *   `@DynamicPropertySource`: Para configurar propiedades de Spring para usar la base de datos de Testcontainers.
+    *   `@ActiveProfiles("test")`: Para usar el perfil de pruebas que activa H2.
+*   **Anotaciones Clave (con Testcontainers para CI/CD):**
+    *   Adicionalmente a las anteriores, se usarían: `@Testcontainers`, `@Container`, `@DynamicPropertySource`.
 *   **`MockMvc`:** Se utiliza para realizar solicitudes HTTP simuladas a los endpoints del controlador y verificar las respuestas.
 *   **Limpieza de Datos:** Es crucial limpiar la base de datos antes de cada prueba (`@BeforeEach`) para asegurar la independencia de las pruebas.
 
@@ -198,11 +200,29 @@ Para cada dominio, la construcción de componentes debe seguir el siguiente orde
 7.  **Controladores:** Exposición de la API REST.
 8.  **Pruebas de Integración:** Verificación del flujo completo de la aplicación.
 
+### 8.2. Estrategia de Construcción de Dominios
+
+El desarrollo seguirá un enfoque incremental basado en las dependencias funcionales entre los dominios. El objetivo es construir desde los dominios más fundamentales (aquellos de los que otros dependen) hacia los más complejos o de soporte.
+
+El orden de construcción recomendado es el siguiente:
+
+1.  **Autenticación:** (Completado) Es la puerta de entrada al sistema. Define quién puede interactuar con la aplicación. **Nota sobre Pruebas de Integración:** Para este dominio, las pruebas de integración se han enfocado en los flujos de registro, login y recuperación de contraseña. Los endpoints de `logout` y `refresh-token` se implementarán y probarán en una fase posterior, una vez que la infraestructura de gestión de JWT (JSON Web Tokens) esté desarrollada, ya que su funcionalidad depende directamente de esta capa de seguridad avanzada.
+2.  **Empleados:** Es el dominio central. La mayoría de las operaciones dependen de la existencia de un empleado.
+3.  **Turnos:** Depende de Empleados. Gestiona los horarios y la asistencia, un prerrequisito para la producción.
+4.  **Producción:** Depende de Empleados y Turnos. Registra el trabajo realizado.
+5.  **Logística:** Generalmente ligado a la Producción. Gestiona el despacho del material producido.
+6.  **Nómina:** Dominio complejo que depende de Empleados, Turnos y potencialmente Producción para los cálculos.
+7.  **Reportes:** Dominio transversal que consume datos de todos los demás. Se construye al final para tener fuentes de datos que analizar.
+
+---
+
+El proceso para desarrollar cada dominio es el siguiente:
+
 1.  **Definir/Actualizar Casos de Uso de Bajo Nivel para el Dominio.**
 2.  **Escribir Pruebas (Unitarias y de Integración).**
 3.  **Escribir el Código de Producción.**
 4.  **Refactorizar.**
-5.  **Repetir.**
+5.  **Repetir.
 
 ## 9. Puntos Finales por Dominio
 

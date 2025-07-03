@@ -6,6 +6,8 @@ import com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO;
 import com.minacontrol.autenticacion.dto.response.RefreshTokenResponseDTO;
 import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
 import com.minacontrol.autenticacion.dto.response.UsuarioDTO;
+import com.minacontrol.autenticacion.exception.ContrasenaInvalidaException;
+import com.minacontrol.autenticacion.exception.UsuarioNoEncontradoException;
 import com.minacontrol.autenticacion.exception.UsuarioYaExisteException;
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
@@ -73,8 +75,21 @@ public class ServicioAutenticacionImpl implements IServicioAutenticacion {
 
     @Override
     public LoginResponseDTO loginUsuario(LoginRequestDTO loginRequestDTO) {
-        // Implementación pendiente: Lógica de autenticación y generación de JWT
-        throw new UnsupportedOperationException("Unimplemented method 'loginUsuario'");
+        // 1. Buscar el usuario por email
+        Usuario usuario = usuarioRepository.findByEmail(loginRequestDTO.email())
+                .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario o contraseña inválidos."));
+
+        // 2. Verificar la contraseña
+        if (!passwordEncoder.matches(loginRequestDTO.password(), usuario.getPassword())) {
+            throw new ContrasenaInvalidaException("Usuario o contraseña inválidos.");
+        }
+
+        // 3. Generar JWTs (Access Token y Refresh Token)
+        // TODO: Implementar la lógica real de generación de JWTs aquí
+        String accessToken = "dummyAccessToken"; // Placeholder
+        String refreshToken = "dummyRefreshToken"; // Placeholder
+
+        return new LoginResponseDTO(accessToken, refreshToken);
     }
 
     @Override
