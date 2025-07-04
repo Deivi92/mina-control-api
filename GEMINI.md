@@ -141,6 +141,20 @@ El desarrollo se realizará de forma iterativa, enfocándose en completar un dom
 5.  **Refactorizar:** Se refactoriza tanto el código de producción como el de las pruebas para mejorar la claridad y el mantenimiento.
 6.  **Repetir:** Se repite el ciclo para el siguiente caso de uso hasta completar el dominio.
 
+### 8.2. Estrategia de Construcción de Dominios
+
+El desarrollo seguirá un enfoque incremental basado en las dependencias funcionales entre los dominios. El objetivo es construir desde los dominios más fundamentales (aquellos de los que otros dependen) hacia los más complejos o de soporte.
+
+El orden de construcción recomendado es el siguiente:
+
+1.  **Autenticación:** (Completado) Es la puerta de entrada al sistema. Define quién puede interactuar con la aplicación.
+2.  **Empleados:** Es el dominio central. La mayoría de las operaciones dependen de la existencia de un empleado.
+3.  **Turnos:** Depende de Empleados. Gestiona los horarios y la asistencia, un prerrequisito para la producción.
+4.  **Producción:** Depende de Empleados y Turnos. Registra el trabajo realizado.
+5.  **Logística:** Generalmente ligado a la Producción. Gestiona el despacho del material producido.
+6.  **Nómina:** Dominio complejo que depende de Empleados, Turnos y potencialmente Producción para los cálculos.
+7.  **Reportes:** Dominio transversal que consume datos de todos los demás. Se construye al final para tener fuentes de datos que analizar.
+
 ## 9. Plantilla de Caso de Uso de Bajo Nivel
 
 (La plantilla de CU-DOM-XXX se mantiene sin cambios)
