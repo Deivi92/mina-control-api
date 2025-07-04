@@ -76,15 +76,15 @@ Se debe seguir rigurosamente una **Arquitectura en Capas (Layered Architecture)*
 
 ## 6. Estrategia de Pruebas (TDD/BDD)
 
-El desarrollo debe seguir un enfoque **TDD/BDD**, priorizando las pruebas unitarias para guiar la lógica de negocio, seguidas por pruebas de integración para verificar el flujo completo.
+El desarrollo se rige por un enfoque **TDD/BDD (Test/Behavior-Driven Development)**, donde los **casos de uso de bajo nivel** sirven como la especificación principal para la creación de pruebas. Se priorizan las pruebas unitarias para guiar el desarrollo de la lógica de negocio, seguidas por pruebas de integración para verificar el flujo completo.
 
 - **Pruebas Unitarias:**
-    - **Foco:** Lógica de negocio en la capa de **Servicio**.
+    - **Foco:** Lógica de negocio en la capa de **Servicio**, guiadas por los casos de uso.
     - **Herramientas:** **JUnit 5** y **Mockito**.
     - **Dependencias:** **Todas** las dependencias deben ser **simuladas (mocked)**.
 
 - **Pruebas de Integración:**
-    - **Foco:** Flujo completo desde el **Controlador** hasta la **Base de Datos**.
+    - **Foco:** Flujo completo desde el **Controlador** hasta la **Base de Datos**, verificando los happy paths y flujos de excepción definidos en los casos de uso.
     - **Herramientas:** `@SpringBootTest` con `MockMvc`.
     - **Base de Datos:** Se usará una base de datos en memoria **H2** para el perfil `test` local, y **Testcontainers** para entornos de CI/CD.
 
@@ -130,17 +130,16 @@ Para garantizar la cobertura y robustez, cada flujo de endpoint probado en una p
 6.  **Verificación del JSON de Error (`ErrorResponseDTO`):**
     -   Para todos los casos de error (4xx, 5xx), verificar que la respuesta se adhiere a la estructura estándar de `ErrorResponseDTO`.
 
-## 8. Flujo de Trabajo de Desarrollo
+## 8. Flujo de Trabajo de Desarrollo Iterativo
 
-El desarrollo es iterativo y se organiza por dominios, siguiendo este orden de construcción de componentes:
-1. DTOs
-2. Entidades
-3. Repositorios
-4. Interfaces de Servicio
-5. Implementación de Servicios (guiado por Pruebas Unitarias)
-6. Excepciones
-7. Controladores
-8. Pruebas de Integración
+El desarrollo se realizará de forma iterativa, enfocándose en completar un dominio clave antes de pasar al siguiente. El proceso para desarrollar cada caso de uso dentro de un dominio sigue un estricto flujo guiado por pruebas (TDD/BDD):
+
+1.  **Definir/Actualizar Caso de Uso de Bajo Nivel:** Se documenta la funcionalidad esperada, validaciones y flujos de excepción en su archivo `.md` correspondiente. Este documento es la fuente de verdad para el desarrollo.
+2.  **Escribir Pruebas Unitarias:** Basándose en el caso de uso, se crean las pruebas unitarias para la capa de servicio. Estas pruebas fallarán inicialmente.
+3.  **Escribir el Código de Producción:** Se implementa la lógica de negocio en la capa de servicio con el único objetivo de hacer que las pruebas unitarias pasen.
+4.  **Escribir Pruebas de Integración:** Una vez que el código de producción está funcionando y validado por las pruebas unitarias, se escriben pruebas de integración para verificar el flujo completo desde el controlador hasta la base de datos.
+5.  **Refactorizar:** Se refactoriza tanto el código de producción como el de las pruebas para mejorar la claridad y el mantenimiento.
+6.  **Repetir:** Se repite el ciclo para el siguiente caso de uso hasta completar el dominio.
 
 ## 9. Plantilla de Caso de Uso de Bajo Nivel
 
