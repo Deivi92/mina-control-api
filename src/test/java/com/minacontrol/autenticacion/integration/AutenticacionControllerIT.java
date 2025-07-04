@@ -6,7 +6,7 @@ import com.minacontrol.autenticacion.dto.request.RecuperarContrasenaRequestDTO;
 import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
-import com.minacontrol.empleado.model.Empleado;
+import com.minacontrol.empleado.entity.Empleado;
 import com.minacontrol.empleado.repository.EmpleadoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -66,9 +66,19 @@ public class AutenticacionControllerIT {
         @BeforeEach
         void registerSetUp() {
             // Crear un empleado base para las pruebas de registro
-            Empleado empleado = new Empleado();
-            empleado.setEmail("empleado@example.com");
-            empleado.setTieneUsuario(false);
+            Empleado empleado = Empleado.builder()
+                    .email("empleado@example.com")
+                    .nombres("Reg")
+                    .apellidos("User")
+                    .numeroIdentificacion("REG_ID_123")
+                    .fechaContratacion(java.time.LocalDate.now())
+                    .salarioBase(java.math.BigDecimal.valueOf(1000.00))
+                    .cargo("Registrar")
+                    .telefono("1112223333")
+                    .estado(com.minacontrol.empleado.enums.EstadoEmpleado.ACTIVO)
+                    .rolSistema(com.minacontrol.empleado.enums.RolSistema.EMPLEADO)
+                    .tieneUsuario(false) // This is important for registration tests
+                    .build();
             empleadoRepository.save(empleado);
         }
 
@@ -235,8 +245,18 @@ public class AutenticacionControllerIT {
 
     private void crearUsuarioParaTest(String email, String password) {
         Empleado empleado = empleadoRepository.findByEmail(email).orElseGet(() -> {
-            Empleado nuevoEmpleado = new Empleado();
-            nuevoEmpleado.setEmail(email);
+            Empleado nuevoEmpleado = Empleado.builder()
+                    .email(email)
+                    .nombres("Test")
+                    .apellidos("User")
+                    .numeroIdentificacion("123456789")
+                    .fechaContratacion(java.time.LocalDate.now())
+                    .salarioBase(java.math.BigDecimal.valueOf(1000.00))
+                    .cargo("Tester")
+                    .telefono("1234567890")
+                    .estado(com.minacontrol.empleado.enums.EstadoEmpleado.ACTIVO)
+                    .rolSistema(com.minacontrol.empleado.enums.RolSistema.EMPLEADO)
+                    .build();
             return empleadoRepository.save(nuevoEmpleado);
         });
         empleado.setTieneUsuario(true);

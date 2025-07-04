@@ -1,6 +1,6 @@
 package com.minacontrol.autenticacion.model;
 
-import com.minacontrol.empleado.model.Empleado;
+import com.minacontrol.empleado.entity.Empleado;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

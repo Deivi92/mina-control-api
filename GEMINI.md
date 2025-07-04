@@ -130,6 +130,90 @@ Para garantizar la cobertura y robustez, cada flujo de endpoint probado en una p
 6.  **Verificación del JSON de Error (`ErrorResponseDTO`):**
     -   Para todos los casos de error (4xx, 5xx), verificar que la respuesta se adhiere a la estructura estándar de `ErrorResponseDTO`.
 
+### 7.5. Guía Detallada para Pruebas Unitarias
+
+Esta sección detalla la metodología y las convenciones para la creación de pruebas unitarias en cada dominio, asegurando consistencia y alta calidad.
+
+#### **1. QUÉ TESTEAR (Orden de Prioridad)**
+```
+1. ServiceTest (80% del esfuerzo) - Lógica de negocio
+2. EntityTest - Validaciones de dominio
+3. MapperTest - Conversiones DTO/Entity
+```
+
+#### **2. ESTRUCTURA DE ARCHIVOS**
+```
+src/test/java/com/minacontrol/{dominio}/unit/
+├── {Dominio}ServiceTest.java    # Principal
+├── {Dominio}Test.java          # Entidad
+└── {Dominio}MapperTest.java    # Mapper
+```
+
+#### **3. TEMPLATE BASE - ServiceTest**
+```java
+ @ExtendWith(MockitoExtension.class)
+class EmpleadoServiceTest {
+
+    @Mock private EmpleadoRepository repository;
+    @InjectMocks private EmpleadoServiceImpl service;
+
+    @Nested @DisplayName("Crear Empleado")
+    class CrearEmpleadoTests {
+
+        @Test
+        void should_CreateEmpleado_When_ValidData() {
+            // Arrange - Preparar datos y mocks
+            // Act - Ejecutar método
+            // Assert - Verificar resultado
+        }
+    }
+
+    @Nested @DisplayName("Validaciones")
+    class ValidacionesTests { /* ... */ }
+
+    @Nested @DisplayName("Excepciones")
+    class ExcepcionesTests { /* ... */ }
+}
+```
+
+#### **4. TIPOS DE TEST POR MÉTODO**
+```
+Por cada método del servicio:
+□ Happy Path (flujo normal)
+□ Validaciones (email, formato, etc.)
+□ Excepciones (duplicados, not found)
+□ Verify mocks (repository.save fue llamado)
+```
+
+#### **5. PATRÓN AAA (Siempre)**
+```java
+ @Test
+void should_Action_When_Condition() {
+    // Arrange - Preparar datos y mocks
+    var dto = createDto();
+    when(repository.save(any())).thenReturn(entity);
+
+    // Act - Ejecutar
+    var result = service.method(dto);
+
+    // Assert - Verificar
+    assertThat(result).isNotNull();
+    verify(repository).save(any());
+}
+```
+
+#### **6. CHECKLIST FINAL**
+```
+□ ServiceTest con @Nested
+□ EntityTest básico
+□ MapperTest básico
+□ Patrón AAA en todos
+□ Nombres descriptivos
+□ Cobertura 80%+
+```
+
+**Flujo**: Caso de Uso → Identificar métodos → Template ServiceTest → AAA por método → EntityTest → MapperTest → Verificar checklist.
+
 ## 8. Flujo de Trabajo de Desarrollo Iterativo
 
 El desarrollo se realizará de forma iterativa, enfocándose en completar un dominio clave antes de pasar al siguiente. El proceso para desarrollar cada caso de uso dentro de un dominio sigue un estricto flujo guiado por pruebas (TDD/BDD):
@@ -154,6 +238,22 @@ El orden de construcción recomendado es el siguiente:
 5.  **Logística:** Generalmente ligado a la Producción. Gestiona el despacho del material producido.
 6.  **Nómina:** Dominio complejo que depende de Empleados, Turnos y potencialmente Producción para los cálculos.
 7.  **Reportes:** Dominio transversal que consume datos de todos los demás. Se construye al final para tener fuentes de datos que analizar.
+
+### 8.3. Estrategia de Ejecución de Pruebas
+
+Para mantener un ciclo de desarrollo ágil y seguro, se establece la siguiente estrategia de ejecución de pruebas:
+
+1.  **Durante el Desarrollo (Pruebas Aisladas por Dominio):**
+    -   **Objetivo:** Obtener retroalimentación rápida y enfocada.
+    -   **Acción:** Al trabajar en un dominio específico (ej. `Empleados`), se deben ejecutar **únicamente** los tests correspondientes a ese dominio. Esto se logra especificando el paquete del dominio en el comando de Maven.
+    -   **Comando de Ejemplo:** `mvn test -Dtest="com.minacontrol.dominio.**.*Test,com.minacontrol.dominio.**.*IT"`
+
+2.  **Antes de Integrar Cambios (Suite Completa):**
+    -   **Objetivo:** Garantizar que los nuevos cambios no han introducido regresiones o efectos secundarios en otras partes del sistema.
+    -   **Acción:** Antes de fusionar una rama de funcionalidad (feature branch) a la rama principal (`main` o `develop`), es **obligatorio** ejecutar la suite de pruebas completa del proyecto.
+    -   **Comando:** `mvn verify` (ejecuta tests unitarios y de integración) o `mvn test` (solo unitarios).
+
+Esta doble aproximación asegura velocidad durante la fase de codificación y máxima seguridad antes de consolidar el código.
 
 ## 9. Plantilla de Caso de Uso de Bajo Nivel
 

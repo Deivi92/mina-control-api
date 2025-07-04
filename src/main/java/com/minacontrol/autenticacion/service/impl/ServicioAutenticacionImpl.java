@@ -13,7 +13,7 @@ import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
 import com.minacontrol.autenticacion.service.IServicioAutenticacion;
 import com.minacontrol.empleado.exception.EmpleadoNotFoundException;
-import com.minacontrol.empleado.model.Empleado;
+import com.minacontrol.empleado.entity.Empleado;
 import com.minacontrol.empleado.repository.EmpleadoRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
