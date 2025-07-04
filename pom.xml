@@ -93,6 +93,15 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Spring Security Test: Utilidades para probar la seguridad en Spring Boot -->
+        <!-- PARA QUÉ: Simular usuarios autenticados en tests de integración de controladores -->
+        <!-- EJEMPLO: @WithMockUser en tests de controladores -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

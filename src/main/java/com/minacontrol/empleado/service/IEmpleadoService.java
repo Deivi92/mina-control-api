@@ -16,4 +16,10 @@ public interface IEmpleadoService {
 
     EmpleadoResponse actualizarEmpleado(Long id, EmpleadoRequest request);
 
+    void eliminarEmpleado(Long id);
+
+    EmpleadoResponse cambiarEstadoEmpleado(Long id, EstadoEmpleado nuevoEstado);
+
+    EmpleadoResponse obtenerPerfilPersonal(String username);
+
 }

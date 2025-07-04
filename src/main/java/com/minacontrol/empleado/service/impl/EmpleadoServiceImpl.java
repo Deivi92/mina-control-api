@@ -41,7 +41,16 @@ public class EmpleadoServiceImpl implements IEmpleadoService {
     @Override
     @Transactional(readOnly = true)
     public List<EmpleadoResponse> listarEmpleados(EstadoEmpleado estado, String cargo) {
-        List<Empleado> empleados = empleadoRepository.findAll(); // Simplificado, se puede mejorar con Criteria API
+        List<Empleado> empleados;
+        if (estado != null && cargo != null) {
+            empleados = empleadoRepository.findByEstadoAndCargoContainingIgnoreCase(estado, cargo);
+        } else if (estado != null) {
+            empleados = empleadoRepository.findByEstado(estado);
+        } else if (cargo != null) {
+            empleados = empleadoRepository.findByCargoContainingIgnoreCase(cargo);
+        } else {
+            empleados = empleadoRepository.findAll();
+        }
         return empleados.stream()
                 .map(empleadoMapper::toResponse)
                 .collect(Collectors.toList());
@@ -64,5 +73,32 @@ public class EmpleadoServiceImpl implements IEmpleadoService {
         empleadoMapper.updateEntityFromRequest(request, empleado);
         Empleado updatedEmpleado = empleadoRepository.save(empleado);
         return empleadoMapper.toResponse(updatedEmpleado);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarEmpleado(Long id) {
+        Empleado empleado = empleadoRepository.findById(id)
+                .orElseThrow(() -> new EmpleadoNotFoundException("Empleado no encontrado con ID: " + id));
+        empleado.setEstado(EstadoEmpleado.INACTIVO);
+        empleadoRepository.save(empleado);
+    }
+
+    @Override
+    @Transactional
+    public EmpleadoResponse cambiarEstadoEmpleado(Long id, EstadoEmpleado nuevoEstado) {
+        Empleado empleado = empleadoRepository.findById(id)
+                .orElseThrow(() -> new EmpleadoNotFoundException("Empleado no encontrado con ID: " + id));
+        empleado.setEstado(nuevoEstado);
+        Empleado updatedEmpleado = empleadoRepository.save(empleado);
+        return empleadoMapper.toResponse(updatedEmpleado);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmpleadoResponse obtenerPerfilPersonal(String username) {
+        return empleadoRepository.findByEmail(username)
+                .map(empleadoMapper::toResponse)
+                .orElseThrow(() -> new EmpleadoNotFoundException("Empleado no encontrado para el usuario: " + username));
     }
 }

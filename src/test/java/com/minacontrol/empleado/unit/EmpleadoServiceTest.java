@@ -216,6 +216,68 @@ class EmpleadoServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("CU-EMP-004: Cambiar Estado de Empleado")
+    class CambiarEstadoEmpleadoTests {
+
+        @Test
+        @DisplayName("Debe cambiar el estado del empleado")
+        void should_ChangeEmployeeStatus() {
+            // Arrange
+            when(empleadoRepository.findById(anyLong())).thenReturn(Optional.of(empleado));
+            when(empleadoRepository.save(any(Empleado.class))).thenReturn(empleado);
+            when(empleadoMapper.toResponse(any(Empleado.class))).thenReturn(empleadoResponse);
+
+            // Act
+            empleadoService.cambiarEstadoEmpleado(1L, EstadoEmpleado.INACTIVO);
+
+            // Assert
+            verify(empleadoRepository).findById(1L);
+            verify(empleadoRepository).save(empleado);
+            assertThat(empleado.getEstado()).isEqualTo(EstadoEmpleado.INACTIVO);
+        }
+    }
+
+    @Nested
+    @DisplayName("CU-EMP-005: Consultar Perfil Personal")
+    class ConsultarPerfilPersonalTests {
+
+        @Test
+        @DisplayName("Debe devolver el perfil personal del empleado")
+        void should_ReturnPersonalProfile() {
+            // Arrange
+            when(empleadoRepository.findByEmail(anyString())).thenReturn(Optional.of(empleado));
+            when(empleadoMapper.toResponse(any(Empleado.class))).thenReturn(empleadoResponse);
+
+            // Act
+            EmpleadoResponse result = empleadoService.obtenerPerfilPersonal("juan.perez@example.com");
+
+            // Assert
+            assertThat(result).isNotNull();
+            assertThat(result.email()).isEqualTo("juan.perez@example.com");
+            verify(empleadoRepository).findByEmail("juan.perez@example.com");
+        }
+    }
+
+    @Nested
+    @DisplayName("CU-EMP-006: Eliminar (Desactivar) Empleado")
+    class EliminarEmpleadoTests {
+
+        @Test
+        @DisplayName("Debe desactivar un empleado")
+        void should_DeactivateEmployee() {
+            // Arrange
+            when(empleadoRepository.findById(anyLong())).thenReturn(Optional.of(empleado));
+
+            // Act
+            empleadoService.eliminarEmpleado(1L);
+
+            // Assert
+            verify(empleadoRepository).findById(1L);
+            verify(empleadoRepository).save(empleado);
+            assertThat(empleado.getEstado()).isEqualTo(EstadoEmpleado.INACTIVO);
+        }
+    }
 
     @Nested
     @DisplayName("CU-EMP-007: Obtener Empleado por ID")
