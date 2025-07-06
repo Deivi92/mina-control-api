@@ -6,6 +6,7 @@ import com.minacontrol.autenticacion.service.IServicioCambioContrasena;
 import com.minacontrol.autenticacion.service.impl.ServicioCambioContrasenaImpl;
 import com.minacontrol.autenticacion.dto.request.CambiarContrasenaRequestDTO;
 import com.minacontrol.autenticacion.exception.ContrasenaInvalidaException;
+import com.minacontrol.autenticacion.exception.IncorrectPasswordException;
 import com.minacontrol.autenticacion.exception.TokenInvalidoException;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -91,7 +92,7 @@ class ServicioCambioContrasenaTest {
     }
 
     @Test
-    @DisplayName("lanzarContrasenaInvalidaExceptionSiContrasenaActualIncorrecta - Debería lanzar ContrasenaInvalidaException si la contraseña actual es incorrecta")
+    @DisplayName("lanzarContrasenaInvalidaExceptionSiContrasenaActualIncorrecta - Debería lanzar IncorrectPasswordException si la contraseña actual es incorrecta")
     void lanzarContrasenaInvalidaExceptionSiContrasenaActualIncorrecta() {
         // Arrange
         cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO("WrongOldPassword!", "NewPassword123!", null);
@@ -99,7 +100,7 @@ class ServicioCambioContrasenaTest {
         when(passwordEncoder.matches("WrongOldPassword!", "hashedOldPassword")).thenReturn(false);
 
         // Act & Assert
-        assertThrows(ContrasenaInvalidaException.class, () -> {
+        assertThrows(IncorrectPasswordException.class, () -> {
             servicioCambioContrasena.cambiarContrasena(cambiarContrasenaRequestDTO, usuario.getEmail());
         });
         verify(usuarioRepository, times(1)).findByEmail(usuario.getEmail());
@@ -120,6 +121,23 @@ class ServicioCambioContrasenaTest {
         });
         verify(usuarioRepository, times(1)).findByResetToken("tokenInvalido");
         verify(passwordEncoder, never()).encode(anyString());
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+    }
+
+    @Test
+    @DisplayName("lanzarContrasenaInvalidaExceptionSiNuevaContrasenaEsIgualALaActual - Debería lanzar ContrasenaInvalidaException si la nueva contraseña es igual a la actual")
+    void lanzarContrasenaInvalidaExceptionSiNuevaContrasenaEsIgualALaActual() {
+        // Arrange
+        cambiarContrasenaRequestDTO = new CambiarContrasenaRequestDTO("SamePassword123!", "SamePassword123!", null);
+        when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(passwordEncoder.matches("SamePassword123!", "hashedOldPassword")).thenReturn(true);
+
+        // Act & Assert
+        assertThrows(ContrasenaInvalidaException.class, () -> {
+            servicioCambioContrasena.cambiarContrasena(cambiarContrasenaRequestDTO, usuario.getEmail());
+        });
+        verify(usuarioRepository, times(1)).findByEmail(usuario.getEmail());
+        verify(passwordEncoder, times(1)).matches("SamePassword123!", "hashedOldPassword");
         verify(usuarioRepository, never()).save(any(Usuario.class));
     }
 }
