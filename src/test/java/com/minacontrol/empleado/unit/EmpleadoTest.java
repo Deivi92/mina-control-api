@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -30,8 +31,8 @@ class EmpleadoTest {
         BigDecimal salarioBase = new BigDecimal("1500.00");
         EstadoEmpleado estado = EstadoEmpleado.ACTIVO;
         RolSistema rolSistema = RolSistema.ADMINISTRADOR;
-        LocalDateTime createdAt = LocalDateTime.now();
-        LocalDateTime updatedAt = LocalDateTime.now();
+        Instant createdAt = Instant.now();
+        Instant updatedAt = Instant.now();
 
         // Act
         Empleado empleado = Empleado.builder()

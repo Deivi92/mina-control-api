@@ -2,6 +2,7 @@ package com.minacontrol.autenticacion.service.impl;
 
 import com.minacontrol.autenticacion.dto.request.CambiarContrasenaRequestDTO;
 import com.minacontrol.autenticacion.exception.ContrasenaInvalidaException;
+import com.minacontrol.autenticacion.exception.IncorrectPasswordException;
 import com.minacontrol.autenticacion.exception.TokenInvalidoException;
 import com.minacontrol.autenticacion.model.Usuario;
 import com.minacontrol.autenticacion.repository.UsuarioRepository;
@@ -54,7 +55,11 @@ public class ServicioCambioContrasenaImpl implements IServicioCambioContrasena {
                 .orElseThrow(() -> new ContrasenaInvalidaException("Usuario no encontrado.")); // Esto no debería ocurrir si el usuario está autenticado
 
         if (!passwordEncoder.matches(cambiarContrasenaRequestDTO.oldPassword(), usuario.getPassword())) {
-            throw new ContrasenaInvalidaException("La contraseña actual es incorrecta.");
+            throw new IncorrectPasswordException("La contraseña actual es incorrecta.");
+        }
+
+        if (cambiarContrasenaRequestDTO.newPassword().equals(cambiarContrasenaRequestDTO.oldPassword())) {
+            throw new ContrasenaInvalidaException("La nueva contraseña no puede ser igual a la actual.");
         }
 
         usuario.setPassword(passwordEncoder.encode(cambiarContrasenaRequestDTO.newPassword()));

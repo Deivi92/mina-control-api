@@ -6,11 +6,14 @@ import com.minacontrol.autenticacion.dto.response.LoginResponseDTO;
 import com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO;
 import com.minacontrol.autenticacion.dto.response.RefreshTokenResponseDTO;
 import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
+import com.minacontrol.autenticacion.dto.request.LogoutRequestDTO;
 import com.minacontrol.autenticacion.dto.request.RecuperarContrasenaRequestDTO;
 import com.minacontrol.autenticacion.dto.response.UsuarioDTO;
 import com.minacontrol.autenticacion.service.IServicioAutenticacion;
 import com.minacontrol.autenticacion.service.IServicioCambioContrasena;
 import com.minacontrol.autenticacion.service.IServicioRecuperacionContrasena;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,13 +46,13 @@ public class AutenticacionController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logoutUsuario(@RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
-        servicioAutenticacion.logoutUsuario(refreshTokenRequestDTO.refreshToken());
+    public ResponseEntity<Void> logoutUsuario(@Valid @RequestBody LogoutRequestDTO logoutRequestDTO) {
+        servicioAutenticacion.logoutUsuario(logoutRequestDTO.refreshToken());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<RefreshTokenResponseDTO> refreshToken(@RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
+    public ResponseEntity<RefreshTokenResponseDTO> refreshToken(@Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
         RefreshTokenResponseDTO response = servicioAutenticacion.refreshToken(refreshTokenRequestDTO);
         return ResponseEntity.ok(response);
     }
@@ -61,15 +64,22 @@ public class AutenticacionController {
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<Void> cambiarContrasena(@Valid @RequestBody CambiarContrasenaRequestDTO cambiarContrasenaRequestDTO) {
-        // TODO: En un escenario real, se obtendría el email del usuario autenticado del contexto de seguridad
-        // Por ahora, se asume que si no hay token, se intenta con el email (para pruebas o flujos específicos)
+    public ResponseEntity<Void> cambiarContrasena(@RequestBody CambiarContrasenaRequestDTO cambiarContrasenaRequestDTO) {
         if (cambiarContrasenaRequestDTO.token() != null && !cambiarContrasenaRequestDTO.token().isEmpty()) {
+            // Flujo de recuperación de contraseña (con token)
+            if (cambiarContrasenaRequestDTO.newPassword() == null || cambiarContrasenaRequestDTO.newPassword().isEmpty()) {
+                throw new IllegalArgumentException("La nueva contraseña no puede estar vacía.");
+            }
             servicioCambioContrasena.cambiarContrasena(cambiarContrasenaRequestDTO);
-        } else {
-            // Placeholder para el email del usuario autenticado. En un sistema real, se obtendría de Spring SecurityContext
-            String emailUsuarioAutenticado = "usuario_autenticado@example.com"; // Esto debe ser dinámico
+        } else if (cambiarContrasenaRequestDTO.oldPassword() != null && !cambiarContrasenaRequestDTO.oldPassword().isEmpty()) {
+            // Flujo de cambio de contraseña (con contraseña actual)
+            if (cambiarContrasenaRequestDTO.newPassword() == null || cambiarContrasenaRequestDTO.newPassword().isEmpty()) {
+                throw new IllegalArgumentException("La nueva contraseña no puede estar vacía.");
+            }
+            String emailUsuarioAutenticado = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
             servicioCambioContrasena.cambiarContrasena(cambiarContrasenaRequestDTO, emailUsuarioAutenticado);
+        } else {
+            throw new IllegalArgumentException("Se requiere la contraseña actual o un token para cambiar la contraseña.");
         }
         return ResponseEntity.ok().build();
     }

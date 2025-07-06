@@ -11,8 +11,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -21,55 +21,51 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "empleados")
 public class Empleado {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nombres", nullable = false)
+    @Column(nullable = false, length = 100)
     private String nombres;
 
-    @Column(name = "apellidos", nullable = false)
+    @Column(nullable = false, length = 100)
     private String apellidos;
 
-    @Column(name = "numero_identificacion", unique = true, nullable = false)
+    @Column(name = "numero_identificacion", nullable = false, unique = true, length = 20)
     private String numeroIdentificacion;
 
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "telefono")
+    @Column(length = 15)
     private String telefono;
 
-    @Column(name = "cargo")
+    @Column(nullable = false)
     private String cargo;
 
     @Column(name = "fecha_contratacion", nullable = false)
     private LocalDate fechaContratacion;
 
-    @Column(name = "salario_base", nullable = false)
+    @Column(name = "salario_base", nullable = false, precision = 10, scale = 2)
     private BigDecimal salarioBase;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "estado", nullable = false)
-    @Builder.Default
-    private EstadoEmpleado estado = EstadoEmpleado.ACTIVO;
+    @Column(nullable = false)
+    private EstadoEmpleado estado;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rol_sistema", nullable = false)
     private RolSistema rolSistema;
 
     @Column(name = "tiene_usuario", nullable = false)
-    @Builder.Default
-    private Boolean tieneUsuario = false;
+    private boolean tieneUsuario = false;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    @Version
-    private Integer version;
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 }

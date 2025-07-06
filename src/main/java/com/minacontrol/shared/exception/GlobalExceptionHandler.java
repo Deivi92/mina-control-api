@@ -5,6 +5,8 @@ import com.minacontrol.autenticacion.exception.UsuarioNoEncontradoException;
 import com.minacontrol.autenticacion.exception.UsuarioYaExisteException;
 import com.minacontrol.empleado.exception.EmpleadoAlreadyExistsException;
 import com.minacontrol.empleado.exception.EmpleadoNotFoundException;
+import com.minacontrol.autenticacion.exception.TokenInvalidoException;
+import com.minacontrol.autenticacion.exception.IncorrectPasswordException;
 import com.minacontrol.shared.dto.ErrorResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -59,5 +61,27 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(TokenInvalidoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTokenInvalidoException(TokenInvalidoException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IncorrectPasswordException.class)
+    public ResponseEntity<ErrorResponseDTO> handleIncorrectPasswordException(IncorrectPasswordException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 }

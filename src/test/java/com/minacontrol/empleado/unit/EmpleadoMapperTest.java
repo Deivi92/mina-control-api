@@ -11,8 +11,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,8 +44,8 @@ class EmpleadoMapperTest {
                 .estado(EstadoEmpleado.ACTIVO)
                 .rolSistema(RolSistema.EMPLEADO)
                 .tieneUsuario(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
 
         // Act
@@ -62,9 +64,9 @@ class EmpleadoMapperTest {
         assertThat(response.salarioBase()).isEqualTo(empleado.getSalarioBase());
         assertThat(response.estado()).isEqualTo(empleado.getEstado());
         assertThat(response.rolSistema()).isEqualTo(empleado.getRolSistema());
-        assertThat(response.tieneUsuario()).isEqualTo(empleado.getTieneUsuario());
-        assertThat(response.createdAt()).isEqualTo(empleado.getCreatedAt());
-        assertThat(response.updatedAt()).isEqualTo(empleado.getUpdatedAt());
+        assertThat(response.tieneUsuario()).isEqualTo(empleado.isTieneUsuario());
+        assertThat(response.createdAt()).isEqualTo(LocalDateTime.ofInstant(empleado.getCreatedAt(), ZoneId.systemDefault()));
+        assertThat(response.updatedAt()).isEqualTo(LocalDateTime.ofInstant(empleado.getUpdatedAt(), ZoneId.systemDefault()));
     }
 
     @Test

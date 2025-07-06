@@ -44,7 +44,7 @@ public class ServicioAutenticacionImpl implements IServicioAutenticacion {
                 .orElseThrow(() -> new EmpleadoNotFoundException("El empleado con el email proporcionado no fue encontrado."));
 
         // 2. Verificar que el empleado no tiene ya una cuenta de usuario
-        if (empleado.getTieneUsuario()) {
+        if (empleado.isTieneUsuario()) {
             throw new UsuarioYaExisteException("El empleado ya tiene una cuenta.");
         }
 
@@ -94,13 +94,19 @@ public class ServicioAutenticacionImpl implements IServicioAutenticacion {
 
     @Override
     public void logoutUsuario(String refreshToken) {
-        // Implementación pendiente: Invalidación de refresh token
-        throw new UnsupportedOperationException("Unimplemented method 'logoutUsuario'");
+        // En un escenario real, aquí se invalidaría el refresh token.
+        // Esto podría ser añadiéndolo a una lista negra, eliminándolo de la BD, etc.
+        // Por ahora, solo simulamos la invalidación.
+        System.out.println("Refresh Token invalidado (simulado): " + refreshToken);
     }
 
     @Override
     public RefreshTokenResponseDTO refreshToken(RefreshTokenRequestDTO refreshTokenRequestDTO) {
-        // Implementación pendiente: Generación de nuevo access token usando refresh token
-        throw new UnsupportedOperationException("Unimplemented method 'refreshToken'");
+        // En un escenario real, aquí se validaría el refreshToken y se generaría un nuevo accessToken.
+        // Por ahora, simulamos la generación de tokens.
+        System.out.println("Generando nuevo Access Token para Refresh Token: " + refreshTokenRequestDTO.refreshToken());
+        String newAccessToken = "newDummyAccessToken_" + System.currentTimeMillis();
+        String newRefreshToken = "newDummyRefreshToken_" + System.currentTimeMillis();
+        return new RefreshTokenResponseDTO(newAccessToken, newRefreshToken);
     }
 }

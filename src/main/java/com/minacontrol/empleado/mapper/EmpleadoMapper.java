@@ -5,6 +5,9 @@ import com.minacontrol.empleado.dto.response.EmpleadoResponse;
 import com.minacontrol.empleado.entity.Empleado;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 @Component
 public class EmpleadoMapper {
 
@@ -41,9 +44,9 @@ public class EmpleadoMapper {
                 entity.getSalarioBase(),
                 entity.getEstado(),
                 entity.getRolSistema(),
-                entity.getTieneUsuario(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.isTieneUsuario(),
+                entity.getCreatedAt() != null ? LocalDateTime.ofInstant(entity.getCreatedAt(), ZoneId.systemDefault()) : null,
+                entity.getUpdatedAt() != null ? LocalDateTime.ofInstant(entity.getUpdatedAt(), ZoneId.systemDefault()) : null
         );
     }
 

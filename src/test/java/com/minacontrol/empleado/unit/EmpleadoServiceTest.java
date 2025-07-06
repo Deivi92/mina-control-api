@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -64,8 +65,8 @@ class EmpleadoServiceTest {
                 .estado(EstadoEmpleado.ACTIVO)
                 .rolSistema(RolSistema.EMPLEADO)
                 .tieneUsuario(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
 
         empleadoRequest = new EmpleadoRequest(
@@ -78,7 +79,7 @@ class EmpleadoServiceTest {
                 1L, "Juan", "Perez", "123456789", "juan.perez@example.com",
                 "1234567890", "Operador", LocalDate.of(2023, 1, 1),
                 new BigDecimal("1000.00"), EstadoEmpleado.ACTIVO, RolSistema.EMPLEADO,
-                false, empleado.getCreatedAt(), empleado.getUpdatedAt()
+                false, LocalDateTime.now(), LocalDateTime.now()
         );
     }
 

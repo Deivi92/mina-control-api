@@ -9,6 +9,7 @@ import com.minacontrol.shared.service.IServicioCorreo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -25,9 +26,16 @@ public class ServicioRecuperacionContrasenaImpl implements IServicioRecuperacion
     @Override
     @Transactional
     public void iniciarRecuperacion(RecuperarContrasenaRequestDTO recuperarContrasenaRequestDTO) {
-        Usuario usuario = usuarioRepository.findByEmail(recuperarContrasenaRequestDTO.email())
-                .orElseThrow(() -> new UsuarioNoEncontradoException("El email proporcionado no está registrado."));
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByEmail(recuperarContrasenaRequestDTO.email());
 
+        if (usuarioOptional.isEmpty()) {
+            // Por seguridad, no revelamos si el email existe o no.
+            // Simplemente registramos el intento y retornamos.
+            System.out.println("Intento de recuperación de contraseña para email no registrado: " + recuperarContrasenaRequestDTO.email());
+            return;
+        }
+
+        Usuario usuario = usuarioOptional.get();
         String resetToken = UUID.randomUUID().toString();
         // TODO: Implementar lógica para establecer la expiración del token (ej. 24 horas)
         usuario.setResetToken(resetToken);

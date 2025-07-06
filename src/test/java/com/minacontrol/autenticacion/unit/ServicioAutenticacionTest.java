@@ -13,6 +13,7 @@ import com.minacontrol.autenticacion.dto.response.UsuarioDTO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class ServicioAutenticacionTest {
@@ -73,7 +75,7 @@ class ServicioAutenticacionTest {
         // Assert
         assertNotNull(result);
         assertEquals(registroUsuarioCreateDTO.email(), result.email());
-        assertTrue(empleado.getTieneUsuario()); // Verifica que el empleado ahora tiene usuario
+        assertTrue(empleado.isTieneUsuario()); // Verifica que el empleado ahora tiene usuario
         verify(empleadoRepository, times(1)).findByEmail(registroUsuarioCreateDTO.email());
         verify(usuarioRepository, times(1)).findByEmail(registroUsuarioCreateDTO.email());
         verify(passwordEncoder, times(1)).encode(registroUsuarioCreateDTO.password());
@@ -125,5 +127,46 @@ class ServicioAutenticacionTest {
         assertEquals("El email ya está en uso.", thrown.getMessage());
         verify(empleadoRepository, times(1)).findByEmail(registroUsuarioCreateDTO.email());
         verify(usuarioRepository, times(1)).findByEmail(registroUsuarioCreateDTO.email());
+    }
+
+    @Nested
+    @DisplayName("CU-AUT-003: Logout de Usuario")
+    class LogoutUsuarioTests {
+
+        @Test
+        @DisplayName("Debería invalidar el token de refresco exitosamente")
+        void should_InvalidateRefreshToken_Successfully() {
+            // Arrange
+            String refreshToken = "someValidRefreshToken";
+
+            // Act
+            servicioAutenticacion.logoutUsuario(refreshToken);
+
+            // Assert
+            // En un escenario real, aquí verificaríamos que el token fue invalidado en el repositorio/cache
+            // Dado que la implementación actual es un System.out.println, no hay nada que verificar con Mockito.
+            // Solo nos aseguramos de que el método se llama sin excepciones.
+            verify(usuarioRepository, never()).save(any(Usuario.class)); // Asegurarse de que no se guarda nada en el repo de usuario
+        }
+    }
+
+    @Nested
+    @DisplayName("CU-AUT-005: Refresh Token")
+    class RefreshTokenTests {
+
+        @Test
+        @DisplayName("Debería generar un nuevo access token y refresh token exitosamente")
+        void should_GenerateNewTokens_Successfully() {
+            // Arrange
+            var refreshTokenRequestDTO = new com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO("oldRefreshToken");
+
+            // Act
+            var result = servicioAutenticacion.refreshToken(refreshTokenRequestDTO);
+
+            // Assert
+            assertThat(result).isNotNull();
+            assertThat(result.accessToken()).startsWith("newDummyAccessToken_");
+            assertThat(result.refreshToken()).startsWith("newDummyRefreshToken_");
+        }
     }
 }

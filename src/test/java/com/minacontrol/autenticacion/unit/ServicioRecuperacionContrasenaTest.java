@@ -60,19 +60,5 @@ class ServicioRecuperacionContrasenaTest {
         verify(servicioCorreo, times(1)).enviarCorreoRecuperacion(eq(usuario), anyString()); // Verifica que se envía el correo
     }
 
-    @Test
-    @DisplayName("deberiaLanzarUsuarioNoEncontradoException - Debería lanzar UsuarioNoEncontradoException si el email no existe")
-    void deberiaLanzarUsuarioNoEncontradoException() {
-        // Arrange
-        when(usuarioRepository.findByEmail(recuperarContrasenaRequestDTO.email())).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(UsuarioNoEncontradoException.class, () ->
-                servicioRecuperacionContrasena.iniciarRecuperacion(recuperarContrasenaRequestDTO));
-
-        // Assert
-        verify(usuarioRepository, times(1)).findByEmail(recuperarContrasenaRequestDTO.email());
-        verify(usuarioRepository, never()).save(any(Usuario.class));
-        verify(servicioCorreo, never()).enviarCorreoRecuperacion(any(Usuario.class), anyString());
-    }
+    
 }
