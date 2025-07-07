@@ -11,5 +11,6 @@ public record RegistroAsistenciaDTO(
         LocalTime horaEntrada,
         LocalTime horaSalida,
         double horasTrabajadas,
-        String estado
+        String estado,
+        String motivo
 ) {}

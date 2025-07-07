@@ -5,6 +5,9 @@ import com.minacontrol.autenticacion.exception.UsuarioNoEncontradoException;
 import com.minacontrol.autenticacion.exception.UsuarioYaExisteException;
 import com.minacontrol.empleado.exception.EmpleadoAlreadyExistsException;
 import com.minacontrol.empleado.exception.EmpleadoNotFoundException;
+import com.minacontrol.turnos.exception.TurnoAlreadyExistsException;
+import com.minacontrol.turnos.exception.TurnoNoEncontradoException;
+import com.minacontrol.turnos.exception.AsignacionTurnoInvalidaException;
 import com.minacontrol.autenticacion.exception.TokenInvalidoException;
 import com.minacontrol.autenticacion.exception.IncorrectPasswordException;
 import com.minacontrol.shared.dto.ErrorResponseDTO;
@@ -76,6 +79,39 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IncorrectPasswordException.class)
     public ResponseEntity<ErrorResponseDTO> handleIncorrectPasswordException(IncorrectPasswordException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(TurnoNoEncontradoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTurnoNotFound(TurnoNoEncontradoException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(TurnoAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTurnoAlreadyExists(TurnoAlreadyExistsException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AsignacionTurnoInvalidaException.class)
+    public ResponseEntity<ErrorResponseDTO> handleAsignacionTurnoInvalida(AsignacionTurnoInvalidaException ex, HttpServletRequest request) {
         ErrorResponseDTO error = new ErrorResponseDTO(
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),

@@ -56,7 +56,7 @@ class AsistenciaServiceTest {
             var dto = new RegistrarAsistenciaDTO(1L, TipoRegistro.ENTRADA);
             var asignacion = new AsignacionTurno();
             var registro = new RegistroAsistencia();
-            var registroDTO = new RegistroAsistenciaDTO(1L, 1L, LocalDate.now(), LocalTime.now(), null, 0, "ENTRADA");
+            var registroDTO = new RegistroAsistenciaDTO(1L, 1L, LocalDate.now(), LocalTime.now(), null, 0, "ENTRADA", null);
 
             when(asignacionTurnoRepository.findConflictosDeHorario(anyLong(), any(), any())).thenReturn(java.util.List.of(asignacion));
             when(registroAsistenciaRepository.findByEmpleadoIdAndFecha(anyLong(), any())).thenReturn(Optional.empty());

@@ -100,13 +100,13 @@ public class TurnoServiceImpl implements ITurnoService {
     @Transactional
     public AsignacionTurnoDTO asignarEmpleadoATurno(AsignacionTurnoCreateDTO createDTO) {
         Empleado empleado = empleadoRepository.findById(createDTO.empleadoId())
-                .orElseThrow(() -> new AsignacionTurnoInvalidaException("El empleado no existe."));
+                .orElseThrow(() -> new com.minacontrol.empleado.exception.EmpleadoNotFoundException("Empleado no encontrado con ID: " + createDTO.empleadoId()));
         if (empleado.getEstado() != com.minacontrol.empleado.enums.EstadoEmpleado.ACTIVO) {
             throw new AsignacionTurnoInvalidaException("El empleado no está activo.");
         }
 
         TipoTurno tipoTurno = tipoTurnoRepository.findById(createDTO.tipoTurnoId())
-                .orElseThrow(() -> new AsignacionTurnoInvalidaException("El tipo de turno no existe."));
+                .orElseThrow(() -> new com.minacontrol.turnos.exception.TurnoNoEncontradoException("Tipo de turno no encontrado con ID: " + createDTO.tipoTurnoId()));
         if (!tipoTurno.isActivo()) {
             throw new AsignacionTurnoInvalidaException("El tipo de turno no está activo.");
         }

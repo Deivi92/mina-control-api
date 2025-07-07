@@ -215,6 +215,22 @@ class EmpleadoServiceTest {
             verify(empleadoRepository).findById(1L);
             verify(empleadoRepository, never()).save(any(Empleado.class));
         }
+
+        @Test
+        @DisplayName("Debe lanzar EmpleadoAlreadyExistsException si el email ya existe en otro empleado al actualizar")
+        void should_ThrowException_When_EmailAlreadyExistsInAnotherEmployeeOnUpdate() {
+            // Arrange
+            Empleado otroEmpleado = Empleado.builder().id(2L).email("otro@example.com").build();
+            when(empleadoRepository.findById(1L)).thenReturn(Optional.of(empleado));
+            when(empleadoRepository.findByEmail(empleadoRequest.email())).thenReturn(Optional.of(otroEmpleado));
+
+            // Act & Assert
+            assertThrows(EmpleadoAlreadyExistsException.class, () -> empleadoService.actualizarEmpleado(1L, empleadoRequest));
+
+            verify(empleadoRepository).findById(1L);
+            verify(empleadoRepository).findByEmail(empleadoRequest.email());
+            verify(empleadoRepository, never()).save(any(Empleado.class));
+        }
     }
 
     @Nested
@@ -277,6 +293,34 @@ class EmpleadoServiceTest {
             verify(empleadoRepository).findById(1L);
             verify(empleadoRepository).save(empleado);
             assertThat(empleado.getEstado()).isEqualTo(EstadoEmpleado.INACTIVO);
+        }
+
+        @Test
+        @DisplayName("Debe lanzar EmpleadoNotFoundException si el empleado a desactivar no existe")
+        void should_ThrowException_When_EmployeeToDeactivateDoesNotExist() {
+            // Arrange
+            when(empleadoRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+            // Act & Assert
+            assertThrows(EmpleadoNotFoundException.class, () -> empleadoService.eliminarEmpleado(1L));
+            verify(empleadoRepository).findById(1L);
+            verify(empleadoRepository, never()).save(any(Empleado.class));
+        }
+
+        @Test
+        @DisplayName("Debe lanzar EmpleadoAlreadyInactiveException si el empleado ya está inactivo")
+        void should_ThrowException_When_EmployeeIsAlreadyInactive() {
+            // Arrange
+            empleado.setEstado(EstadoEmpleado.INACTIVO);
+            when(empleadoRepository.findById(1L)).thenReturn(Optional.of(empleado));
+
+            // Act & Assert
+            assertThrows(com.minacontrol.empleado.exception.EmpleadoAlreadyInactiveException.class, () -> {
+                empleadoService.eliminarEmpleado(1L);
+            });
+
+            verify(empleadoRepository).findById(1L);
+            verify(empleadoRepository, never()).save(any(Empleado.class));
         }
     }
 

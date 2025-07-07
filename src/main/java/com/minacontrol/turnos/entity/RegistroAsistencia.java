@@ -41,4 +41,7 @@ public class RegistroAsistencia {
     @Enumerated(EnumType.STRING)
     @Column(name = "estado")
     private TipoRegistro estado;
+
+    @Column(name = "motivo")
+    private String motivo;
 }

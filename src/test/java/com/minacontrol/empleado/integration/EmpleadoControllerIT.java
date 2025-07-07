@@ -218,6 +218,20 @@ class EmpleadoControllerIT {
                     .content(objectMapper.writeValueAsString(updateRequest)))
                     .andExpect(status().isNotFound());
         }
+
+        @Test
+        @DisplayName("Debe devolver 409 Conflict si el email ya existe en otro empleado al actualizar")
+        void should_Return409_When_EmailAlreadyExistsInAnotherEmpleadoOnUpdate() throws Exception {
+            EmpleadoRequest updateRequest = new EmpleadoRequest(empleadoActivo.getNombres(), empleadoActivo.getApellidos(),
+                    empleadoActivo.getNumeroIdentificacion(), empleadoInactivo.getEmail(), // Using email of another employee
+                    empleadoActivo.getTelefono(), empleadoActivo.getCargo(), empleadoActivo.getFechaContratacion(),
+                    empleadoActivo.getSalarioBase(), empleadoActivo.getRolSistema());
+
+            mockMvc.perform(put("/api/v1/empleados/{id}", empleadoActivo.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(updateRequest)))
+                    .andExpect(status().isConflict());
+        }
     }
 
     @Nested
@@ -241,6 +255,13 @@ class EmpleadoControllerIT {
         void should_Return404_When_EmpleadoToDeactivateNotFound() throws Exception {
             mockMvc.perform(delete("/api/v1/empleados/{id}", 999L))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("Debe devolver 409 Conflict si el empleado ya está inactivo")
+        void should_Return409_When_EmpleadoIsAlreadyInactive() throws Exception {
+            mockMvc.perform(delete("/api/v1/empleados/{id}", empleadoInactivo.getId()))
+                    .andExpect(status().isConflict());
         }
     }
 
@@ -284,6 +305,15 @@ class EmpleadoControllerIT {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(EstadoEmpleado.ACTIVO)))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("Debe devolver 400 Bad Request si el estado es inválido")
+        void should_Return400_When_InvalidEstado() throws Exception {
+            mockMvc.perform(patch("/api/v1/empleados/{id}/estado", empleadoActivo.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("\"INVALID_STATUS\""))
+                    .andExpect(status().isBadRequest());
         }
     }
 

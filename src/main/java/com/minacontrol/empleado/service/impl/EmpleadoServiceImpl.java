@@ -27,15 +27,16 @@ public class EmpleadoServiceImpl implements IEmpleadoService {
     @Transactional
     public EmpleadoResponse crearEmpleado(EmpleadoRequest request) {
         if (empleadoRepository.existsByNumeroIdentificacion(request.numeroIdentificacion())) {
-            throw new EmpleadoAlreadyExistsException("El número de identificación ya existe: " + request.numeroIdentificacion());
+            throw new EmpleadoAlreadyExistsException("Ya existe un empleado con el número de identificación " + request.numeroIdentificacion());
         }
         if (empleadoRepository.existsByEmail(request.email())) {
-            throw new EmpleadoAlreadyExistsException("El email ya existe: " + request.email());
+            throw new EmpleadoAlreadyExistsException("Ya existe un empleado con el email " + request.email());
         }
 
         Empleado empleado = empleadoMapper.toEntity(request);
-        Empleado savedEmpleado = empleadoRepository.save(empleado);
-        return empleadoMapper.toResponse(savedEmpleado);
+        empleado.setEstado(EstadoEmpleado.ACTIVO); // Estado por defecto
+        Empleado nuevoEmpleado = empleadoRepository.save(empleado);
+        return empleadoMapper.toResponse(nuevoEmpleado);
     }
 
     @Override
@@ -68,18 +69,30 @@ public class EmpleadoServiceImpl implements IEmpleadoService {
     @Transactional
     public EmpleadoResponse actualizarEmpleado(Long id, EmpleadoRequest request) {
         Empleado empleado = empleadoRepository.findById(id)
-                .orElseThrow(() -> new EmpleadoNotFoundException("Empleado no encontrado con ID: " + id));
+                .orElseThrow(() -> new EmpleadoNotFoundException("Empleado no encontrado con id: " + id));
+
+        // Validar que el email no exista en otro empleado diferente
+        empleadoRepository.findByEmail(request.email()).ifPresent(empleadoExistente -> {
+            if (!empleadoExistente.getId().equals(id)) {
+                throw new EmpleadoAlreadyExistsException("El email " + request.email() + " ya está en uso por otro empleado.");
+            }
+        });
 
         empleadoMapper.updateEntityFromRequest(request, empleado);
-        Empleado updatedEmpleado = empleadoRepository.save(empleado);
-        return empleadoMapper.toResponse(updatedEmpleado);
+        Empleado empleadoActualizado = empleadoRepository.save(empleado);
+        return empleadoMapper.toResponse(empleadoActualizado);
     }
 
     @Override
     @Transactional
     public void eliminarEmpleado(Long id) {
         Empleado empleado = empleadoRepository.findById(id)
-                .orElseThrow(() -> new EmpleadoNotFoundException("Empleado no encontrado con ID: " + id));
+                .orElseThrow(() -> new EmpleadoNotFoundException("Empleado no encontrado con id: " + id));
+
+        if (empleado.getEstado() == EstadoEmpleado.INACTIVO) {
+            throw new com.minacontrol.empleado.exception.EmpleadoAlreadyInactiveException("El empleado con ID " + id + " ya está inactivo.");
+        }
+
         empleado.setEstado(EstadoEmpleado.INACTIVO);
         empleadoRepository.save(empleado);
     }
