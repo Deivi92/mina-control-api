@@ -270,3 +270,54 @@ Estas reglas definen la interacción esperada con el asistente de IA para garant
 
 *   **Tono y Proactividad:** El asistente debe mantener un tono profesional y colaborativo. Si una solicitud es ambigua, perjudicial o puede mejorarse, el asistente debe señalarlo y proponer alternativas en lugar de proceder ciegamente o ser condescendiente.
 *   **Resolución de Dudas:** Ante la duda, la inacción es preferible a la acción incorrecta. Si el asistente no está seguro de cómo implementar un requisito o si la información en este documento es insuficiente, **debe** detenerse, solicitar clarificación al usuario y, si es apropiado, buscar información pública en la web. No debe realizar acciones sin estar seguro.
+
+## 11. Directrices para la Creación de Casos de Uso de Bajo Nivel
+
+Al crear o actualizar un Caso de Uso de Bajo Nivel (CU-DOM-XXX), es **obligatorio** referenciar los diagramas relevantes para proporcionar un contexto visual completo. Estos diagramas deben ser mencionados en la sección "Referencias" del caso de uso.
+
+La estructura de los diagramas es la siguiente:
+
+*   **Diagramas Generales (ER y Clases):**
+    *   **Diagrama ER Completo:** `docs/diagrams/general/er_diagram_completo.puml`
+    *   **Diagrama de Clases Completo:** `docs/diagrams/general/class_diagram_completo.puml`
+    Estos diagramas proporcionan una visión global de la base de datos y la estructura de clases del sistema, respectivamente.
+
+*   **Diagramas de Secuencia por Dominio:**
+    *   Para cada dominio (ej. `autenticacion`, `empleados`, `turnos`), los diagramas de secuencia específicos se encuentran en `docs/diagrams/{nombre_del_dominio}/sequence_*.puml`.
+    *   Se debe referenciar el diagrama de secuencia que ilustre el flujo del caso de uso específico que se está documentando.
+
+**Ejemplo de Referencias en un Caso de Uso:**
+```
+## 13. Referencias
+*   **Diagrama de Secuencia:** `docs/diagrams/autenticacion/sequence_registro_usuario.puml`
+*   **Diagrama de Clases:** `docs/diagrams/general/class_diagram_completo.puml`
+*   **Diagrama ER:** `docs/diagrams/general/er_diagram_completo.puml`
+```
+Esta convención asegura que cada caso de uso esté debidamente contextualizado visualmente, facilitando la comprensión y el desarrollo.
+
+## 12. Gestión de Entornos con Perfiles de Spring
+
+Para facilitar el desarrollo y las pruebas manuales, el proyecto utiliza perfiles de Spring para gestionar la configuración de seguridad y de base de datos de forma separada para cada entorno.
+
+- **Perfil `dev` (Desarrollo Local):**
+    - **Propósito:** Agilizar el desarrollo y las pruebas manuales con herramientas como `cURL` o Postman.
+    - **Activación:** `mvn spring-boot:run -Dspring-boot.run.profiles=dev`
+    - **Comportamiento:**
+        - **Seguridad:** Deshabilitada. Todas las peticiones a los endpoints son permitidas (`permitAll`).
+        - **Base de Datos:** Se utiliza una base de datos en memoria H2 que se crea y destruye con cada ejecución.
+
+- **Perfil `test` (Pruebas de Integración):**
+    - **Propósito:** Asegurar que el código nuevo no rompe la funcionalidad existente.
+    - **Activación:** Automática al ejecutar `mvn verify` o `mvn test`.
+    - **Comportamiento:**
+        - **Seguridad:** **Habilitada**. Se utiliza la configuración de seguridad real (`SecurityConfig.java`). Las pruebas deben simular la autenticación si es necesario.
+        - **Base de Datos:** Se utiliza una base de datos en memoria H2 limpia para cada ejecución de prueba.
+
+- **Perfil `prod` o por defecto (Producción):**
+    - **Propósito:** Ejecución en el entorno de producción real.
+    - **Activación:** Al ejecutar el JAR (`java -jar ...`) sin especificar un perfil, o especificando `prod`.
+    - **Comportamiento:**
+        - **Seguridad:** **Habilitada** con la configuración más estricta.
+        - **Base de Datos:** Se conecta a la base de datos PostgreSQL de producción (requiere configuración externa).
+
+**Regla de Oro:** Solo necesitas especificar el perfil `dev` explícitamente. Para todas las demás tareas (como `mvn verify`), el sistema aplicará automáticamente la configuración segura y correcta.

@@ -43,12 +43,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-        <!-- H2: Base de datos en memoria, exclusiva para testing -->
-        <!-- PARA QUÉ: Pruebas de integración rápidas sin Docker ni PostgreSQL -->
+        <!-- H2: Base de datos en memoria, para desarrollo y testing -->
+        <!-- PARA QUÉ: Pruebas de integración rápidas y desarrollo local sin Docker -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <scope>runtime</scope>
         </dependency>
         
         <!-- ========== BASE DE DATOS (PRODUCCIÓN) ========== -->
