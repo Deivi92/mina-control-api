@@ -5,6 +5,9 @@ import com.minacontrol.autenticacion.exception.UsuarioNoEncontradoException;
 import com.minacontrol.autenticacion.exception.UsuarioYaExisteException;
 import com.minacontrol.empleado.exception.EmpleadoAlreadyExistsException;
 import com.minacontrol.empleado.exception.EmpleadoNotFoundException;
+import com.minacontrol.produccion.exception.RegistroProduccionDuplicateException;
+import com.minacontrol.produccion.exception.RegistroProduccionNotFoundException;
+import com.minacontrol.produccion.exception.RegistroProduccionValidatedException;
 import com.minacontrol.turnos.exception.TurnoAlreadyExistsException;
 import com.minacontrol.turnos.exception.TurnoNoEncontradoException;
 import com.minacontrol.turnos.exception.AsignacionTurnoInvalidaException;
@@ -21,6 +24,8 @@ import java.time.Instant;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // ... (manejadores existentes de otros dominios)
 
     @ExceptionHandler(EmpleadoNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleEmpleadoNotFound(EmpleadoNotFoundException ex, HttpServletRequest request) {
@@ -119,5 +124,29 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // NUEVOS MANEJADORES PARA EL DOMINIO DE PRODUCCION
+
+    @ExceptionHandler(RegistroProduccionNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleRegistroProduccionNotFound(RegistroProduccionNotFoundException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({RegistroProduccionDuplicateException.class, RegistroProduccionValidatedException.class})
+    public ResponseEntity<ErrorResponseDTO> handleProduccionConflict(RuntimeException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 }
