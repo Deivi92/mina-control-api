@@ -155,7 +155,10 @@ public class NominaServiceImpl implements INominaService {
     @Override
     @Transactional(readOnly = true)
     public List<CalculoNominaDTO> consultarHistorialPagos(Long empleadoId, LocalDate fechaInicio, LocalDate fechaFin) {
-        List<CalculoNomina> calculos = calculoNominaRepository.findByEmpleadoIdAndFechas(empleadoId, fechaInicio, fechaFin);
+        if (fechaInicio.isAfter(fechaFin)) {
+            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin.");
+        }
+                List<CalculoNomina> calculos = calculoNominaRepository.findByEmpleadoIdAndFechas(empleadoId, fechaInicio, fechaFin);
         return calculos.stream()
                 .map(calculoNominaMapper::toDTO)
                 .collect(Collectors.toList());
