@@ -16,6 +16,9 @@ import com.minacontrol.autenticacion.exception.IncorrectPasswordException;
 import com.minacontrol.logistica.exception.DespachoNotFoundException;
 import com.minacontrol.logistica.exception.EstadoDespachoInvalidoException;
 import com.minacontrol.logistica.exception.InvalidDateRangeException;
+import com.minacontrol.nomina.exception.AjusteNominaNoPermitidoException;
+import com.minacontrol.nomina.exception.CalculoNominaNotFoundException;
+import com.minacontrol.nomina.exception.PeriodoNominaInvalidoException;
 import com.minacontrol.shared.dto.ErrorResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -190,6 +193,30 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // NUEVOS MANEJADORES PARA EL DOMINIO DE NOMINA
+
+    @ExceptionHandler(CalculoNominaNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleCalculoNominaNotFound(CalculoNominaNotFoundException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({AjusteNominaNoPermitidoException.class, PeriodoNominaInvalidoException.class})
+    public ResponseEntity<ErrorResponseDTO> handleNominaConflict(RuntimeException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
     // MANEJADORES PARA EXCEPCIONES DEL FRAMEWORK

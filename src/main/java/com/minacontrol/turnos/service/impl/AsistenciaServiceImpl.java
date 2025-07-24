@@ -18,10 +18,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -94,6 +97,13 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
         registro.setMotivo(excepcionAsistenciaDTO.motivo());
 
         return registroAsistenciaMapper.toDTO(registroAsistenciaRepository.save(registro));
+    }
+
+    @Override
+    public Map<Long, BigDecimal> obtenerHorasTrabajadasPorPeriodo(Long periodoId, LocalDate fechaInicio, LocalDate fechaFin) {
+        // Esta es una implementación de marcador de posición.
+        // La lógica real consultaría los registros de asistencia y los agregaría por empleado.
+        return Collections.emptyMap();
     }
 }
 

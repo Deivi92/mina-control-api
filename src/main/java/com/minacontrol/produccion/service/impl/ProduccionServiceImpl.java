@@ -19,8 +19,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -118,6 +121,14 @@ public class ProduccionServiceImpl implements IProduccionService {
         registro.setValidado(true);
         RegistroProduccion savedRegistro = registroProduccionRepository.save(registro);
         return enrichDto(produccionMapper.toDTO(savedRegistro));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, BigDecimal> obtenerProduccionPorPeriodo(Long periodoId, LocalDate fechaInicio, LocalDate fechaFin) {
+        // Esta es una implementación de marcador de posición.
+        // La lógica real consultaría los registros de producción y los agregaría por empleado.
+        return Collections.emptyMap();
     }
 
     private RegistroProduccionDTO enrichDto(RegistroProduccionDTO dto) {

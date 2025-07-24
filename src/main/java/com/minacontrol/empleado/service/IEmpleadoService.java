@@ -22,4 +22,5 @@ public interface IEmpleadoService {
 
     EmpleadoResponse obtenerPerfilPersonal(String username);
 
+    List<Long> obtenerIdsEmpleadosActivos();
 }

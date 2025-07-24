@@ -114,4 +114,12 @@ public class EmpleadoServiceImpl implements IEmpleadoService {
                 .map(empleadoMapper::toResponse)
                 .orElseThrow(() -> new EmpleadoNotFoundException("Empleado no encontrado para el usuario: " + username));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> obtenerIdsEmpleadosActivos() {
+        return empleadoRepository.findByEstado(EstadoEmpleado.ACTIVO).stream()
+                .map(Empleado::getId)
+                .collect(Collectors.toList());
+    }
 }
