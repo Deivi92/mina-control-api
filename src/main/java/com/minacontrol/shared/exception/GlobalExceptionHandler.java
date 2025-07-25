@@ -19,6 +19,9 @@ import com.minacontrol.logistica.exception.InvalidDateRangeException;
 import com.minacontrol.nomina.exception.AjusteNominaNoPermitidoException;
 import com.minacontrol.nomina.exception.CalculoNominaNotFoundException;
 import com.minacontrol.nomina.exception.PeriodoNominaInvalidoException;
+import com.minacontrol.reportes.exception.DatosInsuficientesParaReporteException;
+import com.minacontrol.reportes.exception.ErrorGeneracionReporteException;
+import com.minacontrol.reportes.exception.ParametrosReporteInvalidosException;
 import com.minacontrol.shared.dto.ErrorResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -256,5 +259,40 @@ public class GlobalExceptionHandler {
                 ex.getMessage(),
                 request.getRequestURI());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // NUEVOS MANEJADORES PARA EL DOMINIO DE REPORTES
+
+    @ExceptionHandler(ParametrosReporteInvalidosException.class)
+    public ResponseEntity<ErrorResponseDTO> handleParametrosReporteInvalidos(ParametrosReporteInvalidosException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ErrorGeneracionReporteException.class)
+    public ResponseEntity<ErrorResponseDTO> handleErrorGeneracionReporte(ErrorGeneracionReporteException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(DatosInsuficientesParaReporteException.class)
+    public ResponseEntity<ErrorResponseDTO> handleDatosInsuficientesParaReporte(DatosInsuficientesParaReporteException ex, HttpServletRequest request) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                Instant.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                ex.getMessage(),
+                request.getRequestURI());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 }

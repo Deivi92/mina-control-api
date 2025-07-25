@@ -105,5 +105,13 @@ public class AsistenciaServiceImpl implements IAsistenciaService {
         // La lógica real consultaría los registros de asistencia y los agregaría por empleado.
         return Collections.emptyMap();
     }
+
+    @Override
+    public List<Object> obtenerDatosAsistenciaParaReporte(LocalDate fechaInicio, LocalDate fechaFin) {
+        return registroAsistenciaRepository.findByFechaBetween(fechaInicio, fechaFin)
+                .stream()
+                .map(registroAsistenciaMapper::toDTO)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }
 

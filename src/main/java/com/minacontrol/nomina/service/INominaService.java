@@ -17,4 +17,5 @@ public interface INominaService {
     List<ComprobantePagoDTO> generarComprobantesPago(Long periodoId);
 
     List<CalculoNominaDTO> consultarHistorialPagos(Long empleadoId, LocalDate fechaInicio, LocalDate fechaFin);
+    List<Object> obtenerDatosCostosParaReporte(LocalDate fechaInicio, LocalDate fechaFin);
 }

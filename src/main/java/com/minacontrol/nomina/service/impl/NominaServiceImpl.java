@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -160,6 +161,14 @@ public class NominaServiceImpl implements INominaService {
         }
                 List<CalculoNomina> calculos = calculoNominaRepository.findByEmpleadoIdAndFechas(empleadoId, fechaInicio, fechaFin);
         return calculos.stream()
+                .map(calculoNominaMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Object> obtenerDatosCostosParaReporte(LocalDate fechaInicio, LocalDate fechaFin) {
+        return calculoNominaRepository.findAll().stream()
+                .filter(c -> !c.getPeriodo().getFechaInicio().isAfter(fechaFin) && !c.getPeriodo().getFechaFin().isBefore(fechaInicio))
                 .map(calculoNominaMapper::toDTO)
                 .collect(Collectors.toList());
     }

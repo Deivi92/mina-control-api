@@ -14,4 +14,5 @@ public interface IAsistenciaService {
     List<RegistroAsistenciaDTO> consultarAsistencia(Long empleadoId, LocalDate fechaInicio, LocalDate fechaFin);
     RegistroAsistenciaDTO gestionarExcepcionAsistencia(ExcepcionAsistenciaDTO excepcionAsistenciaDTO);
     Map<Long, BigDecimal> obtenerHorasTrabajadasPorPeriodo(Long periodoId, LocalDate fechaInicio, LocalDate fechaFin);
+    List<Object> obtenerDatosAsistenciaParaReporte(LocalDate fechaInicio, LocalDate fechaFin);
 }

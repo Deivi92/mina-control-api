@@ -16,4 +16,5 @@ public interface IProduccionService {
     void eliminarRegistro(Long id);
     RegistroProduccionDTO validarRegistro(Long id);
     Map<Long, BigDecimal> obtenerProduccionPorPeriodo(Long periodoId, LocalDate fechaInicio, LocalDate fechaFin);
+    List<Object> obtenerDatosProduccionParaReporte(LocalDate fechaInicio, LocalDate fechaFin);
 }

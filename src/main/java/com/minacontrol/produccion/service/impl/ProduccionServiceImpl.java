@@ -131,6 +131,15 @@ public class ProduccionServiceImpl implements IProduccionService {
         return Collections.emptyMap();
     }
 
+    @Override
+    public List<Object> obtenerDatosProduccionParaReporte(LocalDate fechaInicio, LocalDate fechaFin) {
+        return registroProduccionRepository.findByFechaRegistroBetween(fechaInicio, fechaFin)
+                .stream()
+                .map(produccionMapper::toDTO) // Primero mapear a DTO
+                .map(this::enrichDto)       // Luego enriquecer el DTO
+                .collect(Collectors.toList());
+    }
+
     private RegistroProduccionDTO enrichDto(RegistroProduccionDTO dto) {
         if (dto == null) return null;
 
