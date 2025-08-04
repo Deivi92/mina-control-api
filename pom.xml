@@ -77,6 +77,16 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- ========== DOCUMENTACIÓN API (OpenAPI/Swagger) ========== -->
+        <!-- SpringDoc OpenAPI: Genera automáticamente la documentación de la API en formato OpenAPI 3 -->
+        <!-- PARA QUÉ: Crear una UI de Swagger para visualizar y probar los endpoints -->
+        <!-- URL: http://localhost:8080/swagger-ui.html -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
         <!-- ========== MAPSTRUCT (Mapeo de DTOs) ========== -->
         <dependency>
             <groupId>org.mapstruct</groupId>
