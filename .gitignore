@@ -58,3 +58,6 @@ bin/
 
 # Archivo de variables de entorno locales
 .env
+
+# Archivos swap de editores (Vim)
+*.swp
