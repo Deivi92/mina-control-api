@@ -321,3 +321,431 @@ Para facilitar el desarrollo y las pruebas manuales, el proyecto utiliza perfile
         - **Base de Datos:** Se conecta a la base de datos PostgreSQL de producción (requiere configuración externa).
 
 **Regla de Oro:** Solo necesitas especificar el perfil `dev` explícitamente. Para todas las demás tareas (como `mvn verify`), el sistema aplicará automáticamente la configuración segura y correcta.
+
+## 13. Estructura del Proyecto (Árbol de Directorios)
+
+Esta sección proporciona una vista general de la estructura de directorios y archivos del proyecto. Ayuda a entender la organización del código fuente, la documentación y otros artefactos clave.
+
+**Nota de Mantenimiento:** Este árbol se genera para excluir directorios y archivos que no son relevantes para el desarrollo (ej. `.git`, `.vscode`, `target/`). Para mantenerlo actualizado, puedes ejecutar el siguiente comando desde la raíz del proyecto:
+
+```bash
+tree -I '.git|.vscode|.swp|target'
+```
+
+A continuación, se muestra la estructura actual del proyecto:
+
+```
+.
+├── GEMINI.md
+├── ROADMAP.md
+├── docs
+│   ├── casos_de_uso
+│   │   ├── README.md
+│   │   ├── casos_de_uso_alto_nivel.md
+│   │   └── casos_de_uso_bajo_nivel
+│   │       ├── autenticacion
+│   │       │   ├── CU-AUT-001-RegistroUsuario.md
+│   │       │   ├── CU-AUT-002-LoginUsuario.md
+│   │       │   ├── CU-AUT-003-LogoutUsuario.md
+│   │       │   ├── CU-AUT-004-RecuperarPassword.md
+│   │       │   ├── CU-AUT-005-RefreshToken.md
+│   │       │   └── CU-AUT-006-CambiarPassword.md
+│   │       ├── empleados
+│   │       │   ├── CU-EMP-001-CrearEmpleado.md
+│   │       │   ├── CU-EMP-002-ListarEmpleados.md
+│   │       │   ├── CU-EMP-003-ActualizarEmpleado.md
+│   │       │   ├── CU-EMP-004-CambiarEstadoEmpleado.md
+│   │       │   ├── CU-EMP-005-ConsultarPerfilPersonal.md
+│   │       │   ├── CU-EMP-006-EliminarEmpleado.md
+│   │       │   └── CU-EMP-007-ObtenerEmpleadoPorID.md
+│   │       ├── logistica
+│   │       │   ├── CU-LOG-001-RegistrarDespacho.md
+│   │       │   ├── CU-LOG-002-ConsultarDespachos.md
+│   │       │   └── CU-LOG-003-ActualizarEstadoDespacho.md
+│   │       ├── nomina
+│   │       │   ├── CU-NOM-001-CalcularNominaSemanal.md
+│   │       │   ├── CU-NOM-002-AjustarCalculoNomina.md
+│   │       │   ├── CU-NOM-003-GenerarComprobantesPago.md
+│   │       │   └── CU-NOM-004-ConsultarHistorialPagos.md
+│   │       ├── produccion
+│   │       │   ├── CU-PRO-001-RegistrarProduccion.md
+│   │       │   ├── CU-PRO-002-ConsultarProduccion.md
+│   │       │   ├── CU-PRO-003-ObtenerProduccionPorId.md
+│   │       │   ├── CU-PRO-004-ActualizarProduccion.md
+│   │       │   ├── CU-PRO-005-EliminarProduccion.md
+│   │       │   └── CU-PRO-006-ValidarProduccion.md
+│   │       ├── reportes
+│   │       │   ├── CU-REP-001-GenerarReporteProduccion.md
+│   │       │   ├── CU-REP-002-GenerarReporteAsistencia.md
+│   │       │   ├── CU-REP-003-GenerarReporteCostosLaborales.md
+│   │       │   └── CU-REP-004-ExportarDatosOperacionales.md
+│   │       └── turnos
+│   │           ├── CU-TUR-001-CrearTurno.md
+│   │           ├── CU-TUR-002-ListarTurnos.md
+│   │           ├── CU-TUR-003-ObtenerTurnoPorId.md
+│   │           ├── CU-TUR-004-ActualizarTurno.md
+│   │           ├── CU-TUR-005-EliminarTurno.md
+│   │           ├── CU-TUR-006-AsignarEmpleado.md
+│   │           ├── CU-TUR-007-RegistrarAsistencia.md
+│   │           ├── CU-TUR-008-ConsultarAsistencia.md
+│   │           └── CU-TUR-009-GestionarExcepcionAsistencia.md
+│   └── diagrams
+│       ├── README.md
+│       ├── autenticacion
+│       │   ├── README.md
+│       │   ├── class_diagram_autenticacion.puml
+│       │   ├── sequence_cambiar_password.puml
+│       │   ├── sequence_login.puml
+│       │   ├── sequence_logout.puml
+│       │   ├── sequence_recuperar_password.puml
+│       │   ├── sequence_refresh_token.puml
+│       │   └── sequence_registro.puml
+│       ├── empleados
+│       │   ├── README.md
+│       │   ├── class_diagram_empleados.puml
+│       │   ├── sequence_actualizar_empleado.puml
+│       │   ├── sequence_cambiar_estado_empleado.puml
+│       │   ├── sequence_consultar_perfil_personal.puml
+│       │   ├── sequence_crear_empleado.puml
+│       │   ├── sequence_eliminar_empleado.puml
+│       │   ├── sequence_listar_empleados.puml
+│       │   └── sequence_obtener_empleado_por_id.puml
+│       ├── general
+│       │   ├── README.md
+│       │   ├── architecture_overview.puml
+│       │   ├── class_diagram_completo.puml
+│       │   └── er_diagram_completo.puml
+│       ├── logistica
+│       │   ├── README.md
+│       │   ├── class_diagram_logistica.puml
+│       │   ├── sequence_actualizar_estado_despacho.puml
+│       │   ├── sequence_consultar_despachos.puml
+│       │   └── sequence_registrar_despacho.puml
+│       ├── nomina
+│       │   ├── README.md
+│       │   ├── class_diagram_nomina_corregido.puml
+│       │   ├── sequence_ajustar_nomina.puml
+│       │   ├── sequence_calcular_nomina_semanal.puml
+│       │   ├── sequence_consultar_historial_nomina.puml
+│       │   └── sequence_generar_comprobantes.puml
+│       ├── produccion
+│       │   ├── README.md
+│       │   ├── class_diagram_produccion.puml
+│       │   ├── sequence_actualizar_produccion.puml
+│       │   ├── sequence_consultar_produccion_empleado.puml
+│       │   ├── sequence_consultar_produccion_fecha.puml
+│       │   ├── sequence_eliminar_produccion.puml
+│       │   └── sequence_registrar_produccion.puml
+│       ├── reportes
+│       │   ├── README.md
+│       │   ├── class_diagram_reportes.puml
+│       │   ├── sequence_exportar_datos.puml
+│       │   ├── sequence_reporte_asistencia.puml
+│       │   ├── sequence_reporte_costos_laborales.puml
+│       │   └── sequence_reporte_produccion.puml
+│       └── turnos
+│           ├── README.md
+│           ├── class_diagram_turnos_corregido.puml
+│           ├── sequence_actualizar_turno.puml
+│           ├── sequence_asignar_empleado_turno.puml
+│           ├── sequence_consultar_asistencia.puml
+│           ├── sequence_crear_turno.puml
+│           ├── sequence_eliminar_turno.puml
+│           ├── sequence_gestionar_excepciones.puml
+│           ├── sequence_listar_turnos.puml
+│           ├── sequence_obtener_turno_por_id.puml
+│           └── sequence_registrar_entrada_salida.puml
+├── openapi-spec.json
+├── pom.xml
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── com
+    │   │       └── minacontrol
+    │   │           ├── MinaControlApiApplication.java
+    │   │           ├── autenticacion
+    │   │           │   ├── controller
+    │   │           │   │   └── AutenticacionController.java
+    │   │           │   ├── dto
+    │   │           │   │   ├── request
+    │   │           │   │   │   ├── CambiarContrasenaRequestDTO.java
+    │   │           │   │   │   ├── LoginRequestDTO.java
+    │   │           │   │   │   ├── LogoutRequestDTO.java
+    │   │           │   │   │   ├── RecuperarContrasenaRequestDTO.java
+    │   │           │   │   │   ├── RefreshTokenRequestDTO.java
+    │   │           │   │   │   └── RegistroUsuarioCreateDTO.java
+    │   │           │   │   └── response
+    │   │           │   │       ├── LoginResponseDTO.java
+    │   │           │   │       ├── RefreshTokenResponseDTO.java
+    │   │           │   │       └── UsuarioDTO.java
+    │   │           │   ├── exception
+    │   │           │   │   ├── ContrasenaInvalidaException.java
+    │   │           │   │   ├── IncorrectPasswordException.java
+    │   │           │   │   ├── TokenInvalidoException.java
+    │   │           │   │   ├── UsuarioNoEncontradoException.java
+    │   │           │   │   └── UsuarioYaExisteException.java
+    │   │           │   ├── model
+    │   │           │   │   └── Usuario.java
+    │   │           │   ├── repository
+    │   │           │   │   └── UsuarioRepository.java
+    │   │           │   └── service
+    │   │           │       ├── IServicioAutenticacion.java
+    │   │           │       ├── IServicioCambioContrasena.java
+    │   │           │       ├── IServicioRecuperacionContrasena.java
+    │   │           │       └── impl
+    │   │           │           ├── ServicioAutenticacionImpl.java
+    │   │           │           ├── ServicioCambioContrasenaImpl.java
+    │   │           │           └── ServicioRecuperacionContrasenaImpl.java
+    │   │           ├── empleado
+    │   │           │   ├── controller
+    │   │           │   │   └── EmpleadoController.java
+    │   │           │   ├── dto
+    │   │           │   │   ├── request
+    │   │           │   │   │   └── EmpleadoRequest.java
+    │   │           │   │   └── response
+    │   │           │   │       └── EmpleadoResponse.java
+    │   │           │   ├── entity
+    │   │           │   │   └── Empleado.java
+    │   │           │   ├── enums
+    │   │           │   │   ├── EstadoEmpleado.java
+    │   │           │   │   └── RolSistema.java
+    │   │           │   ├── exception
+    │   │           │   │   ├── EmpleadoAlreadyExistsException.java
+    │   │           │   │   ├── EmpleadoAlreadyInactiveException.java
+    │   │           │   │   ├── EmpleadoNoEncontradoException.java
+    │   │           │   │   └── EmpleadoNotFoundException.java
+    │   │           │   ├── mapper
+    │   │           │   │   └── EmpleadoMapper.java
+    │   │           │   ├── repository
+    │   │           │   │   └── EmpleadoRepository.java
+    │   │           │   └── service
+    │   │           │ .
+    │   │           │       └── impl
+    │   │           │           └── EmpleadoServiceImpl.java
+    │   │           ├── logistica
+    │   │           │   ├── controller
+    │   │           │   │   └── LogisticaController.java
+    │   │           │   ├── domain
+    │   │           │   │   └── EstadoDespacho.java
+    │   │           │   ├── dto
+    │   │           │   │   ├── request
+    │   │           │   │   │   └── DespachoCreateDTO.java
+    │   │           │   │   └── response
+    │   │           │   │       └── DespachoDTO.java
+    │   │           │   ├── entity
+    │   │           │   │   └── Despacho.java
+    │   │           │   ├── exception
+    │   │           │   │   ├── DespachoNotFoundException.java
+    │   │           │   │   ├── EstadoDespachoInvalidoException.java
+    │   │           │   │   └── InvalidDateRangeException.java
+    │   │           │   ├── mapper
+    │   │           │   │   └── DespachoMapper.java
+    │   │           │   ├── repository
+    │   │           │   │   └── DespachoRepository.java
+    │   │           │   └── service
+    │   │           │       ├── ILogisticaService.java
+    │   │           │       └── impl
+    │   │           │           └── LogisticaServiceImpl.java
+    │   │           ├── nomina
+    │   │           │   ├── controller
+    │   │           │   │   └── NominaController.java
+    │   │           │   ├── dto
+    │   │           │   │   ├── request
+    │   │           │   │   │   ├── AjusteNominaDTO.java
+    │   │           │   │   │   └── CalcularNominaRequestDTO.java
+    │   │           │   │   └── response
+    │   │           │   │       ├── CalculoNominaDTO.java
+    │   │           │   │       ├── CalculoNominaResumenDTO.java
+    │   │           │   │       └── ComprobantePagoDTO.java
+    │   │           │   ├── entity
+    │   │           │   │   ├── CalculoNomina.java
+    │   │           │   │   ├── ComprobantePago.java
+    │   │           │   │   └── PeriodoNomina.java
+    │   │           │   ├── enums
+    │   │           │   │   └── EstadoPeriodo.java
+    │   │           │   ├── exception
+    │   │           │   │   ├── AjusteNominaNoPermitidoException.java
+    │   │           │   │   ├── CalculoNominaNotFoundException.java
+    │   │           │   │   └── PeriodoNominaInvalidoException.java
+    │   │           │   ├── mapper
+    │   │           │   │   ├── CalculoNominaMapper.java
+    │   │           │   │   └── ComprobantePagoMapper.java
+    │   │           │   ├── repository
+    │   │           │   │   ├── CalculoNominaRepository.java
+    │   │           │   │   ├── ComprobantePagoRepository.java
+    │   │           │   │   └── PeriodoNominaRepository.java
+    │   │           │   └── service
+    │   │           │       ├── INominaService.java
+    │   │           │       └── impl
+    │   │           │           └── NominaServiceImpl.java
+    │   │           ├── produccion
+    │   │           │   ├── controller
+    │   │           │   │   └── ProduccionController.java
+    │   │           │   ├── dto
+    │   │           │   │   ├── request
+    │   │           │   │   │   └── RegistroProduccionCreateDTO.java
+    │   │           │   │   └── response
+    │   │           │   │       └── RegistroProduccionDTO.java
+    │   │           │   ├── entity
+    │   │           │   │   └── RegistroProduccion.java
+    │   │           │   ├── exception
+    │   │           │   │   ├── RegistroProduccionDuplicateException.java
+    │   │           │   │   ├── RegistroProduccionNotFoundException.java
+    │   │           │   │   └── RegistroProduccionValidatedException.java
+    │   │           │   ├── mapper
+    │   │           │   │   └── ProduccionMapper.java
+    │   │           │   ├── repository
+    │   │           │   │   └── RegistroProduccionRepository.java
+    │   │           │   └── service
+    │   │           │       ├── IProduccionService.java
+    │   │           │       └── impl
+    │   │           │           └── ProduccionServiceImpl.java
+    │   │           ├── reportes
+    │   │           │   ├── controller
+    │   │           │   │   └── ReporteController.java
+    │   │           │   ├── dto
+    │   │           │   │   ├── request
+    │   │           │   │   │   ├── DatosOperacionalesDTO.java
+    │   │           │   │   │   └── ParametrosReporteDTO.java
+    │   │           │   │   └── response
+    │   │           │   │       └── ReporteDTO.java
+    │   │           │   ├── entity
+    │   │           │   │   └── ReporteGenerado.java
+    │   │           │   ├── enums
+    │   │           │   │   ├── FormatoReporte.java
+    │   │           │   │   └── TipoReporte.java
+    │   │           │   ├── exception
+    │   │           │   │   ├── DatosInsuficientesParaReporteException.java
+    │   │           │   │   ├── ErrorGeneracionReporteException.java
+    │   │           │   │   └── ParametrosReporteInvalidosException.java
+    │   │           │   ├── mapper
+    │   │           │   │   └── ReporteMapper.java
+    │   │           │   ├── repository
+    │   │           │   │   └── ReporteGeneradoRepository.java
+    │   │           │   └── service
+    │   │           │       ├── IReporteService.java
+    │   │           │       └── impl
+    │   │           │           └── ReporteServiceImpl.java
+    │   │           ├── shared
+    │   │           │   ├── config
+    │   │           │   │   └── SecurityConfig.java
+    │   │           │   ├── dto
+    │   │           │   │   └── ErrorResponseDTO.java
+    │   │           │   ├── exception
+    │   │           │   │   └── GlobalExceptionHandler.java
+    │   │           │   └── service
+    │   │           │       ├── GeneradorReporteService.java
+    │   │           │       ├── IServicioCorreo.java
+    │   │           │       └── impl
+    │   │           │           ├── GeneradorReporteServiceImpl.java
+    │   │           │           └── ServicioCorreoImpl.java
+    │   │           └── turnos
+    │   │               ├── controller
+    │   │               │   ├── AsistenciaController.java
+    │   │               │   └── TurnoController.java
+    │   │               ├── dto
+    │   │               │   ├── request
+    │   │               │   │   ├── AsignacionTurnoCreateDTO.java
+    │   │               │   │   ├── ExcepcionAsistenciaDTO.java
+    │   │               │   │   ├── RegistrarAsistenciaDTO.java
+    │   │               │   │   ├── TipoTurnoCreateDTO.java
+    │   │               │   │   └── TipoTurnoUpdateDTO.java
+    │   │               │   └── response
+    │   │               │       ├── AsignacionTurnoDTO.java
+    │   │               │       ├── RegistroAsistenciaDTO.java
+    │   │               │       └── TipoTurnoDTO.java
+    │   │               ├── entity
+    │   │               │   ├── AsignacionTurno.java
+    │   │               │   ├── RegistroAsistencia.java
+    │   │               │   └── TipoTurno.java
+    │   │               ├── enums
+    │   │               │   ├── EstadoAsistencia.java
+    │   │               │   └── TipoRegistro.java
+    │   │               ├── exception
+    │   │               │   ├── AsignacionTurnoInvalidaException.java
+    │   │               │   ├── RegistroAsistenciaInvalidoException.java
+    │   │               │   ├── TurnoAlreadyExistsException.java
+    │   │               │   ├── TurnoInvalidoException.java
+    │   │               │   └── TurnoNoEncontradoException.java
+    │   │               ├── mapper
+    │   │               │   ├── AsignacionTurnoMapper.java
+    │   │               │   ├── RegistroAsistenciaMapper.java
+    │   │               │   └── TipoTurnoMapper.java
+    │   │               ├── repository
+    │   │               │   ├── AsignacionTurnoRepository.java
+    │   │               │   ├── RegistroAsistenciaRepository.java
+    │   │               │   └── TipoTurnoRepository.java
+    │   │               └── service
+    │   │                   ├── IAsistenciaService.java
+    │   │                   ├── ITurnoService.java
+    │   │                   └── impl
+    │   │                       ├── AsistenciaServiceImpl.java
+    │   │                       └── TurnoServiceImpl.java
+    │   └── resources
+    │       ├── application-dev.properties
+    │       ├── application-test.properties
+    │       └── application.properties
+    └── test
+        ├── java
+        │   └── com
+        │       └── minacontrol
+        │           ├── autenticacion
+        │           │   ├── integration
+        │           │   │   └── AutenticacionControllerIT.java
+        │           │   └── unit
+        │           │       ├── ServicioAutenticacionTest.java
+        │           │       ├── ServicioCambioContrasenaTest.java
+        │           │       └── ServicioRecuperacionContrasenaTest.java
+        │           ├── empleado
+        │           │   ├── integration
+        │           │   │   └── EmpleadoControllerIT.java
+        │           │   └── unit
+        │           │       ├── EmpleadoMapperTest.java
+        │           │       ├── EmpleadoServiceTest.java
+        │           │       └── EmpleadoTest.java
+        │           ├── logistica
+        │           │   ├── integration
+        │           │   │   └── LogisticaControllerIT.java
+        │           │   └── unit
+        │           │       ├── DespachoMapperTest.java
+        │           │       ├── DespachoTest.java
+        │           │       └── LogisticaServiceTest.java
+        │           ├── nomina
+        │           │   ├── integration
+        │           │   │   └── NominaControllerIT.java
+        │           │   └── unit
+        │           │       ├── CalculoNominaMapperTest.java
+        │           │       ├── CalculoNominaTest.java
+        │           │       ├── ComprobantePagoMapperTest.java
+        │           │       ├── ComprobantePagoTest.java
+        │           │       ├── NominaServiceTest.java
+        │           │       └── PeriodoNominaTest.java
+        │           ├── produccion
+        │           │   ├── integration
+        │           │   │   └── ProduccionControllerIT.java
+        │           │   └── unit
+        │           │       ├── ProduccionServiceTest.java
+        │           │       ├── RegistroProduccionMapperTest.java
+        │           │       └── RegistroProduccionTest.java
+        │           ├── reportes
+        │           │   ├── integration
+        │           │   │   └── ReporteControllerIT.java
+        │           │   └── unit
+        │           │       ├── ReporteGeneradoTest.java
+        │           │       ├── ReporteMapperTest.java
+        │           │       └── ReporteServiceTest.java
+        │           └── turnos
+        │               ├── integration
+        │               │   ├── AsistenciaControllerIT.java
+        │               │   └── TurnoControllerIT.java
+        │               └── unit
+        │                   ├── AsignacionTurnoMapperTest.java
+        │                   ├── AsignacionTurnoServiceTest.java
+        │                   ├── AsistenciaServiceTest.java
+        │                   ├── TipoTurnoMapperTest.java
+        │                   ├── TipoTurnoServiceTest.java
+        │                   └── TipoTurnoTest.java
+        └── resources
+
+139 directories, 272 files
+```
