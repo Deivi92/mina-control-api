@@ -55,3 +55,6 @@ bin/
 .env.development
 .env.production
 *.env
+
+# Archivo de variables de entorno locales
+.env
