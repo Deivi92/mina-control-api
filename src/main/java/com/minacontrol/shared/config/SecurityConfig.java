@@ -47,6 +47,16 @@ public class SecurityConfig {
     /**
      * Configuración de seguridad para todos los perfiles EXCEPTO 'dev' (ej. prod, test).
      * Asegura los endpoints con JWT.
+     * 
+     * ADVERTENCIA DE SEGURIDAD:
+     * Esta configuración requiere implementación adicional para ser funcional en producción:
+     * 1. JwtAuthenticationFilter para validar tokens JWT en cada request
+     * 2. JwtAuthenticationEntryPoint para manejar errores de autenticación
+     * 3. Implementación completa de generación y validación de tokens JWT
+     * 4. Configuración de CORS para peticiones cross-origin
+     * 
+     * Actualmente, esta configuración bloqueará todos los endpoints (excepto /api/auth/**)
+     * sin un mecanismo de autenticación JWT funcional.
      */
     @Configuration
     @Profile("!dev")
@@ -60,6 +70,8 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                // TODO: Agregar .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // TODO: Agregar .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
             return http.build();
         }
     }
