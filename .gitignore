@@ -61,3 +61,6 @@ bin/
 
 # Archivos swap de editores (Vim)
 *.swp
+
+# Archivos de contexto de IA
+qwen.md
