@@ -316,11 +316,29 @@ public class AutenticacionControllerIT {
     @DisplayName("Endpoint: POST /api/auth/refresh-token")
     class RefreshTokenTests {
 
+        @BeforeEach
+        void refreshTokenSetUp() {
+            crearUsuarioParaTest("refresh.user@example.com", "Password123!");
+        }
+
         @Test
         @DisplayName("Debería generar un nuevo access token y refresh token exitosamente")
         void should_GenerateNewTokens_Successfully() throws Exception {
-            // Arrange
-            var refreshTokenRequestDTO = new com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO("validRefreshToken");
+            // Arrange: Hacer login primero para obtener un refresh token real
+            LoginRequestDTO loginDTO = new LoginRequestDTO("refresh.user@example.com", "Password123!");
+            
+            String refreshToken = mockMvc.perform(post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(loginDTO)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.refreshToken").isNotEmpty())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString()
+                    .split("\"refreshToken\":\"")[1]
+                    .split("\"")[0];
+
+            var refreshTokenRequestDTO = new com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO(refreshToken);
 
             // Act & Assert
             mockMvc.perform(post("/api/auth/refresh-token")

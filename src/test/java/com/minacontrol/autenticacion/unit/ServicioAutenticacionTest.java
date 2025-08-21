@@ -10,6 +10,7 @@ import com.minacontrol.empleado.exception.EmpleadoNotFoundException;
 import com.minacontrol.autenticacion.exception.UsuarioYaExisteException;
 import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
 import com.minacontrol.autenticacion.dto.response.UsuarioDTO;
+import com.minacontrol.shared.security.jwt.JwtUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +20,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -39,7 +43,17 @@ class ServicioAutenticacionTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private UserDetailsService userDetailsService;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
+
+    // Nota: No usamos @InjectMocks porque el constructor ha cambiado
+    // y necesitamos pasar los nuevos mocks.
     private ServicioAutenticacionImpl servicioAutenticacion;
 
     private RegistroUsuarioCreateDTO registroUsuarioCreateDTO;
@@ -48,12 +62,22 @@ class ServicioAutenticacionTest {
 
     @BeforeEach
     void setUp() {
+        // Inicializar el servicio con todos los mocks necesarios
+        servicioAutenticacion = new ServicioAutenticacionImpl(
+                empleadoRepository,
+                usuarioRepository,
+                passwordEncoder,
+                jwtUtil,
+                userDetailsService,
+                authenticationManager
+        );
+
         registroUsuarioCreateDTO = new RegistroUsuarioCreateDTO("test@example.com", "Password123!");
-        
+
         empleado = new Empleado(); // Asume un constructor o setters para Empleado
         empleado.setEmail("test@example.com");
         empleado.setTieneUsuario(false); // Asume un setter para esta propiedad
-        
+
         usuario = new Usuario(); // Asume un constructor o setters para Usuario
         usuario.setEmail("test@example.com");
         usuario.setPassword("hashedPassword");
@@ -158,15 +182,23 @@ class ServicioAutenticacionTest {
         @DisplayName("Debería generar un nuevo access token y refresh token exitosamente")
         void should_GenerateNewTokens_Successfully() {
             // Arrange
-            var refreshTokenRequestDTO = new com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO("oldRefreshToken");
+            var refreshTokenRequestDTO = new com.minacontrol.autenticacion.dto.request.RefreshTokenRequestDTO("validRefreshToken");
+            UserDetails userDetails = mock(UserDetails.class);
+            
+            // Configurar mocks
+            when(jwtUtil.extractUsername("validRefreshToken")).thenReturn("user@example.com");
+            when(userDetailsService.loadUserByUsername("user@example.com")).thenReturn(userDetails);
+            when(jwtUtil.validateToken("validRefreshToken", userDetails)).thenReturn(true);
+            when(jwtUtil.generateAccessToken(userDetails)).thenReturn("newAccessToken");
+            when(jwtUtil.generateRefreshToken(userDetails)).thenReturn("newRefreshToken");
 
             // Act
             var result = servicioAutenticacion.refreshToken(refreshTokenRequestDTO);
 
             // Assert
             assertThat(result).isNotNull();
-            assertThat(result.accessToken()).startsWith("newDummyAccessToken_");
-            assertThat(result.refreshToken()).startsWith("newDummyRefreshToken_");
+            assertThat(result.accessToken()).isEqualTo("newAccessToken");
+            assertThat(result.refreshToken()).isEqualTo("newRefreshToken");
         }
     }
 }
