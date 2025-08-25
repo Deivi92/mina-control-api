@@ -4,8 +4,8 @@ Este es un proyecto monorepo. La constitución completa está dividida en dos ar
 
 **Instrucción para Gemini:** Para obtener el contexto completo, debes leer el contenido de los siguientes dos archivos en este orden:
 
-1.  **`./CONSTITUCION_BACKEND.md`**: Contiene todas las reglas, arquitecturas y convenciones para la API de Spring Boot.
-2.  **`./CONSTITUCION_FRONTEND.md`**: Contiene todas las reglas, arquitecturas y convenciones para la aplicación de React.
+1.  **`backend/CONSTITUCION_BACKEND.md`**: Contiene todas las reglas, arquitecturas y convenciones para la API de Spring Boot.
+2.  **`frontend/CONSTITUCION_FRONTEND.md`**: Contiene todas las reglas, arquitecturas y convenciones para la aplicación de React.
 
 No modifiques estos archivos base a menos que se te pida explícitamente. El contexto combinado de ambos archivos forma la guía completa para este proyecto.
 
