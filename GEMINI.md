@@ -1,13 +1,24 @@
-# Constitución del Proyecto Monorepo: MinaControl Pro
+# Contexto Global del Monorepo: MinaControl Pro
 
-Este es un proyecto monorepo. La constitución completa está dividida en dos archivos para mayor claridad y mantenimiento.
+**Rol de este archivo:** Este es el archivo de contexto principal y global para el proyecto MinaControl Pro. Proporciona una visión general de la estructura del monorepo y establece las directrices de colaboración.
 
-**Instrucción para Gemini:** Para obtener el contexto completo, debes leer el contenido de los siguientes dos archivos en este orden:
+**Estructura del Proyecto:**
+Este es un monorepo que contiene dos subproyectos principales:
+- **`/backend`**: Una API RESTful desarrollada con Spring Boot y Java.
+- **`/frontend`**: Una aplicación de cliente desarrollada con React y TypeScript.
 
-1.  **`backend/CONSTITUCION_BACKEND.md`**: Contiene todas las reglas, arquitecturas y convenciones para la API de Spring Boot.
-2.  **`frontend/CONSTITUCION_FRONTEND.md`**: Contiene todas las reglas, arquitecturas y convenciones para la aplicación de React.
+---
 
-No modifiques estos archivos base a menos que se te pida explícitamente. El contexto combinado de ambos archivos forma la guía completa para este proyecto.
+### Instrucciones para el Asistente Gemini
+
+Al operar desde el directorio raíz, debes tener en cuenta esta estructura. Para cualquier tarea específica del backend o del frontend, **es obligatorio que consultes el archivo de contexto correspondiente** para asegurar el cumplimiento de sus reglas y arquitecturas específicas:
+
+- **Para tareas de Backend:** Consulta el archivo `backend/GEMINI.md`.
+- **Para tareas de Frontend:** Consulta el archivo `frontend/GEMINI.md`.
+
+Esta aproximación jerárquica asegura que siempre se apliquen las convenciones correctas al módulo correspondiente.
+
+---
 
 ## Contexto Adicional sobre el Asistente de IA
 
