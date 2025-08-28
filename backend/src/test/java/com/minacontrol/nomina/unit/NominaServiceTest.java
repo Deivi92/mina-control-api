@@ -19,7 +19,9 @@ import com.minacontrol.nomina.repository.PeriodoNominaRepository;
 import com.minacontrol.nomina.service.impl.NominaServiceImpl;
 import com.minacontrol.produccion.service.IProduccionService;
 import com.minacontrol.turnos.service.IAsistenciaService;
-import com.minacontrol.empleado.service.IEmpleadoService; // Added this import
+import com.minacontrol.empleado.service.IEmpleadoService;
+import com.minacontrol.nomina.service.IConfiguracionTarifasService;
+import com.minacontrol.nomina.entity.ConfiguracionTarifas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,6 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,7 +59,9 @@ class NominaServiceTest {
     @Mock
     private IProduccionService produccionService;
     @Mock
-    private IEmpleadoService empleadoService; // Added this mock
+    private IEmpleadoService empleadoService;
+    @Mock
+    private IConfiguracionTarifasService configuracionTarifasService; // Mock para el nuevo servicio
     @Mock
     private CalculoNominaMapper calculoNominaMapper;
     @Mock
@@ -102,7 +107,34 @@ class NominaServiceTest {
                     .thenReturn(Collections.singletonMap(1L, new BigDecimal("40")));
             when(produccionService.obtenerProduccionPorPeriodo(anyLong(), any(LocalDate.class), any(LocalDate.class)))
                     .thenReturn(Collections.singletonMap(1L, new BigDecimal("5")));
-            when(empleadoService.obtenerIdsEmpleadosActivos()).thenReturn(List.of(1L)); // Mock para el nuevo método
+            when(empleadoService.obtenerIdsEmpleadosActivos()).thenReturn(List.of(1L));
+            when(configuracionTarifasService.obtenerConfiguracionVigente(anyString())).thenReturn(Optional.empty()); // Sin configuración
+            when(calculoNominaRepository.save(any(CalculoNomina.class))).thenReturn(calculoNomina);
+
+            // Act
+            nominaService.calcularNominaSemanal(request);
+
+            // Assert
+            verify(calculoNominaRepository, atLeastOnce()).save(any(CalculoNomina.class));
+            assertThat(periodoNomina.getEstado()).isEqualTo(EstadoPeriodo.CALCULADO);
+        }
+
+        @Test
+        @DisplayName("Debe calcular la nómina usando configuración de tarifas cuando está disponible")
+        void should_CalcularNomina_With_ConfiguracionTarifas() {
+            // Arrange
+            CalcularNominaRequestDTO request = new CalcularNominaRequestDTO(1L);
+            ConfiguracionTarifas configuracion = new ConfiguracionTarifas();
+            configuracion.setTarifaPorHora(new BigDecimal("6823.00"));
+            configuracion.setBonoPorTonelada(new BigDecimal("8400.00"));
+            
+            when(periodoNominaRepository.findById(1L)).thenReturn(Optional.of(periodoNomina));
+            when(asistenciaService.obtenerHorasTrabajadasPorPeriodo(anyLong(), any(LocalDate.class), any(LocalDate.class)))
+                    .thenReturn(Collections.singletonMap(1L, new BigDecimal("40")));
+            when(produccionService.obtenerProduccionPorPeriodo(anyLong(), any(LocalDate.class), any(LocalDate.class)))
+                    .thenReturn(Collections.singletonMap(1L, new BigDecimal("5")));
+            when(empleadoService.obtenerIdsEmpleadosActivos()).thenReturn(List.of(1L));
+            when(configuracionTarifasService.obtenerConfiguracionVigente(anyString())).thenReturn(Optional.of(configuracion));
             when(calculoNominaRepository.save(any(CalculoNomina.class))).thenReturn(calculoNomina);
 
             // Act

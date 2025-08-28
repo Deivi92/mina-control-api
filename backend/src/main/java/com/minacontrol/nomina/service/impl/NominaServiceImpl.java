@@ -19,6 +19,8 @@ import com.minacontrol.nomina.repository.CalculoNominaRepository;
 import com.minacontrol.nomina.repository.ComprobantePagoRepository;
 import com.minacontrol.nomina.repository.PeriodoNominaRepository;
 import com.minacontrol.nomina.service.INominaService;
+import com.minacontrol.nomina.service.IConfiguracionTarifasService;
+import com.minacontrol.nomina.entity.ConfiguracionTarifas;
 import com.minacontrol.produccion.service.IProduccionService;
 import com.minacontrol.turnos.service.IAsistenciaService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -44,6 +47,7 @@ public class NominaServiceImpl implements INominaService {
     private final IAsistenciaService asistenciaService;
     private final IProduccionService produccionService;
     private final IEmpleadoService empleadoService; // Para obtener empleados activos
+    private final IConfiguracionTarifasService configuracionTarifasService; // Para obtener configuración de tarifas
     private final CalculoNominaMapper calculoNominaMapper;
     private final ComprobantePagoMapper comprobantePagoMapper;
 
@@ -57,6 +61,14 @@ public class NominaServiceImpl implements INominaService {
             throw new PeriodoNominaInvalidoException("El período de nómina no está abierto para cálculo.");
         }
 
+        // Obtener configuración de tarifas vigente
+        Optional<ConfiguracionTarifas> configuracionOpt = configuracionTarifasService.obtenerConfiguracionVigente("COP");
+        ConfiguracionTarifas configuracion = configuracionOpt.orElse(null);
+        
+        // Valores por defecto si no hay configuración
+        BigDecimal tarifaPorHora = configuracion != null ? configuracion.getTarifaPorHora() : new BigDecimal("10");
+        BigDecimal bonoPorTonelada = configuracion != null ? configuracion.getBonoPorTonelada() : new BigDecimal("2");
+
         // Suponiendo que IEmpleadoService tiene un método para obtener IDs de empleados activos
         List<Long> empleadosActivosIds = empleadoService.obtenerIdsEmpleadosActivos();
 
@@ -68,8 +80,8 @@ public class NominaServiceImpl implements INominaService {
         BigDecimal montoTotal = BigDecimal.ZERO;
 
         for (Long empleadoId : empleadosActivosIds) {
-            BigDecimal salarioBase = horasTrabajadas.getOrDefault(empleadoId, BigDecimal.ZERO).multiply(new BigDecimal("10")); // Tarifa por hora
-            BigDecimal bonificaciones = produccion.getOrDefault(empleadoId, BigDecimal.ZERO).multiply(new BigDecimal("2")); // Bono por tonelada
+            BigDecimal salarioBase = horasTrabajadas.getOrDefault(empleadoId, BigDecimal.ZERO).multiply(tarifaPorHora);
+            BigDecimal bonificaciones = produccion.getOrDefault(empleadoId, BigDecimal.ZERO).multiply(bonoPorTonelada);
             BigDecimal deducciones = BigDecimal.ZERO;
             BigDecimal totalBruto = salarioBase.add(bonificaciones);
             BigDecimal totalNeto = totalBruto.subtract(deducciones);
