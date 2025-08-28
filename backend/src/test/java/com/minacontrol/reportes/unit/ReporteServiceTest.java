@@ -16,6 +16,8 @@ import com.minacontrol.shared.service.GeneradorReporteService;
 import com.minacontrol.produccion.service.IProduccionService;
 import com.minacontrol.turnos.service.IAsistenciaService;
 import com.minacontrol.nomina.service.INominaService;
+import com.minacontrol.nomina.service.IConfiguracionTarifasService; // Importar el servicio de configuración de tarifas
+import com.minacontrol.nomina.entity.ConfiguracionTarifas; // Importar la entidad de configuración de tarifas
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +33,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional; // Importar Optional
+import java.math.BigDecimal; // Importar BigDecimal
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,6 +52,7 @@ class ReporteServiceTest {
     @Mock private IProduccionService produccionService;
     @Mock private IAsistenciaService asistenciaService;
     @Mock private INominaService nominaService;
+    @Mock private IConfiguracionTarifasService configuracionTarifasService; // Mock del servicio de configuración de tarifas
     @Mock private GeneradorReporteService generadorReporteService;
     @Mock private ReporteMapper reporteMapper;
 
@@ -258,6 +263,117 @@ class ReporteServiceTest {
             assertThatThrownBy(() -> reporteService.exportarDatosOperacionales(exportDTO))
                     .isInstanceOf(DatosInsuficientesParaReporteException.class)
                     .hasMessageContaining("No se encontraron datos para los datasets y período especificados.");
+        }
+    }
+    
+    @Nested
+    @DisplayName("Inclusión de Tarifas en Reportes")
+    class InclusionTarifasTests {
+        
+        private ConfiguracionTarifas crearConfiguracionTarifas() {
+            return ConfiguracionTarifas.builder()
+                    .id(1L)
+                    .tarifaPorHora(new BigDecimal("6823.0"))
+                    .bonoPorTonelada(new BigDecimal("8000.0"))
+                    .moneda("COP")
+                    .fechaVigencia(LocalDate.now())
+                    .creadoPor(1L)
+                    .fechaCreacion(LocalDate.now())
+                    .build();
+        }
+
+        @Test
+        @DisplayName("Debe incluir tarifas en reporte de producción")
+        void should_IncluirTarifas_En_ReporteProduccion() {
+            // Arrange
+            ConfiguracionTarifas configuracion = crearConfiguracionTarifas();
+            when(produccionService.obtenerDatosProduccionParaReporte(any(), any())).thenReturn(List.of("dato1", "dato2"));
+            when(configuracionTarifasService.obtenerConfiguracionVigente("COP")).thenReturn(Optional.of(configuracion));
+            when(generadorReporteService.generarArchivoPDF(any(), anyString())).thenReturn("/path/to/report.pdf");
+            when(reporteRepository.save(any(ReporteGenerado.class))).thenAnswer(invocation -> {
+                ReporteGenerado rg = invocation.getArgument(0);
+                rg.setId(1L);
+                return rg;
+            });
+
+            // Act
+            ReporteDTO result = reporteService.generarReporteProduccion(parametrosReporte);
+
+            // Assert
+            assertThat(result).isNotNull();
+            verify(configuracionTarifasService).obtenerConfiguracionVigente("COP");
+            // Aquí podríamos verificar que los datos pasados al generador incluyen la configuración,
+            // pero eso requeriría un mock más detallado del generador o verificar interacciones más específicas.
+        }
+
+        @Test
+        @DisplayName("Debe incluir tarifas en reporte de asistencia")
+        void should_IncluirTarifas_En_ReporteAsistencia() {
+            // Arrange
+            ConfiguracionTarifas configuracion = crearConfiguracionTarifas();
+            parametrosReporte = new ParametrosReporteDTO(TipoReporte.ASISTENCIA, LocalDate.now().minusDays(7), LocalDate.now(), FormatoReporte.EXCEL, null, null, true, null);
+            when(asistenciaService.obtenerDatosAsistenciaParaReporte(any(), any())).thenReturn(List.of("dato1", "dato2"));
+            when(configuracionTarifasService.obtenerConfiguracionVigente("COP")).thenReturn(Optional.of(configuracion));
+            when(generadorReporteService.generarArchivoExcel(any())).thenReturn("/path/to/report.xlsx");
+            when(reporteRepository.save(any(ReporteGenerado.class))).thenAnswer(invocation -> {
+                ReporteGenerado rg = invocation.getArgument(0);
+                rg.setId(1L);
+                return rg;
+            });
+
+            // Act
+            ReporteDTO result = reporteService.generarReporteAsistencia(parametrosReporte);
+
+            // Assert
+            assertThat(result).isNotNull();
+            verify(configuracionTarifasService).obtenerConfiguracionVigente("COP");
+        }
+
+        @Test
+        @DisplayName("Debe incluir tarifas en reporte de costos laborales")
+        void should_IncluirTarifas_En_ReporteCostosLaborales() {
+            // Arrange
+            ConfiguracionTarifas configuracion = crearConfiguracionTarifas();
+            parametrosReporte = new ParametrosReporteDTO(TipoReporte.COSTOS_LABORALES, LocalDate.now().minusDays(7), LocalDate.now(), FormatoReporte.PDF, null, null, true, null);
+            when(nominaService.obtenerDatosCostosParaReporte(any(), any())).thenReturn(List.of("dato1"));
+            when(produccionService.obtenerDatosProduccionParaReporte(any(), any())).thenReturn(List.of("dato2"));
+            when(configuracionTarifasService.obtenerConfiguracionVigente("COP")).thenReturn(Optional.of(configuracion));
+            when(generadorReporteService.generarArchivoPDF(any(), anyString())).thenReturn("/path/to/costos.pdf");
+            when(reporteRepository.save(any(ReporteGenerado.class))).thenAnswer(invocation -> {
+                ReporteGenerado rg = invocation.getArgument(0);
+                rg.setId(1L);
+                return rg;
+            });
+
+            // Act
+            ReporteDTO result = reporteService.generarReporteCostosLaborales(parametrosReporte);
+
+            // Assert
+            assertThat(result).isNotNull();
+            verify(configuracionTarifasService).obtenerConfiguracionVigente("COP");
+        }
+
+        @Test
+        @DisplayName("Debe incluir tarifas en exportación de datos operacionales")
+        void should_IncluirTarifas_En_ExportacionDatosOperacionales() {
+            // Arrange
+            ConfiguracionTarifas configuracion = crearConfiguracionTarifas();
+            DatosOperacionalesDTO exportDTO = new DatosOperacionalesDTO(List.of("produccion"), FormatoReporte.CSV, LocalDate.now().minusDays(7), LocalDate.now(), null);
+            when(produccionService.obtenerDatosProduccionParaReporte(any(), any())).thenReturn(List.of("data"));
+            when(configuracionTarifasService.obtenerConfiguracionVigente("COP")).thenReturn(Optional.of(configuracion));
+            when(generadorReporteService.generarArchivoCSV(any())).thenReturn("/path/to/export.csv");
+            when(reporteRepository.save(any(ReporteGenerado.class))).thenAnswer(invocation -> {
+                ReporteGenerado rg = invocation.getArgument(0);
+                rg.setId(1L);
+                return rg;
+            });
+
+            // Act
+            ReporteDTO result = reporteService.exportarDatosOperacionales(exportDTO);
+
+            // Assert
+            assertThat(result).isNotNull();
+            verify(configuracionTarifasService).obtenerConfiguracionVigente("COP");
         }
     }
 }

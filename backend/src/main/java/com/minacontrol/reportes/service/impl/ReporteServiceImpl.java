@@ -16,13 +16,17 @@ import com.minacontrol.shared.service.GeneradorReporteService;
 import com.minacontrol.produccion.service.IProduccionService;
 import com.minacontrol.turnos.service.IAsistenciaService;
 import com.minacontrol.nomina.service.INominaService;
+import com.minacontrol.nomina.service.IConfiguracionTarifasService;
+import com.minacontrol.nomina.entity.ConfiguracionTarifas; // Importar la entidad de configuración de tarifas
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList; // Importar ArrayList
 import java.util.List;
+import java.util.Optional; // Importar Optional
 import java.util.UUID;
 
 @Service
@@ -33,6 +37,7 @@ public class ReporteServiceImpl implements IReporteService {
     private final IProduccionService produccionService;
     private final IAsistenciaService asistenciaService;
     private final INominaService nominaService;
+    private final IConfiguracionTarifasService configuracionTarifasService; // Inyectar el servicio de configuración de tarifas
     private final GeneradorReporteService generadorReporteService;
     private final ReporteMapper reporteMapper;
 
@@ -47,7 +52,18 @@ public class ReporteServiceImpl implements IReporteService {
             throw new DatosInsuficientesParaReporteException("No se encontraron datos de producción para el período especificado.");
         }
 
-        // 2. Generar archivo
+        // 2. Obtener configuración de tarifas vigente
+        Optional<ConfiguracionTarifas> configuracionOpt = configuracionTarifasService.obtenerConfiguracionVigente("COP");
+        ConfiguracionTarifas configuracion = configuracionOpt.orElse(null);
+        
+        // 3. Agregar información de tarifas a los datos del reporte
+        if (configuracion != null) {
+            // Crear una nueva lista mutable para evitar UnsupportedOperationException
+            datosProduccion = new ArrayList<>(datosProduccion);
+            datosProduccion.add(configuracion); // Agregar la configuración de tarifas a los datos
+        }
+
+        // 4. Generar archivo
         String rutaArchivo;
         try {
             if (parametros.formato() == FormatoReporte.PDF) {
@@ -61,7 +77,7 @@ public class ReporteServiceImpl implements IReporteService {
             throw new ErrorGeneracionReporteException("Error al generar el archivo del reporte de producción: " + e.getMessage(), e);
         }
 
-        // 3. Guardar metadatos del reporte
+        // 5. Guardar metadatos del reporte
         ReporteGenerado reporteGenerado = ReporteGenerado.builder()
                 .tipoReporte(TipoReporte.PRODUCCION)
                 .nombreReporte("Reporte de Producción")
@@ -92,7 +108,18 @@ public class ReporteServiceImpl implements IReporteService {
             throw new DatosInsuficientesParaReporteException("No se encontraron datos de asistencia para el período especificado.");
         }
 
-        // 2. Generar archivo
+        // 2. Obtener configuración de tarifas vigente
+        Optional<ConfiguracionTarifas> configuracionOpt = configuracionTarifasService.obtenerConfiguracionVigente("COP");
+        ConfiguracionTarifas configuracion = configuracionOpt.orElse(null);
+        
+        // 3. Agregar información de tarifas a los datos del reporte
+        if (configuracion != null) {
+            // Crear una nueva lista mutable para evitar UnsupportedOperationException
+            datosAsistencia = new ArrayList<>(datosAsistencia);
+            datosAsistencia.add(configuracion); // Agregar la configuración de tarifas a los datos
+        }
+
+        // 4. Generar archivo
         String rutaArchivo;
         try {
             if (parametros.formato() == FormatoReporte.PDF) {
@@ -106,7 +133,7 @@ public class ReporteServiceImpl implements IReporteService {
             throw new ErrorGeneracionReporteException("Error al generar el archivo del reporte de asistencia: " + e.getMessage(), e);
         }
 
-        // 3. Guardar metadatos del reporte
+        // 5. Guardar metadatos del reporte
         ReporteGenerado reporteGenerado = ReporteGenerado.builder()
                 .tipoReporte(TipoReporte.ASISTENCIA)
                 .nombreReporte("Reporte de Asistencia")
@@ -138,9 +165,23 @@ public class ReporteServiceImpl implements IReporteService {
             throw new DatosInsuficientesParaReporteException("No se encontraron suficientes datos de nómina o producción para generar el reporte de costos laborales.");
         }
 
+        // 2. Obtener configuración de tarifas vigente
+        Optional<ConfiguracionTarifas> configuracionOpt = configuracionTarifasService.obtenerConfiguracionVigente("COP");
+        ConfiguracionTarifas configuracion = configuracionOpt.orElse(null);
+        
+        // 3. Agregar información de tarifas a los datos del reporte
+        if (configuracion != null) {
+            // Crear nuevas listas mutables para evitar UnsupportedOperationException
+            datosNomina = new ArrayList<>(datosNomina);
+            datosProduccion = new ArrayList<>(datosProduccion);
+            // Agregar la configuración de tarifas a ambos conjuntos de datos
+            datosNomina.add(configuracion);
+            datosProduccion.add(configuracion);
+        }
+
         // TODO: Consolidar y procesar datos para KPIs de costos laborales
 
-        // 2. Generar archivo
+        // 4. Generar archivo
         String rutaArchivo;
         try {
             if (parametros.formato() == FormatoReporte.PDF) {
@@ -154,7 +195,7 @@ public class ReporteServiceImpl implements IReporteService {
             throw new ErrorGeneracionReporteException("Error al generar el archivo del reporte de costos laborales: " + e.getMessage(), e);
         }
 
-        // 3. Guardar metadatos del reporte
+        // 5. Guardar metadatos del reporte
         ReporteGenerado reporteGenerado = ReporteGenerado.builder()
                 .tipoReporte(TipoReporte.COSTOS_LABORALES)
                 .nombreReporte("Reporte de Costos Laborales")
@@ -198,7 +239,18 @@ public class ReporteServiceImpl implements IReporteService {
             throw new DatosInsuficientesParaReporteException("No se encontraron datos para los datasets y período especificados.");
         }
 
-        // 2. Generar archivo
+        // 2. Obtener configuración de tarifas vigente
+        Optional<ConfiguracionTarifas> configuracionOpt = configuracionTarifasService.obtenerConfiguracionVigente("COP");
+        ConfiguracionTarifas configuracion = configuracionOpt.orElse(null);
+        
+        // 3. Agregar información de tarifas a los datos del reporte
+        if (configuracion != null) {
+            // Crear una nueva lista mutable para evitar UnsupportedOperationException
+            datosAExportar = new ArrayList<>(datosAExportar);
+            datosAExportar.add(configuracion); // Agregar la configuración de tarifas a los datos
+        }
+
+        // 4. Generar archivo
         String rutaArchivo;
         try {
             if (datos.formato() == FormatoReporte.CSV) {
@@ -212,7 +264,7 @@ public class ReporteServiceImpl implements IReporteService {
             throw new ErrorGeneracionReporteException("Error al generar el archivo de exportación de datos operacionales: " + e.getMessage(), e);
         }
 
-        // 3. Guardar metadatos del reporte
+        // 5. Guardar metadatos del reporte
         ReporteGenerado reporteGenerado = ReporteGenerado.builder()
                 .tipoReporte(TipoReporte.OPERACIONAL)
                 .nombreReporte("Exportación de Datos Operacionales")
