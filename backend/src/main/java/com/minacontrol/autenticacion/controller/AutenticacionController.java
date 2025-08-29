@@ -1,5 +1,7 @@
 package com.minacontrol.autenticacion.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.minacontrol.autenticacion.dto.request.CambiarContrasenaRequestDTO;
 import com.minacontrol.autenticacion.dto.request.LoginRequestDTO;
 import com.minacontrol.autenticacion.dto.response.LoginResponseDTO;
@@ -19,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Autenticación", description = "Operaciones de registro, login y gestión de tokens.")
 @RestController
 @RequestMapping("/api/auth")
 public class AutenticacionController {

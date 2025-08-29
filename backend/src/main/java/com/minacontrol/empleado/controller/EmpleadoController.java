@@ -1,5 +1,7 @@
 package com.minacontrol.empleado.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.minacontrol.empleado.dto.request.EmpleadoRequest;
 import com.minacontrol.empleado.dto.response.EmpleadoResponse;
 import com.minacontrol.empleado.enums.EstadoEmpleado;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Empleados", description = "Gestión de perfiles y datos de empleados.")
 @RestController
 @RequestMapping("/api/v1/empleados")
 @RequiredArgsConstructor

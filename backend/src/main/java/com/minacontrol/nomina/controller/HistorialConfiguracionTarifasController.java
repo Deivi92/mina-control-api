@@ -1,5 +1,7 @@
 package com.minacontrol.nomina.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.minacontrol.nomina.entity.HistorialConfiguracionTarifas;
 import com.minacontrol.nomina.service.IConfiguracionTarifasService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Tag(name = "Nómina", description = "Operaciones para gestionar la nómina, incluyendo tarifas, historial y cálculos.")
 @RestController
 @RequestMapping("/api/configuracion/tarifas/historial")
 public class HistorialConfiguracionTarifasController {

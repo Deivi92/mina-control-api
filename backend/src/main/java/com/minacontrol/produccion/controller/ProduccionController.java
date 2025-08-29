@@ -1,5 +1,7 @@
 package com.minacontrol.produccion.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.minacontrol.produccion.dto.request.RegistroProduccionCreateDTO;
 import com.minacontrol.produccion.dto.response.RegistroProduccionDTO;
 import com.minacontrol.produccion.service.IProduccionService;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Producción", description = "Operaciones para registrar y consultar la producción.")
 @RestController
 @RequestMapping("/api/v1/produccion")
 @RequiredArgsConstructor

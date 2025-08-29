@@ -1,5 +1,7 @@
 package com.minacontrol.turnos.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.minacontrol.turnos.dto.request.ExcepcionAsistenciaDTO;
 import com.minacontrol.turnos.dto.request.RegistrarAsistenciaDTO;
 import com.minacontrol.turnos.dto.response.RegistroAsistenciaDTO;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Turnos", description = "Gestión de turnos, horarios y asistencia.")
 @RestController
 @RequestMapping("/api/v1/asistencia")
 @RequiredArgsConstructor

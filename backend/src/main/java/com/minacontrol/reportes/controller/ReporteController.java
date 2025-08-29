@@ -1,5 +1,7 @@
 package com.minacontrol.reportes.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.minacontrol.reportes.dto.request.DatosOperacionalesDTO;
 import com.minacontrol.reportes.dto.request.ParametrosReporteDTO;
 import com.minacontrol.reportes.dto.response.ReporteDTO;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Reportes", description = "Generación de reportes de producción, asistencia, etc.")
 @RestController
 @RequestMapping("/api/reportes") // Añadido el RequestMapping
 @RequiredArgsConstructor

@@ -1,5 +1,7 @@
 package com.minacontrol.nomina.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.minacontrol.nomina.dto.request.AjusteNominaDTO;
 import com.minacontrol.nomina.dto.request.CalcularNominaRequestDTO;
 import com.minacontrol.nomina.dto.response.CalculoNominaDTO;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Nómina", description = "Operaciones para gestionar la nómina, incluyendo tarifas, historial y cálculos.")
 @RestController
 @RequestMapping("/api/nomina")
 @RequiredArgsConstructor

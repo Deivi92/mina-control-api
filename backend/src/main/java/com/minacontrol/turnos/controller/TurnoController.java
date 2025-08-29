@@ -1,6 +1,8 @@
 
 package com.minacontrol.turnos.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.minacontrol.turnos.dto.request.AsignacionTurnoCreateDTO;
 import com.minacontrol.turnos.dto.request.TipoTurnoCreateDTO;
 import com.minacontrol.turnos.dto.response.AsignacionTurnoDTO;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Turnos", description = "Gestión y asignación de turnos de trabajo.")
 @RestController
 @RequestMapping("/api/v1/turnos")
 @RequiredArgsConstructor

@@ -26,7 +26,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/configuracion/tarifas")
-@Tag(name = "Configuración de Tarifas", description = "Operaciones para gestionar la configuración de tarifas monetarias")
+@Tag(name = "Nómina", description = "Operaciones para gestionar la nómina, incluyendo tarifas, historial y cálculos.")
 @SecurityRequirement(name = "bearerAuth")
 public class ConfiguracionTarifasController {
 
