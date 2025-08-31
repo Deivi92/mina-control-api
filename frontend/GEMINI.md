@@ -120,7 +120,9 @@ Este es el ciclo de vida completo, paso a paso, para implementar un nuevo domini
 * **Acciones:**
   1. **Selección de tecnologías base:** React, Vite, TypeScript, React Query, MUI, etc.
   2. **Configuración de herramientas de calidad:** ESLint, Prettier, Husky, GitHub Actions.
-  3. **Plantillas y generadores:** Crear snippets para VS Code y plantillas de archivos.
+  3. **Definición del Sistema de Diseño:** Crear y configurar el tema global de la aplicación en `src/app/styles/theme.ts` para definir la paleta de colores, tipografía y estilo general.
+  4. **Creación de la Estructura de Activos:** Preparar el directorio `src/app/assets` y añadir los logos o iconos base de la aplicación.
+  5. **Plantillas y generadores:** Crear snippets para VS Code y plantillas de archivos.
 
 ### Paso 1: Análisis del Contrato (API Spec)
 * **Intención:** Establecer una única fuente de verdad.
@@ -129,12 +131,13 @@ Este es el ciclo de vida completo, paso a paso, para implementar un nuevo domini
   2. Identificar endpoints, modelos y DTOs del dominio.
   3. Generar automáticamente tipos TypeScript a partir del OpenAPI spec.
 
-### Paso 2: Diseño del Blueprint de UI/UX
-* **Intención:** Traducir datos en una experiencia de usuario tangible y de alta calidad.
+### Paso 2: Creación del Blueprint de UI/UX
+* **Intención:** Diseñar una experiencia de usuario tangible y de alta calidad, aplicando los principios de la `USABILITY_GUIDE.md` al dominio específico.
 * **Acciones:**
-  1. Crear Wireframes, lista de componentes, flujos de usuario y criterios de aceptación.
-  2. **Validar el diseño contra los principios de la [Guía de Usabilidad](./docs/USABILITY_GUIDE.md).**
-  3. Validar accesibilidad (WCAG).
+  1. **Crear un archivo de Blueprint:** Para cada dominio, se creará un archivo `docs/blueprints/XX-NOMBRE-BLUEPRINT.md`.
+  2. **Definir el Diseño:** El blueprint debe contener los wireframes, la lista de componentes y los flujos de usuario.
+  3. **Validación Explícita de Usabilidad:** El blueprint debe incluir una sección que explique cómo el diseño propuesto cumple con los principios clave de la `USABILITY_GUIDE.md`, poniendo dichos principios al servicio de las necesidades del dominio.
+  4. **Definir Criterios de Aceptación:** El documento concluirá con una lista de criterios de aceptación claros.
 
 ### Paso 2.5: Creación del Plan de Acción (Desarrollo Basado en Especificación)
 *   **Intención:** Traducir el flujo abstracto en un plan de acción concreto, adoptando un enfoque de **Desarrollo Basado en Especificación (Specification-Driven Development)**.
