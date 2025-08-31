@@ -13,6 +13,27 @@
 
 Este documento establece el proceso de desarrollo y la arquitectura para el frontend del proyecto Mina Control. La filosofía es combinar la disciplina y el orden de la arquitectura de backend con un flujo de trabajo moderno que garantice la máxima calidad en la interfaz y experiencia de usuario (UI/UX). Cada dominio de la aplicación se construirá como un bloque completo y probado antes de pasar al siguiente, asegurando un crecimiento robusto y mantenible del proyecto.
 
+## Plan de Desarrollo por Dominios
+
+Basado en el análisis del `openapi-spec.json`, se ha definido el siguiente plan de trabajo para la construcción del frontend. Esta será nuestra "lista de tareas" (To-Do List) a seguir.
+
+-   [ ] **Dominio 1: Autenticación**
+    -   *Objetivo:* Permitir a los usuarios iniciar y cerrar sesión. Proteger las rutas que lo requieran. Es la base de la seguridad.
+-   [ ] **Dominio 2: Empleados**
+    -   *Objetivo:* Crear la interfaz para listar, crear, editar y ver los empleados. Es un dominio central que se conectará con muchos otros.
+-   [ ] **Dominio 3: Turnos**
+    -   *Objetivo:* Gestionar los tipos de turno y asignarlos a los empleados.
+-   [ ] **Dominio 4: Producción**
+    -   *Objetivo:* Implementar el formulario para que los empleados registren su producción diaria.
+-   [ ] **Dominio 5: Nómina**
+    -   *Objetivo:* Configurar las tarifas y permitir el cálculo de la nómina. Depende de los dominios anteriores.
+-   [ ] **Dominio 6: Logística**
+    -   *Objetivo:* Administrar los despachos.
+-   [ ] **Dominio 7: Reportes**
+    -   *Objetivo:* Visualizar los datos consolidados de la operación.
+
+Para cada dominio, se seguirá rigurosamente **"El Flujo de Desarrollo Detallado por Dominio"** descrito más abajo en esta misma constitución.
+
 ## Enfoque Pedagógico
 
 Este es un proyecto con un fuerte enfoque en el aprendizaje. Por lo tanto, el asistente de IA (Gemini) debe seguir las siguientes directrices:
@@ -115,6 +136,14 @@ Este es el ciclo de vida completo, paso a paso, para implementar un nuevo domini
   2. **Validar el diseño contra los principios de la [Guía de Usabilidad](./docs/USABILITY_GUIDE.md).**
   3. Validar accesibilidad (WCAG).
 
+### Paso 2.5: Creación del Plan de Acción (Desarrollo Basado en Especificación)
+*   **Intención:** Traducir el flujo abstracto en un plan de acción concreto, adoptando un enfoque de **Desarrollo Basado en Especificación (Specification-Driven Development)**.
+*   **Acciones:**
+    1.  Antes de escribir código de implementación, el asistente debe crear la **especificación de pruebas completa** para todas las capas del dominio (Servicios, Hooks, Componentes).
+    2.  Esto implica crear todos los archivos `.test.ts(x)` necesarios, cada uno con el esqueleto completo de bloques `describe` e `it` que definen la totalidad del comportamiento esperado, basándose en el OpenAPI spec y el Blueprint de UI/UX.
+    3.  Este conjunto de pruebas se convierte en la especificación formal y la lista de tareas para la fase de implementación.
+    4.  El asistente debe presentar este plan y obtener la aprobación del usuario antes de proceder.
+
 ### Paso 3: Desarrollo Guiado por Pruebas Unitarias (TDD)
 * **Intención:** Validar cada pieza de forma aislada.
 * **Acciones:**
@@ -169,11 +198,71 @@ Este es el ciclo de vida completo, paso a paso, para implementar un nuevo domini
 - **Errores de Componente:** Usar `ErrorBoundary` de React para atrapar errores y mostrar una UI de fallback.
 - **Errores de Validación:** Mostrar mensajes de error específicos en los formularios.
 
-## Estrategia de Pruebas
+## Estrategia de Pruebas Detallada
 
-- **Pruebas Unitarias (Jest + React Testing Library):** Validar la lógica interna de componentes y hooks de forma aislada.
-- **Pruebas de Integración (Jest + React Testing Library):** Verificar la interacción entre varios componentes dentro de un feature.
-- **Pruebas End-to-End (Playwright):** Validar flujos completos de usuario en un entorno real o simulado.
+La arquitectura de la aplicación se divide en 3 capas por cada dominio, y la estrategia de testing se alinea con esta separación.
+
+### 1. **Capas del Dominio**
+
+-   **Servicios (Lógica de datos):** Responsables de la comunicación con la API.
+    ```typescript
+    // empleado.service.ts
+    export const empleadoService = {
+      obtenerEmpleados: () => axios.get('/api/empleados'),
+      crearEmpleado: (data) => axios.post('/api/empleados', data)
+    }
+    ```
+-   **Hooks (Manejo de estado):** Orquestan la lógica de estado del servidor (loading, error, data), usando los servicios.
+    ```typescript
+    // useEmpleados.ts
+    export const useEmpleados = () => {
+      // Usa empleadoService
+      // Maneja loading, error, data
+    }
+    ```
+-   **Componentes/Páginas (UI):** Responsables de la presentación, usan los hooks para mostrar los datos y el estado.
+    ```typescript
+    // EmpleadoTable.tsx, EmpleadosPage.tsx
+    // Usan los hooks para mostrar datos
+    ```
+
+### 2. **Tipos de Pruebas**
+
+#### Pruebas Unitarias (Aisladas)
+Se crea un archivo de prueba por cada archivo en cada capa, mockeando sus dependencias externas.
+
+-   `empleado.service.test.ts` ← **Mockea `axios`**. Se prueba que el servicio llama a la API correctamente.
+-   `useEmpleados.test.ts` ← **Mockea el `empleado.service`**. Se prueba que el hook maneja los estados (loading, error, data) correctamente.
+-   `EmpleadoTable.test.tsx` ← **Mockea el `useEmpleados` hook**. Se prueba que el componente renderiza la UI correcta para cada estado.
+
+#### Pruebas de Integración (Colaboración)
+Se crea un archivo de prueba para la página principal del dominio, probando la colaboración de todas las capas internas y mockeando solo el límite del sistema (la red).
+
+-   `EmpleadosPage.test.tsx` ← **Solo mockea `axios`**.
+    -   Usa el `useEmpleados` hook real.
+    -   Usa el `empleado.service` real.
+    -   Renderiza todos los componentes reales.
+    -   Verifica que el flujo completo dentro del frontend funciona como se espera.
+
+### 3. **Diagrama de Dependencias de Pruebas**
+
+```plaintext
+PRUEBAS UNITARIAS (aisladas):
+Service     ← Mock de HTTP (axios)
+Hook        ← Mock del Service
+Componente  ← Mock del Hook
+
+PRUEBA DE INTEGRACIÓN (colaboración):
+Página → Hook Real → Service Real ← Mock de HTTP (axios)
+```
+
+### 4. Estructura y Legibilidad de Pruebas
+
+Para asegurar que los archivos de prueba sean legibles y mantenibles, se establece la siguiente norma de estructura:
+
+-   **Agrupación con `describe`:** Todas las pruebas para un archivo deben estar contenidas en un bloque `describe` principal (ej. `describe('AuthService', ...)`).
+-   **Anidamiento por Funcionalidad:** Dentro del bloque principal, se deben usar bloques `describe` anidados para agrupar las pruebas de cada función o método exportado (ej. `describe('login', ...)`). Esta práctica es el equivalente directo a usar clases `@Nested` en JUnit 5 y es obligatoria para mantener el orden.
+-   **Casos de Prueba Claros:** Cada caso de prueba individual debe ser definido con la función `it` y tener un nombre descriptivo de su comportamiento esperado (ej. `it('debería devolver los tokens en caso de éxito')`).
 
 ## Estándares y Convenciones
 
@@ -181,7 +270,7 @@ Este es el ciclo de vida completo, paso a paso, para implementar un nuevo domini
 * **Componentes:** `PascalCase` (ej. `EmpleadoTable.tsx`)
 * **Hooks:** `useCamelCase` (ej. `useEmpleados.ts`)
 * **Servicios:** `camelCase.service.ts` (ej. `empleado.service.ts`)
-* **Archivos de prueba:** `[nombreArchivo].test.tsx`
+* **Archivos de prueba:** `[nombreArchivo].test.tsx`. **Deben estar ubicados en el mismo directorio que el archivo que prueban.**
 
 ### Estándares de Código
 * Todas las funciones deben tener JSDoc.
