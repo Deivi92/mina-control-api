@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { useAuth, AuthProvider } from './useAuth.tsx'; // Importamos el provider
 import * as authService from '../services/auth.service';
-import type { LoginRequest } from '../types';
+import type { LoginRequest, Usuario } from '../types'; // Importamos Usuario
 import { vi } from 'vitest';
 import React from 'react';
 
@@ -30,6 +30,8 @@ describe('useAuth Hook with Provider', () => {
   it('debería manejar el flujo de login exitoso correctamente', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     const credentials: LoginRequest = { email: 'test@test.com', password: 'password' };
+    // Creamos un mockUser que coincida con la interfaz Usuario
+    const mockUser: Usuario = { id: 1, email: credentials.email };
     
     mockedAuthService.login.mockResolvedValue({ accessToken: 'fake-token', refreshToken: 'fake-refresh-token' });
 
@@ -39,7 +41,7 @@ describe('useAuth Hook with Provider', () => {
 
     expect(result.current.isLoading).toBe(false);
     // Verificamos que el usuario simulado se establece correctamente
-    expect(result.current.user).toEqual({ id: '1', nombre: credentials.email, rol: 'USER' });
+    expect(result.current.user).toEqual(mockUser);
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.error).toBeNull();
     expect(authService.login).toHaveBeenCalledWith(credentials);
