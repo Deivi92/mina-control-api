@@ -21,7 +21,8 @@ export const LoginPage = () => {
         <CardContent>
           <Box sx={{ textAlign: 'center', mb: 2 }}>
             {/* Aquí podríamos poner nuestro logo SVG */}
-            <Typography component="h1" variant="h5">
+            {/* Usamos variant="h1" para aplicar el gradiente del tema, pero ajustamos el tamaño */}
+            <Typography component="h1" variant="h1" sx={{ fontSize: '2rem' }}>
               Iniciar Sesión
             </Typography>
           </Box>
