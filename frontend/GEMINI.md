@@ -162,10 +162,10 @@ Este es el ciclo de vida completo, paso a paso, para implementar un nuevo domini
   3. Refactorizar y realizar auto-revisión de código.
 
 ### Paso 5: Pruebas de Integración
-* **Intención:** Verificar que las piezas colaboran correctamente.
-* **Acciones:**
-  1. Escribir pruebas para las `Pages`, simulando interacciones complejas entre componentes.
-  2. Mockear respuestas de la API para simular escenarios.
+
+*   **Intención:** Verificar que las piezas del dominio (Componentes, Hooks, Servicios) colaboran correctamente en un flujo de usuario real.
+*   **Acciones:**
+    1.  Implementar la suite de pruebas para la `Page` principal del dominio, siguiendo la guía técnica y el estándar de rigor definidos en la sección **`Estrategia de Pruebas Detallada > Pruebas de Integración (Colaboración)`**.
 
 ### Paso 6: Pruebas End-to-End (E2E)
 * **Intención:** Simular el recorrido completo de un usuario real.
@@ -266,6 +266,26 @@ Para asegurar que los archivos de prueba sean legibles y mantenibles, se estable
 -   **Agrupación con `describe`:** Todas las pruebas para un archivo deben estar contenidas en un bloque `describe` principal (ej. `describe('AuthService', ...)`).
 -   **Anidamiento por Funcionalidad:** Dentro del bloque principal, se deben usar bloques `describe` anidados para agrupar las pruebas de cada función o método exportado (ej. `describe('login', ...)`). Esta práctica es el equivalente directo a usar clases `@Nested` en JUnit 5 y es obligatoria para mantener el orden.
 -   **Casos de Prueba Claros:** Cada caso de prueba individual debe ser definido con la función `it` y tener un nombre descriptivo de su comportamiento esperado (ej. `it('debería devolver los tokens en caso de éxito')`).
+
+### 5. Estándar de Pruebas de Integración (Principio General)
+
+Para asegurar la consistencia y rigurosidad a través de todos los dominios, se establece el siguiente principio general. Para cada flujo de usuario que implique una comunicación con la API, las pruebas de integración deben verificar cómo reacciona la UI a los 4 posibles resultados:
+
+1.  **Éxito (Happy Path):**
+    *   **Cuando:** La API responde como se espera (`2xx`).
+    *   **Verificar:** La UI se actualiza para mostrar el estado final correcto (datos, redirección, etc.).
+
+2.  **Carga (Loading State):**
+    *   **Cuando:** La respuesta de la API está en curso.
+    *   **Verificar:** La UI proporciona feedback inmediato de que algo está sucediendo (spinners, botones deshabilitados).
+
+3.  **Error de Validación (Input Errors):**
+    *   **Cuando:** La entrada del usuario es inválida (validación cliente) o la API la rechaza (`4xx`).
+    *   **Verificar:** La UI muestra mensajes de error claros y específicos para que el usuario corrija su entrada.
+
+4.  **Error de Sistema (System Failure):**
+    *   **Cuando:** La API falla por completo (`5xx`) o hay un problema de red.
+    *   **Verificar:** La UI muestra un mensaje de error genérico y amigable, sin "romperse".
 
 ## Estándares y Convenciones
 

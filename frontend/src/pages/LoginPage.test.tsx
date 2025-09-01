@@ -1,40 +1,81 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LoginPage } from './LoginPage';
+import { BrowserRouter } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
 
-// Mockeamos nuestro hook useAuth
-jest.mock('../auth/hooks/useAuth');
-const mockedUseAuth = useAuth as jest.Mock;
+// Mock del hook de autenticación para aislar completamente el componente LoginPage
+vi.mock('../auth/hooks/useAuth');
 
-describe('LoginPage', () => {
+const renderWithRouter = (ui: React.ReactElement) => {
+  return render(<BrowserRouter>{ui}</BrowserRouter>);
+};
+
+describe('LoginPage (Component Test)', () => {
+  const mockLogin = vi.fn();
 
   beforeEach(() => {
-    // Reseteamos el mock antes de cada prueba con valores por defecto
-    mockedUseAuth.mockReturnValue({
-      login: jest.fn(), // una función mock para espiar si es llamada
+    // Limpiamos los mocks antes de cada prueba
+    vi.clearAllMocks();
+    // Configuramos el estado por defecto del mock de useAuth
+    (useAuth as vi.Mock).mockReturnValue({
+      login: mockLogin,
       isLoading: false,
       error: null,
     });
   });
 
-  it('debería renderizar el título, campos de email/contraseña y botón', () => {
-    // TODO: Implementar
+  it('debería renderizar el formulario correctamente', () => {
+    renderWithRouter(<LoginPage />);
+    expect(screen.getByLabelText(/Correo Electrónico/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Contraseña/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Ingresar/i })).toBeInTheDocument();
   });
 
-  it('debería permitir al usuario escribir en los campos', () => {
-    // TODO: Implementar
+  it('debería llamar a la función login con las credenciales correctas al enviar el formulario', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<LoginPage />);
+
+    await user.type(screen.getByLabelText(/Correo Electrónico/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/Contraseña/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /Ingresar/i }));
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith({ 
+        email: 'test@example.com', 
+        password: 'password123' 
+      });
+    });
   });
 
-  it('debería llamar a la función login del hook con las credenciales al hacer submit', () => {
-    // TODO: Implementar
+  it('debería deshabilitar el botón y mostrar un spinner mientras isLoading es true', () => {
+    (useAuth as vi.Mock).mockReturnValue({
+      login: mockLogin,
+      isLoading: true,
+      error: null,
+    });
+
+    renderWithRouter(<LoginPage />);
+
+    expect(screen.getByRole('button', { name: /Ingresar/i })).toBeDisabled();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('debería mostrar un indicador de carga y deshabilitar el botón si isLoading es true', () => {
-    // TODO: Implementar
+  it('debería mostrar un mensaje de error cuando el hook devuelve un error', async () => {
+    (useAuth as vi.Mock).mockReturnValue({
+      login: mockLogin,
+      isLoading: false,
+      error: 'Credenciales incorrectas',
+    });
+
+    renderWithRouter(<LoginPage />);
+
+    expect(await screen.findByText('Credenciales incorrectas')).toBeInTheDocument();
   });
 
-  it('debería mostrar un mensaje de error si el hook tiene un error', () => {
-    // TODO: Implementar
+  it('debería tener el botón de login deshabilitado si los campos están vacíos', () => {
+    renderWithRouter(<LoginPage />);
+    expect(screen.getByRole('button', { name: /Ingresar/i })).toBeDisabled();
   });
-
 });

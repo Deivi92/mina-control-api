@@ -6,6 +6,7 @@ export interface LoginRequest {
   email: string;
   password: string;
 }
+// Pequeño cambio para forzar la re-transpilación
 
 /**
  * DTO para la respuesta de login.
@@ -76,3 +77,5 @@ export interface CambiarContrasenaRequest {
   newPassword: string;
   token?: string;
 }
+
+export const TEST_EXPORT = 'hello';

@@ -1,68 +1,58 @@
 import axios from 'axios';
-import { login, register, refreshToken, logout } from './auth.service';
-import { LoginRequest } from '../types';
+import { login, register, logout } from './auth.service';
+import type { LoginRequest, RegistroUsuarioRequest, LogoutRequest } from '../types';
+import { vi } from 'vitest';
 
-// Mockeamos el módulo completo de Axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+vi.mock('axios');
+const mockedAxios = axios as vi.Mocked<typeof axios>;
 
 describe('AuthService', () => {
-
-  // Limpiamos los mocks después de cada prueba para evitar interferencias
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // Pruebas para la función de LOGIN
   describe('login', () => {
-    it('debería existir la función login', () => {
-      expect(login).toBeDefined();
-    });
-
     it('debería llamar a axios.post con la URL y los datos correctos', async () => {
-      // TODO: Implementar esta prueba
+      const credentials: LoginRequest = { email: 'test@example.com', password: 'password123' };
+      mockedAxios.post.mockResolvedValue({ data: {} });
+      await login(credentials);
+      expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/login', credentials);
     });
 
     it('debería devolver los tokens en caso de éxito', async () => {
-      // TODO: Implementar esta prueba
+      const credentials: LoginRequest = { email: 'test@example.com', password: 'password123' };
+      const mockResponse = { data: { accessToken: 'fake-access-token', refreshToken: 'fake-refresh-token' } };
+      mockedAxios.post.mockResolvedValue(mockResponse);
+      const result = await login(credentials);
+      expect(result).toEqual(mockResponse.data);
     });
 
     it('debería lanzar un error si la llamada a la API falla', async () => {
-      // TODO: Implementar esta prueba
+      const credentials: LoginRequest = { email: 'test@example.com', password: 'password123' };
+      const errorMessage = 'Request failed with status code 401';
+      mockedAxios.post.mockRejectedValue(new Error(errorMessage));
+      await expect(login(credentials)).rejects.toThrow(errorMessage);
     });
   });
 
   // Pruebas para la función de REGISTRO
   describe('register', () => {
-    it('debería existir la función register', () => {
-      expect(register).toBeDefined();
-    });
-
     it('debería llamar a axios.post con la URL y los datos de registro correctos', async () => {
-      // TODO: Implementar esta prueba
-    });
-  });
-
-  // Pruebas para la función de REFRESH TOKEN
-  describe('refreshToken', () => {
-    it('debería existir la función refreshToken', () => {
-      expect(refreshToken).toBeDefined();
-    });
-
-    it('debería llamar a axios.post para refrescar el token', async () => {
-      // TODO: Implementar esta prueba
+      const userData: RegistroUsuarioRequest = { email: 'new@example.com', password: 'new-password' };
+      mockedAxios.post.mockResolvedValue({ data: {} });
+      await register(userData);
+      expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/register', userData);
     });
   });
 
   // Pruebas para la función de LOGOUT
   describe('logout', () => {
-    it('debería existir la función logout', () => {
-      expect(logout).toBeDefined();
-    });
-
     it('debería llamar a axios.post para hacer logout', async () => {
-      // TODO: Implementar esta prueba
+      const logoutPayload: LogoutRequest = { refreshToken: 'some-refresh-token' };
+      mockedAxios.post.mockResolvedValue({});
+      await logout(logoutPayload);
+      expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/logout', logoutPayload);
     });
   });
-
 });
