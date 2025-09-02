@@ -1,0 +1,275 @@
+name: CI/CD Pipeline - MinaControl Pro
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '20'
+  MAVEN_OPTS: -Xmx1024m
+
+jobs:
+  # Job para detectar cambios en backend o frontend
+  detect-changes:
+    name: Detectar cambios
+    runs-on: ubuntu-latest
+    outputs:
+      backend-changed: ${{ steps.changes.outputs.backend }}
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detectar cambios en directorios
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/**'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/**'
+
+  # Job para Backend (Spring Boot + Maven + Java 17)
+  backend-ci:
+    name: Backend - Build y Test
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend-changed == 'true'
+    
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache dependencias Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Validar estructura del proyecto
+        run: |
+          echo "📋 Validando estructura del proyecto backend..."
+          ls -la
+          if [ ! -f "pom.xml" ]; then
+            echo "❌ No se encontró pom.xml"
+            exit 1
+          fi
+          echo "✅ Estructura del proyecto validada"
+
+      - name: Compilar proyecto
+        run: |
+          echo "🔨 Compilando proyecto backend..."
+          mvn clean compile -B
+
+      - name: Ejecutar tests unitarios
+        run: |
+          echo "🧪 Ejecutando tests unitarios..."
+          mvn test -B
+
+      - name: Ejecutar tests de integración
+        run: |
+          echo "🔧 Ejecutando tests de integración..."
+          mvn verify -B
+
+      - name: Generar reportes de cobertura
+        run: |
+          echo "📊 Generando reportes de cobertura..."
+          mvn jacoco:report -B
+
+      - name: Verificar calidad del código
+        run: |
+          echo "🔍 Verificando calidad del código..."
+          mvn checkstyle:check -B || echo "⚠️ Checkstyle warnings encontrados"
+
+      - name: Empaquetar aplicación
+        run: |
+          echo "📦 Empaquetando aplicación..."
+          mvn package -DskipTests -B
+
+      - name: Subir artefactos de backend
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/target/*.jar
+          retention-days: 7
+
+      - name: Subir reportes de tests
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-reports
+          path: |
+            backend/target/surefire-reports/
+            backend/target/site/jacoco/
+          retention-days: 7
+
+  # Job para Frontend (React + TypeScript + Vite + Node.js)
+  frontend-ci:
+    name: Frontend - Build y Test
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend-changed == 'true'
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Validar estructura del proyecto
+        run: |
+          echo "📋 Validando estructura del proyecto frontend..."
+          ls -la
+          if [ ! -f "package.json" ]; then
+            echo "❌ No se encontró package.json"
+            exit 1
+          fi
+          echo "✅ Estructura del proyecto validada"
+
+      - name: Instalar dependencias
+        run: |
+          echo "📦 Instalando dependencias..."
+          npm ci
+
+      - name: Verificar compilación TypeScript
+        run: |
+          echo "🔧 Verificando compilación TypeScript..."
+          npm run compile
+
+      - name: Ejecutar linter (ESLint)
+        run: |
+          echo "🔍 Ejecutando linter..."
+          npm run lint
+
+      - name: Verificar formato de código (Prettier)
+        run: |
+          echo "✨ Verificando formato de código..."
+          npm run format:check
+
+      - name: Ejecutar tests unitarios
+        run: |
+          echo "🧪 Ejecutando tests unitarios..."
+          npm run test -- --run --coverage
+
+      - name: Build para producción
+        run: |
+          echo "🏗️ Generando build de producción..."
+          npm run build
+
+      - name: Subir artefactos de frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+      - name: Subir reportes de tests
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-reports
+          path: |
+            frontend/coverage/
+          retention-days: 7
+
+  # Job de validación general del monorepo
+  monorepo-validation:
+    name: Validación del Monorepo
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Validar estructura del monorepo
+        run: |
+          echo "🏗️ Validando estructura del monorepo..."
+          
+          # Verificar directorios principales
+          if [ ! -d "backend" ] || [ ! -d "frontend" ]; then
+            echo "❌ Estructura de monorepo inválida - faltan directorios backend o frontend"
+            exit 1
+          fi
+          
+          # Verificar archivos de configuración principales
+          if [ ! -f "backend/pom.xml" ]; then
+            echo "❌ No se encontró backend/pom.xml"
+            exit 1
+          fi
+          
+          if [ ! -f "frontend/package.json" ]; then
+            echo "❌ No se encontró frontend/package.json"
+            exit 1
+          fi
+          
+          echo "✅ Estructura del monorepo validada correctamente"
+
+      - name: Mostrar resumen de cambios
+        run: |
+          echo "📊 Resumen de cambios detectados:"
+          echo "Backend cambiado: ${{ needs.detect-changes.outputs.backend-changed }}"
+          echo "Frontend cambiado: ${{ needs.detect-changes.outputs.frontend-changed }}"
+
+  # Job de resumen final
+  build-summary:
+    name: Resumen del Build
+    runs-on: ubuntu-latest
+    needs: [detect-changes, backend-ci, frontend-ci, monorepo-validation]
+    if: always()
+    
+    steps:
+      - name: Resumen de resultados
+        run: |
+          echo "🎯 RESUMEN DEL PIPELINE CI/CD - MinaControl Pro"
+          echo "============================================="
+          echo ""
+          echo "📊 Estado de los jobs:"
+          echo "- Detección de cambios: ${{ needs.detect-changes.result }}"
+          echo "- Validación monorepo: ${{ needs.monorepo-validation.result }}"
+          echo "- Backend CI: ${{ needs.backend-ci.result }}"
+          echo "- Frontend CI: ${{ needs.frontend-ci.result }}"
+          echo ""
+          echo "🔍 Cambios detectados:"
+          echo "- Backend: ${{ needs.detect-changes.outputs.backend-changed }}"
+          echo "- Frontend: ${{ needs.detect-changes.outputs.frontend-changed }}"
+          echo ""
+          
+          # Determinar estado general
+          if [[ "${{ needs.backend-ci.result }}" == "failure" ]] || [[ "${{ needs.frontend-ci.result }}" == "failure" ]] || [[ "${{ needs.monorepo-validation.result }}" == "failure" ]]; then
+            echo "❌ Pipeline falló - revisar logs de los jobs"
+            exit 1
+          elif [[ "${{ needs.backend-ci.result }}" == "skipped" ]] && [[ "${{ needs.frontend-ci.result }}" == "skipped" ]]; then
+            echo "⏭️ No hay cambios que procesar"
+          else
+            echo "✅ Pipeline completado exitosamente"
+          fi

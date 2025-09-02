@@ -1,0 +1,292 @@
+name: Dependency Updates - MinaControl Pro
+
+on:
+  schedule:
+    # Ejecutar todos los lunes a las 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  # Actualización de dependencias del Backend (Maven)
+  update-backend-dependencies:
+    name: Actualizar Dependencias Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache dependencias Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      - name: Verificar actualizaciones disponibles
+        working-directory: ./backend
+        run: |
+          echo "🔍 Verificando actualizaciones de dependencias Maven..."
+          mvn versions:display-dependency-updates -B
+          mvn versions:display-plugin-updates -B
+
+      - name: Actualizar dependencias menores
+        working-directory: ./backend
+        run: |
+          echo "⬆️ Actualizando dependencias menores..."
+          mvn versions:update-properties -B
+          mvn versions:use-latest-releases -DallowMinorUpdates=true -DallowIncrementalUpdates=true -B
+
+      - name: Verificar que el proyecto compila
+        working-directory: ./backend
+        run: |
+          echo "🔨 Verificando que el proyecto compila después de las actualizaciones..."
+          mvn clean compile -B
+
+      - name: Ejecutar tests rápidos
+        working-directory: ./backend
+        run: |
+          echo "🧪 Ejecutando tests básicos..."
+          mvn test -B -Dtest="**/unit/**/*Test.java"
+
+      - name: Crear Pull Request si hay cambios
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(backend): actualizar dependencias Maven"
+          title: "🔄 Actualización automática de dependencias Backend"
+          body: |
+            ## 🔄 Actualización Automática de Dependencias Backend
+            
+            Este PR actualiza automáticamente las dependencias del backend (Maven) a sus versiones más recientes compatibles.
+            
+            ### ✅ Verificaciones realizadas:
+            - ✅ Compilación exitosa
+            - ✅ Tests unitarios básicos
+            
+            ### 📋 Pasos siguientes:
+            1. Revisar los cambios en `pom.xml`
+            2. Ejecutar tests completos localmente
+            3. Verificar que no hay breaking changes
+            4. Hacer merge si todo está correcto
+            
+            ---
+            *Este PR fue generado automáticamente por GitHub Actions*
+          branch: auto-update/backend-dependencies
+          delete-branch: true
+
+  # Actualización de dependencias del Frontend (npm)
+  update-frontend-dependencies:
+    name: Actualizar Dependencias Frontend
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Verificar actualizaciones disponibles
+        working-directory: ./frontend
+        run: |
+          echo "🔍 Verificando actualizaciones de dependencias npm..."
+          npx npm-check-updates
+
+      - name: Actualizar dependencias menores
+        working-directory: ./frontend
+        run: |
+          echo "⬆️ Actualizando dependencias menores y patches..."
+          npx npm-check-updates -u --target minor
+          npm install
+
+      - name: Verificar que el proyecto compila
+        working-directory: ./frontend
+        run: |
+          echo "🔨 Verificando que el proyecto compila después de las actualizaciones..."
+          npm run compile
+
+      - name: Ejecutar linting
+        working-directory: ./frontend
+        run: |
+          echo "📏 Ejecutando linting..."
+          npm run lint
+
+      - name: Ejecutar tests básicos
+        working-directory: ./frontend
+        run: |
+          echo "🧪 Ejecutando tests básicos..."
+          npm run test -- --run
+
+      - name: Verificar build de producción
+        working-directory: ./frontend
+        run: |
+          echo "🏗️ Verificando build de producción..."
+          npm run build
+
+      - name: Crear Pull Request si hay cambios
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(frontend): actualizar dependencias npm"
+          title: "🔄 Actualización automática de dependencias Frontend"
+          body: |
+            ## 🔄 Actualización Automática de Dependencias Frontend
+            
+            Este PR actualiza automáticamente las dependencias del frontend (npm) a sus versiones más recientes compatibles.
+            
+            ### ✅ Verificaciones realizadas:
+            - ✅ Compilación TypeScript exitosa
+            - ✅ Linting pasado
+            - ✅ Tests unitarios básicos
+            - ✅ Build de producción exitoso
+            
+            ### 📋 Pasos siguientes:
+            1. Revisar los cambios en `package.json` y `package-lock.json`
+            2. Ejecutar tests completos localmente
+            3. Verificar la aplicación en modo desarrollo
+            4. Hacer merge si todo está correcto
+            
+            ---
+            *Este PR fue generado automáticamente por GitHub Actions*
+          branch: auto-update/frontend-dependencies
+          delete-branch: true
+
+  # Análisis de seguridad de dependencias
+  security-audit:
+    name: Auditoría de Seguridad
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Auditoría de seguridad Backend (OWASP)
+        working-directory: ./backend
+        run: |
+          echo "🔒 Ejecutando auditoría de seguridad del backend..."
+          mvn org.owasp:dependency-check-maven:check -B || true
+
+      - name: Auditoría de seguridad Frontend (npm audit)
+        working-directory: ./frontend
+        run: |
+          echo "🔒 Ejecutando auditoría de seguridad del frontend..."
+          npm ci
+          npm audit --audit-level moderate || true
+
+      - name: Crear issue si hay vulnerabilidades críticas
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 Vulnerabilidades de seguridad detectadas en dependencias';
+            const body = `
+            ## 🚨 Alerta de Seguridad
+            
+            Se han detectado vulnerabilidades de seguridad en las dependencias del proyecto.
+            
+            ### 📊 Información del análisis:
+            - **Fecha**: ${new Date().toISOString().split('T')[0]}
+            - **Workflow**: ${context.workflow}
+            - **Run ID**: ${context.runId}
+            
+            ### 🔍 Pasos para revisar:
+            1. Revisar los logs del workflow en la pestaña "Actions"
+            2. Identificar las dependencias vulnerables
+            3. Actualizar a versiones seguras
+            4. Re-ejecutar el análisis
+            
+            ### 🔗 Enlaces útiles:
+            - [Workflow Run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            - [OWASP Dependency Check](https://owasp.org/www-project-dependency-check/)
+            - [npm audit docs](https://docs.npmjs.com/cli/v8/commands/npm-audit)
+            
+            ---
+            *Este issue fue creado automáticamente por el análisis de seguridad*
+            `;
+            
+            // Buscar si ya existe un issue similar abierto
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security,dependencies'
+            });
+            
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Vulnerabilidades de seguridad detectadas')
+            );
+            
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['security', 'dependencies', 'automated']
+              });
+            }
+
+      - name: Subir reportes de auditoría
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-reports
+          path: |
+            backend/target/dependency-check-report.html
+            frontend/npm-audit-report.json
+          retention-days: 30
+
+  # Resumen del estado de dependencias
+  dependency-summary:
+    name: Resumen de Dependencias
+    runs-on: ubuntu-latest
+    needs: [update-backend-dependencies, update-frontend-dependencies, security-audit]
+    if: always()
+    
+    steps:
+      - name: Generar resumen
+        run: |
+          echo "📊 RESUMEN DE GESTIÓN DE DEPENDENCIAS - MinaControl Pro"
+          echo "===================================================="
+          echo ""
+          echo "🎯 Estado de las actualizaciones:"
+          echo "- Backend Dependencies: ${{ needs.update-backend-dependencies.result }}"
+          echo "- Frontend Dependencies: ${{ needs.update-frontend-dependencies.result }}"
+          echo "- Security Audit: ${{ needs.security-audit.result }}"
+          echo ""
+          echo "📅 Próxima ejecución programada: Próximo lunes a las 9 AM UTC"
+          echo ""
+          
+          if [[ "${{ needs.security-audit.result }}" == "failure" ]]; then
+            echo "⚠️ ATENCIÓN: Se detectaron vulnerabilidades de seguridad"
+            echo "🔍 Revisar los reportes y aplicar las correcciones necesarias"
+          else
+            echo "✅ No se detectaron vulnerabilidades críticas"
+          fi

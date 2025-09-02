@@ -1,0 +1,309 @@
+name: Code Quality & Security - MinaControl Pro
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  schedule:
+    # Ejecutar análisis de seguridad semanalmente los lunes a las 2 AM UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '20'
+
+jobs:
+  # Análisis de calidad de código para Backend
+  backend-quality:
+    name: Backend - Análisis de Calidad
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necesario para SonarCloud
+
+      - name: Configurar Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache dependencias Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      - name: Ejecutar tests con cobertura
+        run: |
+          echo "🧪 Ejecutando tests con cobertura de código..."
+          mvn clean verify jacoco:report -B
+
+      - name: Verificar calidad del código (Checkstyle)
+        run: |
+          echo "📏 Verificando estilo de código..."
+          mvn checkstyle:check -B || true
+
+      - name: Verificar bugs potenciales (SpotBugs)
+        run: |
+          echo "🐛 Buscando bugs potenciales..."
+          mvn spotbugs:check -B || true
+
+      - name: Análisis de dependencias (OWASP)
+        run: |
+          echo "🔒 Analizando vulnerabilidades en dependencias..."
+          mvn org.owasp:dependency-check-maven:check -B || true
+
+      - name: Generar reporte de calidad combinado
+        run: |
+          echo "📊 Generando reporte de calidad..."
+          mkdir -p target/quality-reports
+          
+          # Copiar reportes si existen
+          [ -d "target/site/jacoco" ] && cp -r target/site/jacoco target/quality-reports/ || echo "No jacoco reports"
+          [ -d "target/site/checkstyle" ] && cp -r target/site/checkstyle target/quality-reports/ || echo "No checkstyle reports"
+          [ -d "target/site/spotbugs" ] && cp -r target/site/spotbugs target/quality-reports/ || echo "No spotbugs reports"
+          
+          echo "✅ Reportes de calidad generados"
+
+      - name: Subir reportes de calidad
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-quality-reports
+          path: backend/target/quality-reports/
+          retention-days: 30
+
+  # Análisis de calidad de código para Frontend
+  frontend-quality:
+    name: Frontend - Análisis de Calidad
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: |
+          echo "📦 Instalando dependencias..."
+          npm ci
+
+      - name: Análisis de código TypeScript
+        run: |
+          echo "🔍 Analizando código TypeScript..."
+          npm run compile
+
+      - name: Análisis ESLint
+        run: |
+          echo "📏 Ejecutando ESLint..."
+          npm run lint -- --format json --output-file eslint-report.json || true
+          npm run lint || true
+
+      - name: Verificar formato con Prettier
+        run: |
+          echo "✨ Verificando formato de código..."
+          npm run format:check || true
+
+      - name: Ejecutar tests con cobertura
+        run: |
+          echo "🧪 Ejecutando tests con cobertura..."
+          npm run test -- --run --coverage --reporter=json --outputFile=test-results.json
+
+      - name: Análisis de vulnerabilidades (npm audit)
+        run: |
+          echo "🔒 Analizando vulnerabilidades en dependencias..."
+          npm audit --audit-level moderate --json > npm-audit.json || true
+          npm audit --audit-level moderate || true
+
+      - name: Análisis de paquetes obsoletos
+        run: |
+          echo "📦 Verificando paquetes obsoletos..."
+          npx npm-check-updates --format json > outdated-packages.json || true
+
+      - name: Generar reporte de calidad
+        run: |
+          echo "📊 Generando reporte de calidad frontend..."
+          mkdir -p quality-reports
+          
+          # Mover reportes generados
+          [ -f "eslint-report.json" ] && mv eslint-report.json quality-reports/
+          [ -f "test-results.json" ] && mv test-results.json quality-reports/
+          [ -f "npm-audit.json" ] && mv npm-audit.json quality-reports/
+          [ -f "outdated-packages.json" ] && mv outdated-packages.json quality-reports/
+          [ -d "coverage" ] && cp -r coverage quality-reports/
+          
+          echo "✅ Reportes de calidad frontend generados"
+
+      - name: Subir reportes de calidad
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-quality-reports
+          path: frontend/quality-reports/
+          retention-days: 30
+
+  # Análisis de seguridad con CodeQL
+  security-analysis:
+    name: Análisis de Seguridad (CodeQL)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'java', 'javascript' ]
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Inicializar CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,quality
+
+      - name: Configurar entorno para Java
+        if: matrix.language == 'java'
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Build automático
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Ejecutar análisis CodeQL
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+  # Análisis de secretos
+  secret-scanning:
+    name: Escaneo de Secretos
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ejecutar TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  # Análisis de licencias
+  license-compliance:
+    name: Cumplimiento de Licencias
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java (para backend)
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Configurar Node.js (para frontend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Analizar licencias del backend
+        working-directory: ./backend
+        run: |
+          echo "📜 Analizando licencias del backend..."
+          mvn license:aggregate-third-party-report -B || true
+
+      - name: Analizar licencias del frontend
+        working-directory: ./frontend
+        run: |
+          echo "📜 Analizando licencias del frontend..."
+          npm install -g license-checker
+          license-checker --json --out license-report.json || true
+          license-checker || true
+
+      - name: Subir reportes de licencias
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: license-reports
+          path: |
+            backend/target/site/third-party-report.html
+            frontend/license-report.json
+          retention-days: 30
+
+  # Resumen de análisis de calidad
+  quality-summary:
+    name: Resumen de Calidad
+    runs-on: ubuntu-latest
+    needs: [backend-quality, frontend-quality, security-analysis, secret-scanning, license-compliance]
+    if: always()
+    
+    steps:
+      - name: Descargar todos los reportes
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-reports/
+
+      - name: Generar resumen de calidad
+        run: |
+          echo "📊 RESUMEN DE ANÁLISIS DE CALIDAD - MinaControl Pro"
+          echo "==============================================="
+          echo ""
+          echo "🎯 Estado de los análisis:"
+          echo "- Backend Quality: ${{ needs.backend-quality.result }}"
+          echo "- Frontend Quality: ${{ needs.frontend-quality.result }}"
+          echo "- Security Analysis: ${{ needs.security-analysis.result }}"
+          echo "- Secret Scanning: ${{ needs.secret-scanning.result }}"
+          echo "- License Compliance: ${{ needs.license-compliance.result }}"
+          echo ""
+          
+          # Mostrar estructura de reportes generados
+          echo "📁 Reportes generados:"
+          find ./all-reports -type f -name "*.json" -o -name "*.html" -o -name "*.xml" | head -20
+          
+          # Determinar estado general
+          if [[ "${{ needs.backend-quality.result }}" == "failure" ]] || [[ "${{ needs.frontend-quality.result }}" == "failure" ]]; then
+            echo "❌ Algunos análisis de calidad fallaron"
+            exit 1
+          else
+            echo "✅ Análisis de calidad completado"
+          fi
+
+      - name: Subir resumen completo
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-summary-complete
+          path: ./all-reports/
+          retention-days: 90

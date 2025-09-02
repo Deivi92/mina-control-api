@@ -1,0 +1,281 @@
+name: Deploy & Release - MinaControl Pro
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger en tags de versión (ej: v1.0.0)
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno de despliegue'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Saltar tests'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Job para preparar el release
+  prepare-release:
+    name: Preparar Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.prerelease }}
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Extraer información de versión
+        id: version
+        run: |
+          if [[ $GITHUB_REF =~ ^refs/tags/v(.*)$ ]]; then
+            VERSION=${BASH_REMATCH[1]}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            
+            # Determinar si es prerelease (contiene alpha, beta, rc)
+            if [[ $VERSION =~ (alpha|beta|rc) ]]; then
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+            else
+              echo "prerelease=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "version=dev-$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Mostrar información del release
+        run: |
+          echo "🏷️ Versión: ${{ steps.version.outputs.version }}"
+          echo "🚀 Prerelease: ${{ steps.version.outputs.prerelease }}"
+          echo "🎯 Entorno: ${{ inputs.environment || 'staging' }}"
+
+  # Build completo para release
+  build-for-release:
+    name: Build para Release
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    strategy:
+      matrix:
+        component: [backend, frontend]
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # Backend build
+      - name: Configurar Java (Backend)
+        if: matrix.component == 'backend'
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Cache Maven (Backend)
+        if: matrix.component == 'backend'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      - name: Build Backend
+        if: matrix.component == 'backend'
+        working-directory: ./backend
+        run: |
+          echo "🔨 Building backend para release v${{ needs.prepare-release.outputs.version }}"
+          
+          # Actualizar versión en pom.xml
+          mvn versions:set -DnewVersion=${{ needs.prepare-release.outputs.version }} -B
+          
+          # Build sin tests si se especifica
+          if [[ "${{ inputs.skip_tests }}" == "true" ]]; then
+            mvn clean package -DskipTests -B
+          else
+            mvn clean package -B
+          fi
+
+      # Frontend build
+      - name: Configurar Node.js (Frontend)
+        if: matrix.component == 'frontend'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        if: matrix.component == 'frontend'
+        working-directory: ./frontend
+        run: |
+          echo "🔨 Building frontend para release v${{ needs.prepare-release.outputs.version }}"
+          
+          npm ci
+          
+          # Tests condicionales
+          if [[ "${{ inputs.skip_tests }}" != "true" ]]; then
+            npm run test -- --run
+            npm run lint
+          fi
+          
+          # Build optimizado para producción
+          npm run build
+
+      - name: Subir artefactos de release
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.component }}-release-${{ needs.prepare-release.outputs.version }}
+          path: |
+            ${{ matrix.component == 'backend' && 'backend/target/*.jar' || 'frontend/dist/' }}
+          retention-days: 90
+
+  # Docker build y push (opcional para el futuro)
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [prepare-release, build-for-release]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login al Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Descargar artefactos de backend
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-release-${{ needs.prepare-release.outputs.version }}
+          path: ./backend/target/
+
+      - name: Crear Dockerfile temporal para backend
+        run: |
+          cat > Dockerfile.backend << 'EOF'
+          FROM openjdk:17-jre-alpine
+          VOLUME /tmp
+          ARG JAR_FILE=target/*.jar
+          COPY ${JAR_FILE} app.jar
+          EXPOSE 8080
+          ENTRYPOINT ["java","-jar","/app.jar"]
+          EOF
+
+      - name: Build y Push imagen de backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./Dockerfile.backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ needs.prepare-release.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Crear GitHub Release
+  create-release:
+    name: Crear GitHub Release
+    runs-on: ubuntu-latest
+    needs: [prepare-release, build-for-release]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Descargar artefactos
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-release-${{ needs.prepare-release.outputs.version }}"
+          merge-multiple: true
+          path: ./release-assets/
+
+      - name: Generar notas del release
+        id: release_notes
+        run: |
+          echo "Generando notas del release..."
+          
+          # Obtener el tag anterior
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          
+          # Generar changelog básico
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "## 🚀 Cambios desde $PREVIOUS_TAG" > release_notes.md
+            echo "" >> release_notes.md
+            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD >> release_notes.md
+          else
+            echo "## 🚀 Release Inicial v${{ needs.prepare-release.outputs.version }}" > release_notes.md
+            echo "" >> release_notes.md
+            echo "- Implementación inicial del sistema MinaControl Pro" >> release_notes.md
+            echo "- Backend: API REST con Spring Boot" >> release_notes.md
+            echo "- Frontend: Aplicación React con TypeScript" >> release_notes.md
+          fi
+          
+          echo "" >> release_notes.md
+          echo "## 📦 Componentes incluidos" >> release_notes.md
+          echo "- **Backend**: Sistema de gestión minera con API REST" >> release_notes.md
+          echo "- **Frontend**: Interfaz de usuario moderna y responsiva" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "## 🛠️ Tecnologías" >> release_notes.md
+          echo "- Java 17 + Spring Boot 3.2.0" >> release_notes.md
+          echo "- React 19 + TypeScript + Vite" >> release_notes.md
+          echo "- Base de datos: H2 (desarrollo) / PostgreSQL (producción)" >> release_notes.md
+
+      - name: Crear Release en GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: MinaControl Pro v${{ needs.prepare-release.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ needs.prepare-release.outputs.is_prerelease }}
+          files: |
+            release-assets/**/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Notificación de despliegue exitoso
+  deployment-notification:
+    name: Notificación de Despliegue
+    runs-on: ubuntu-latest
+    needs: [prepare-release, create-release]
+    if: always()
+    
+    steps:
+      - name: Notificar resultado del despliegue
+        run: |
+          echo "🎉 DESPLIEGUE COMPLETADO - MinaControl Pro"
+          echo "========================================="
+          echo ""
+          echo "📊 Resumen del Release:"
+          echo "- Versión: v${{ needs.prepare-release.outputs.version }}"
+          echo "- Prerelease: ${{ needs.prepare-release.outputs.is_prerelease }}"
+          echo "- Estado Release: ${{ needs.create-release.result }}"
+          echo ""
+          
+          if [[ "${{ needs.create-release.result }}" == "success" ]]; then
+            echo "✅ Release creado exitosamente en GitHub"
+            echo "🔗 URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          else
+            echo "❌ Error al crear el release"
+          fi
