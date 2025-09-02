@@ -49,8 +49,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
 
     # Install backend dependencies and build
     - name: Build Backend
@@ -83,6 +81,11 @@ jobs:
       run: |
         cd frontend
         npm run test:e2e
+
+    # Create report directory if it doesn't exist
+    - name: Ensure report directory exists
+      run: |
+        mkdir -p frontend/playwright-report
 
     # Upload test results (screenshots, videos) as artifacts
     - uses: actions/upload-artifact@v4
