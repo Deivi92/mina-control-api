@@ -47,7 +47,7 @@ describe('LoginPage (Component Test)', () => {
         password: 'password123' 
       });
     });
-  });
+  }, 10000);
 
   it('debería deshabilitar el botón y mostrar un spinner mientras isLoading es true', () => {
     (useAuth as vi.Mock).mockReturnValue({

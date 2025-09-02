@@ -1,6 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from '../app/App';
 import { LoginPage } from '../pages/LoginPage';
+import { DashboardPage } from '../pages/DashboardPage';
+import { RegisterPage } from '../pages/RegisterPage';
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 
 export const router = createBrowserRouter([
   {
@@ -8,10 +12,29 @@ export const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        index: true, // Esto hace que LoginPage sea la ruta por defecto para '/'
+        index: true,
         element: <LoginPage />,
       },
-      // Futuras rutas como /dashboard irían aquí como hijos de App
+      {
+        path: 'login', // Ruta explícita para /login
+        element: <LoginPage />,
+      },
+      {
+        path: 'register',
+        element: <RegisterPage />,
+      },
+      {
+        path: 'forgot-password',
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: 'reset-password/:token',
+        element: <ResetPasswordPage />,
+      },
+      {
+        path: 'dashboard',
+        element: <DashboardPage />,
+      },
     ],
   },
 ]);

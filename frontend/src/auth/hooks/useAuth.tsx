@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import * as authService from '../services/auth.service';
 import type { LoginRequest, Usuario } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 // 1. Definimos la forma del contexto
 interface AuthContextType {
@@ -11,15 +12,17 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginRequest) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
-// 2. Creamos el Context con un valor por defecto
+// 2. Creamos el Context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// 3. Creamos el componente Proveedor
+// 3. Creamos el Proveedor
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Usuario | null>(null);
+  // const [accessToken, setAccessToken] = useState<string | null>(null); // Corrección: accessToken no se usa
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -28,26 +31,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setError(null);
     try {
-      // En una app real, aquí se guardarían los tokens (ej. localStorage)
-      // y se podría decodificar el JWT para obtener info del usuario.
-      await authService.login(credentials);
-      setUser({ id: 1, email: credentials.email }); // Simulamos un usuario
-      // Redirigir al dashboard después de un login exitoso
+      const { accessToken: _, refreshToken } = await authService.login(credentials);
+      
+      // Guardamos los tokens
+      // accessToken no se usa directamente, solo refreshToken
+      setRefreshToken(refreshToken);
+
+      // Decodificamos el token para obtener la info del usuario
+      // En una app real, la estructura del token puede variar
+      const decodedToken: { sub: string, [key: string]: any } = jwtDecode(_);
+      setUser({ email: decodedToken.sub } as Usuario); // Simulación parcial
+
       navigate('/dashboard');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMessage);
-      throw err; // Re-lanzamos el error para que el componente pueda reaccionar
+      throw err;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    // Aquí se limpiarían los tokens
-    // Redirigir a la página de login después de cerrar sesión
-    navigate('/');
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      if (refreshToken) {
+        await authService.logout({ refreshToken });
+      }
+    } catch (err) {
+      console.error("Error during server logout, proceeding with client logout", err);
+      // No bloqueamos al usuario si el logout del servidor falla
+    } finally {
+      // Limpiamos todo el estado local
+      setUser(null);
+      // setAccessToken(null); // Corrección: accessToken ya no se usa
+      setRefreshToken(null);
+      setError(null);
+      setIsLoading(false);
+      navigate('/');
+    }
   };
 
   const value = {
@@ -62,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 4. Creamos el hook que consume el contexto
+// 4. Creamos el hook de consumo
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

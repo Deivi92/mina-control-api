@@ -1,36 +1,70 @@
 # Blueprint 01: Autenticación
 
-Este documento describe el diseño y la experiencia de usuario para el dominio de Autenticación, centrado en la `LoginPage`.
+Este documento describe el diseño y la experiencia de usuario para todos los flujos del dominio de Autenticación.
 
-## 1. Wireframe y Diseño General
+---
 
--   **Layout:** Una página con un `Card` de Material-UI centrado vertical y horizontalmente.
--   **Dimensiones:** El `Card` tendrá un ancho máximo de 400px para mantener la legibilidad en pantallas grandes.
--   **Estilo:** Minimalista, usando el tema por defecto de Material-UI.
+## Flujo 1: Iniciar Sesión (Login)
 
-## 2. Lista de Componentes
+-   **Página:** `LoginPage.tsx`
+-   **Diseño:** Un `Card` centrado con un ancho máximo de 400px.
+-   **Componentes:** Título, campos de Email y Contraseña, botón de "Ingresar", spinner de carga y alerta de errores.
+-   **Flujo de Usuario:**
+    1.  Botón deshabilitado si los campos están vacíos.
+    2.  Al enviar, se muestra un spinner y se deshabilita el botón (`Visibilidad del estado`).
+    3.  En caso de éxito, se redirige al Dashboard.
+    4.  En caso de fallo, se muestra un `Alert` con un error amigable (`Lenguaje del usuario`).
+-   **Navegación:** Incluye enlaces a "Registrarse" y "¿Olvidaste tu contraseña?".
 
--   `Typography`: Para el título "Iniciar Sesión".
--   `TextField`: Un campo para "Correo Electrónico".
--   `TextField`: Un campo de tipo `password` para la "Contraseña".
--   `Button`: Un botón principal con el texto "Ingresar".
--   `CircularProgress`: Un spinner para indicar estados de carga.
--   `Alert`: Un componente para mostrar mensajes de error.
+---
 
-## 3. Flujo de Usuario y Criterios de Aceptación
+## Flujo 2: Registro de Usuario
 
-1.  **Estado Inicial:** El usuario ve el formulario con los campos vacíos. El botón "Ingresar" está deshabilitado.
-2.  **Interacción:** El usuario puede escribir en los campos. El botón "Ingresar" se habilita solo cuando ambos campos tienen contenido.
-3.  **Envío:** Al hacer clic en "Ingresar", el botón se deshabilita y muestra un `CircularProgress` para indicar la carga.
-4.  **Éxito:** Si las credenciales son válidas, el usuario es redirigido a la página principal (Dashboard).
-5.  **Fallo:** Si las credenciales son inválidas, el `CircularProgress` desaparece, el botón se rehabilita y aparece un componente `Alert` con un mensaje de error claro y amigable.
+-   **Página:** `RegisterPage.tsx`
+-   **Diseño:** Un `Card` centrado, más ancho para acomodar más campos (ej. 600px).
+-   **Componentes:** Título, campos para nombre, apellido, email, contraseña, etc., botón de "Registrarse", spinner y alertas.
+-   **Flujo de Usuario:**
+    1.  El botón se habilita solo cuando todos los campos requeridos están llenos (`Prevención de errores`).
+    2.  Al enviar, se muestra un spinner.
+    3.  En caso de éxito, el formulario se oculta y se muestra un `Alert` de éxito con un enlace para ir a la página de Login (`Feedback inmediato`).
+    4.  En caso de fallo (ej. email duplicado), se muestra un `Alert` con el error específico.
+-   **Navegación:** Incluye un enlace a "¿Ya tienes una cuenta? Inicia sesión".
 
-## 4. Validación explícita de Usabilidad
+---
 
-Este diseño pone los principios de la `USABILITY_GUIDE.md` al servicio del dominio de Autenticación de la siguiente manera:
+## Flujo 3: Recuperación de Contraseña
 
--   **Principio 1 (Visibilidad del estado):** Se cumple mediante el uso del `CircularProgress` y el estado deshabilitado del botón durante la carga. El usuario siempre sabe que el sistema está trabajando.
--   **Principio 3 (Consistencia y estándares):** Se cumple usando un diseño de formulario de login que es un estándar de facto en la web.
--   **Principio 4 (Reconocimiento antes que recuerdo):** Se cumple con etiquetas claras y un flujo obvio, sin requerir memorización.
--   **Principio 5 (Prevención de errores):** Se cumple deshabilitando el botón de envío si los campos están vacíos, previniendo errores innecesarios.
--   **Principio 8 (Lenguaje del usuario):** Se cumplirá mostrando mensajes de error como "Credenciales incorrectas" en lugar de jerga técnica.
+Este flujo se divide en dos páginas.
+
+### Paso 3.1: Solicitar Enlace de Recuperación
+
+-   **Página:** `ForgotPasswordPage.tsx`
+-   **Diseño:** Similar al Login, un `Card` simple y centrado.
+-   **Componentes:** Título ("Recuperar Contraseña"), un campo de Email, botón de "Enviar Enlace", spinner y alertas.
+-   **Flujo de Usuario:**
+    1.  El usuario introduce su email y hace clic en enviar.
+    2.  Se muestra un spinner.
+    3.  **Siempre** se mostrará un mensaje de éxito genérico, como: "Si tu correo está registrado, recibirás un enlace en breve". Esto evita que un atacante pueda descubrir qué correos existen en el sistema (`Seguridad y Prevención de Errores`).
+
+### Paso 3.2: Establecer Nueva Contraseña
+
+-   **Página:** `ResetPasswordPage.tsx` (se accede desde el enlace en el correo).
+-   **Diseño:** `Card` centrado.
+-   **Componentes:** Título ("Nueva Contraseña"), campo para "Nueva Contraseña", campo para "Confirmar Contraseña", botón de "Guardar Contraseña", spinner y alertas.
+-   **Flujo de Usuario:**
+    1.  El botón de "Guardar" estará deshabilitado hasta que ambos campos estén llenos y sus valores coincidan (`Prevención de errores`).
+    2.  Al enviar, se muestra un spinner.
+    3.  En caso de éxito, se muestra un `Alert` de éxito y un enlace para ir al Login.
+    4.  En caso de fallo (ej. token inválido), se muestra un error claro.
+
+---
+
+## Flujo 4: Cierre de Sesión (Logout)
+
+-   **Página:** No es una página, es una acción.
+-   **Diseño:** Debe ser un botón o una opción de menú claramente visible en las áreas protegidas de la aplicación (ej. en un menú de perfil en el header).
+-   **Componentes:** `Button` o `MenuItem` con el texto "Cerrar Sesión".
+-   **Flujo de Usuario:**
+    1.  El usuario hace clic en "Cerrar Sesión".
+    2.  La sesión local se destruye.
+    3.  El usuario es redirigido inmediatamente a la `LoginPage` (`Control y libertad del usuario`).

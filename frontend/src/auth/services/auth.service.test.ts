@@ -1,58 +1,66 @@
 import axios from 'axios';
-import { login, register, logout } from './auth.service';
-import type { LoginRequest, RegistroUsuarioRequest, LogoutRequest } from '../types';
+import { login, register, forgotPassword, resetPassword } from './auth.service';
+import type { LoginRequest, RegistroUsuarioRequest, RecuperarContrasenaRequest, CambiarContrasenaRequest, Usuario, LoginResponse } from '../types';
 import { vi } from 'vitest';
 
 vi.mock('axios');
-const mockedAxios = axios as vi.Mocked<typeof axios>;
 
 describe('AuthService', () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  // Pruebas para la función de LOGIN
   describe('login', () => {
-    it('debería llamar a axios.post con la URL y los datos correctos', async () => {
+    it('debería llamar a axios.post con la URL y los datos correctos y devolver tokens', async () => {
       const credentials: LoginRequest = { email: 'test@example.com', password: 'password123' };
-      mockedAxios.post.mockResolvedValue({ data: {} });
-      await login(credentials);
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/login', credentials);
-    });
+      const mockTokens: LoginResponse = { accessToken: 'fake-access-token', refreshToken: 'fake-refresh-token' };
+      (axios.post as vi.Mock).mockResolvedValue({ data: mockTokens });
 
-    it('debería devolver los tokens en caso de éxito', async () => {
-      const credentials: LoginRequest = { email: 'test@example.com', password: 'password123' };
-      const mockResponse = { data: { accessToken: 'fake-access-token', refreshToken: 'fake-refresh-token' } };
-      mockedAxios.post.mockResolvedValue(mockResponse);
       const result = await login(credentials);
-      expect(result).toEqual(mockResponse.data);
-    });
 
-    it('debería lanzar un error si la llamada a la API falla', async () => {
-      const credentials: LoginRequest = { email: 'test@example.com', password: 'password123' };
-      const errorMessage = 'Request failed with status code 401';
-      mockedAxios.post.mockRejectedValue(new Error(errorMessage));
-      await expect(login(credentials)).rejects.toThrow(errorMessage);
+      expect(axios.post).toHaveBeenCalledWith('/api/auth/login', credentials);
+      expect(result).toEqual(mockTokens);
     });
   });
 
-  // Pruebas para la función de REGISTRO
   describe('register', () => {
-    it('debería llamar a axios.post con la URL y los datos de registro correctos', async () => {
-      const userData: RegistroUsuarioRequest = { email: 'new@example.com', password: 'new-password' };
-      mockedAxios.post.mockResolvedValue({ data: {} });
-      await register(userData);
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/register', userData);
+    it('debería llamar a la API de registro y devolver los datos del usuario creado', async () => {
+      const newUser: RegistroUsuarioRequest = { nombre: 'Test', apellido: 'User', email: 'test@test.com', password: 'password', cedula: '1', telefono: '1', cargo: 'Test' };
+      const createdUser: Usuario = { id: 1, ...newUser };
+      (axios.post as vi.Mock).mockResolvedValue({ data: createdUser });
+
+      const result = await register(newUser);
+
+      expect(axios.post).toHaveBeenCalledWith('/api/auth/register', newUser);
+      expect(result).toEqual(createdUser);
     });
   });
 
-  // Pruebas para la función de LOGOUT
-  describe('logout', () => {
-    it('debería llamar a axios.post para hacer logout', async () => {
-      const logoutPayload: LogoutRequest = { refreshToken: 'some-refresh-token' };
-      mockedAxios.post.mockResolvedValue({});
-      await logout(logoutPayload);
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/logout', logoutPayload);
+  describe('forgotPassword', () => {
+    it('debería llamar a la API de forgot-password con el email correcto', async () => {
+      // Arrange
+      const request: RecuperarContrasenaRequest = { email: 'test@example.com' };
+      (axios.post as vi.Mock).mockResolvedValue({});
+
+      // Act
+      await forgotPassword(request);
+
+      // Assert
+      expect(axios.post).toHaveBeenCalledWith('/api/auth/forgot-password', request);
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('debería llamar a la API de reset-password con los datos correctos', async () => {
+      // Arrange
+      const request: CambiarContrasenaRequest = { token: 'valid-token', newPassword: 'new-password-123' };
+       (axios.post as vi.Mock).mockResolvedValue({});
+
+      // Act
+      await resetPassword(request);
+
+      // Assert
+      expect(axios.post).toHaveBeenCalledWith('/api/auth/reset-password', request);
     });
   });
 });

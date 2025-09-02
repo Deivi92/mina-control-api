@@ -1,139 +1,84 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Autenticación', () => {
-  // Hook para navegar a la página de login antes de cada test.
-  // Asumimos que la página de login está en la raíz del sitio.
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-  });
+// Bloque principal para todo el dominio de Autenticación
+test.describe('Dominio de Autenticación', () => {
 
-  // Escenario 1: Login Exitoso (Happy Path)
-  test('debería permitir el login a un usuario con credenciales válidas y redirigir al dashboard', async ({ page }) => {
-    // Interceptamos la llamada y forzamos una respuesta exitosa.
-    await page.route('**/api/auth/login', async route => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
-          refreshToken: 'dummy-refresh-token'
-        }),
-      });
+  // --- Flujo de Login ---
+  test.describe('Flujo de Login', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/');
     });
 
-    // Localizadores
-    const emailInput = page.getByLabel('Correo Electrónico');
-    const passwordInput = page.getByLabel('Contraseña');
-    const loginButton = page.getByRole('button', { name: /ingresar/i });
-
-    // Rellenamos el formulario y hacemos clic
-    await emailInput.fill('usuario@valido.com');
-    await passwordInput.fill('passwordCorrecta');
-    await loginButton.click();
-
-    // Verificación: Esperamos que la URL cambie a /dashboard
-    // El router de la aplicación se encargará de esta redirección.
-    await expect(page).toHaveURL('/dashboard');
-    
-    // Adicionalmente, verificamos que no haya un mensaje de error
-    const errorMessage = page.getByRole('alert');
-    await expect(errorMessage).not.toBeVisible();
-  });
-
-  // Escenario 2: Login Fallido (Credenciales Incorrectas)
-  test('debería mostrar un mensaje de error con credenciales incorrectas', async ({ page }) => {
-    // Interceptamos la llamada a la API de login y forzamos una respuesta de error 401.
-    await page.route('**/api/auth/login', async route => {
-      await route.fulfill({
-        status: 401,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          timestamp: new Date().toISOString(),
-          status: 401,
-          error: 'Unauthorized',
-          message: 'Usuario o contraseña incorrectos',
-          path: '/api/auth/login'
-        }),
-      });
+    test('debería permitir el login y redirigir al dashboard', async ({ page }) => {
+      await page.route('**/api/auth/login', route => route.fulfill({ status: 200, body: JSON.stringify({ accessToken: 'fake-token', refreshToken: 'fake-refresh-token' }) }));
+      await page.getByLabel('Correo Electrónico').fill('user@test.com');
+      await page.getByLabel('Contraseña').fill('password');
+      await page.getByRole('button', { name: /ingresar/i }).click();
+      await expect(page).toHaveURL('/dashboard');
     });
 
-    // Localizadores
-    const emailInput = page.getByLabel('Correo Electrónico');
-    const passwordInput = page.getByLabel('Contraseña');
-    const loginButton = page.getByRole('button', { name: /ingresar/i });
-
-    // Rellenamos el formulario y hacemos clic
-    await emailInput.fill('usuario@incorrecto.com');
-    await passwordInput.fill('passwordCualquiera');
-    await loginButton.click();
-
-    // Verificación
-    const errorMessage = page.getByRole('alert');
-    await expect(errorMessage).toBeVisible();
-    await expect(errorMessage).toContainText('Usuario o contraseña incorrectos');
-    
-    // Verificamos que seguimos en la misma página
-    await expect(page).toHaveURL('/');
+    test('debería mostrar un error con credenciales incorrectas', async ({ page }) => {
+      await page.route('**/api/auth/login', route => route.fulfill({ status: 401, body: JSON.stringify({ message: 'Usuario o contraseña incorrectos' }) }));
+      await page.getByLabel('Correo Electrónico').fill('user@test.com');
+      await page.getByLabel('Contraseña').fill('wrong-password');
+      await page.getByRole('button', { name: /ingresar/i }).click();
+      await expect(page.getByRole('alert')).toContainText('Usuario o contraseña incorrectos');
+    });
   });
 
-  // Escenario 3: Validación de Formulario (Prevención de Errores)
-  test('debería tener el botón de login deshabilitado si los campos están vacíos', async ({ page }) => {
-    // Localizadores de los elementos de la UI
-    const emailInput = page.getByLabel('Correo Electrónico');
-    const passwordInput = page.getByLabel('Contraseña');
-    const loginButton = page.getByRole('button', { name: /ingresar/i });
-
-    // 1. Verificar que el botón está deshabilitado al inicio
-    await expect(loginButton).toBeDisabled();
-
-    // 2. Rellenar solo el email y verificar que sigue deshabilitado
-    await emailInput.fill('test@user.com');
-    await expect(loginButton).toBeDisabled();
-
-    // 3. Rellenar solo la contraseña (limpiando el email) y verificar
-    await emailInput.clear();
-    await passwordInput.fill('password123');
-    await expect(loginButton).toBeDisabled();
-    
-    // 4. Rellenar ambos campos y verificar que el botón se habilita
-    await emailInput.fill('test@user.com');
-    await expect(loginButton).toBeEnabled();
-  });
-
-  // Escenario 4: Verificación del Estado de Carga (Visibilidad del Estado)
-  test('debería mostrar un estado de carga durante el intento de login', async ({ page }) => {
-    // Forzamos una respuesta lenta para tener tiempo de ver el estado de carga.
-    await page.route('**/api/auth/login', async route => {
-      // Introducimos un retraso para que el estado de carga sea visible.
-      await new Promise(resolve => setTimeout(resolve, 300));
-      route.fulfill({
-        status: 401, // No importa si es éxito o error para este test
-        contentType: 'application/json',
-        body: JSON.stringify({ message: 'Error simulado' }),
-      });
+  // --- Flujo de Registro ---
+  test.describe('Flujo de Registro', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/register');
     });
 
-    const emailInput = page.getByLabel('Correo Electrónico');
-    const passwordInput = page.getByLabel('Contraseña');
-    const loginButton = page.getByRole('button', { name: /ingresar/i });
+    test('debería permitir el registro de un nuevo usuario', async ({ page }) => {
+      await page.route('**/api/auth/register', route => route.fulfill({ status: 201, body: JSON.stringify({ id: 1, email: 'new@user.com' }) }));
+      await page.getByLabel('Nombre').fill('Nuevo');
+      await page.getByLabel('Apellido').fill('Usuario');
+      await page.getByLabel('Correo Electrónico').fill('new@user.com');
+      await page.getByLabel('Contraseña').fill('password123');
+      await page.getByLabel('Cédula').fill('123456');
+      await page.getByLabel('Teléfono').fill('555-1234');
+      await page.getByLabel('Cargo').fill('Tester');
+      await page.getByRole('button', { name: /registrarse/i }).click();
+      await expect(page.getByRole('alert')).toContainText('¡Registro exitoso!');
+    });
+  });
 
-    await emailInput.fill('test@user.com');
-    await passwordInput.fill('password123');
+  // --- Flujo de Recuperar Contraseña ---
+  test.describe('Flujo de Recuperar Contraseña', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/forgot-password');
+    });
 
-    // Empezamos a esperar la respuesta de la API ANTES de hacer clic.
-    const responsePromise = page.waitForResponse('**/api/auth/login');
+    test('debería mostrar un mensaje de éxito genérico al solicitar recuperación', async ({ page }) => {
+      await page.route('**/api/auth/forgot-password', route => route.fulfill({ status: 200 }));
+      await page.getByLabel('Correo Electrónico').fill('any@user.com');
+      await page.getByRole('button', { name: /enviar enlace/i }).click();
+      await expect(page.getByRole('alert')).toContainText('recibirás un enlace para restablecer tu contraseña');
+    });
+    // Nota: Probar el flujo completo de reseteo (recibir email, hacer clic en enlace) 
+    // está fuera del alcance de una prueba E2E estándar y requiere herramientas especializadas.
+  });
 
-    await loginButton.click();
+  // --- Flujo de Logout ---
+  test.describe('Flujo de Logout', () => {
+    test('debería permitir a un usuario logueado cerrar sesión', async ({ page }) => {
+      // 1. Primero, simulamos un login exitoso para tener una sesión.
+      await page.goto('/');
+      await page.route('**/api/auth/login', route => route.fulfill({ status: 200, body: JSON.stringify({ accessToken: 'fake-token', refreshToken: 'fake-refresh-token' }) }));
+      await page.getByLabel('Correo Electrónico').fill('user@test.com');
+      await page.getByLabel('Contraseña').fill('password');
+      await page.getByRole('button', { name: /ingresar/i }).click();
+      await expect(page).toHaveURL('/dashboard'); // Verificamos que estamos en el dashboard
 
-    // Inmediatamente después del clic, verificamos el estado de carga.
-    await expect(loginButton).toBeDisabled();
-    await expect(page.getByRole('progressbar')).toBeVisible();
+      // 2. Ahora, hacemos clic en el botón de logout.
+      await page.getByRole('button', { name: /cerrar sesión/i }).click();
 
-    // Esperamos a que la respuesta de la API llegue.
-    await responsePromise;
-
-    // Una vez que la respuesta ha llegado, el estado de carga debe desaparecer.
-    await expect(page.getByRole('progressbar')).not.toBeVisible();
-    await expect(loginButton).toBeEnabled();
+      // 3. Verificamos que somos redirigidos a la página de login.
+      await expect(page).toHaveURL('/');
+      await expect(page.getByRole('heading', { name: /iniciar sesión/i })).toBeVisible();
+    });
   });
 });

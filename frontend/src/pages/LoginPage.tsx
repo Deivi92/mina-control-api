@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
-import { Container, Card, CardContent, Typography, TextField, Button, CircularProgress, Alert, Box } from '@mui/material';
-import { theme } from '../app/styles/theme'; // Importamos nuestro tema para usar los colores directamente si es necesario
+import { Container, Card, CardContent, Typography, TextField, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { theme } from '../app/styles/theme';
 
 export const LoginPage = () => {
   const { login, isLoading, error } = useAuth();
@@ -20,8 +21,6 @@ export const LoginPage = () => {
       <Card sx={{ width: '100%', padding: 2 }}>
         <CardContent>
           <Box sx={{ textAlign: 'center', mb: 2 }}>
-            {/* Aquí podríamos poner nuestro logo SVG */}
-            {/* Usamos variant="h1" para aplicar el gradiente del tema, pero ajustamos el tamaño */}
             <Typography component="h1" variant="h1" sx={{ fontSize: '2rem' }}>
               Iniciar Sesión
             </Typography>
@@ -84,6 +83,14 @@ export const LoginPage = () => {
               )}
             </Box>
           </form>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+            <Link component={RouterLink} to="/forgot-password" variant="body2">
+              ¿Olvidaste tu contraseña?
+            </Link>
+            <Link component={RouterLink} to="/register" variant="body2">
+              ¿No tienes una cuenta? Regístrate
+            </Link>
+          </Box>
         </CardContent>
       </Card>
     </Container>

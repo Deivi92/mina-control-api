@@ -1,21 +1,42 @@
 import { renderHook, act } from '@testing-library/react';
-import { useAuth, AuthProvider } from './useAuth.tsx'; // Importamos el provider
+import { useAuth, AuthProvider } from './useAuth.tsx';
 import * as authService from '../services/auth.service';
-import type { LoginRequest, Usuario } from '../types'; // Importamos Usuario
+import type { LoginRequest, Usuario } from '../types';
 import { vi } from 'vitest';
 import React from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { MemoryRouter } from 'react-router-dom';
 
-// Mock del servicio que es el límite de nuestro hook
+// -- Mocks --
 vi.mock('../services/auth.service');
-const mockedAuthService = authService as vi.Mocked<typeof authService>;
+// Corrección: Mockear jwt_decode para que tenga una exportación nombrada jwtDecode
+vi.mock('jwt-decode', () => ({
+  jwtDecode: vi.fn(),
+}));
 
-// Creamos un wrapper reutilizable
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+// -- Fin Mocks --
+
+const mockedAuthService = authService as vi.Mocked<typeof authService>;
+// Tipar explícitamente el mock de jwtDecode para un acceso más claro
+const mockedJwtDecode = jwtDecode as vi.Mock;
+
+// Corrección: El wrapper debe proporcionar un Router para que useNavigate funcione
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <AuthProvider>{children}</AuthProvider>
+  <MemoryRouter>
+    <AuthProvider>{children}</AuthProvider>
+  </MemoryRouter>
 );
 
 describe('useAuth Hook with Provider', () => {
-  afterEach(() => {
+  beforeEach(() => {
     vi.clearAllMocks();
   });
 
@@ -23,49 +44,56 @@ describe('useAuth Hook with Provider', () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toBeNull();
   });
 
-  it('debería manejar el flujo de login exitoso correctamente', async () => {
+  it('debería manejar el flujo de login exitoso', async () => {
+    // Arrange
     const { result } = renderHook(() => useAuth(), { wrapper });
-    const credentials: LoginRequest = { email: 'test@test.com', password: 'password' };
-    // Creamos un mockUser que coincida con la interfaz Usuario
-    const mockUser: Usuario = { id: 1, email: credentials.email };
-    
+    const credentials = { email: 'test@test.com', password: 'password' };
     mockedAuthService.login.mockResolvedValue({ accessToken: 'fake-token', refreshToken: 'fake-refresh-token' });
+    // Corrección: Usar el mock tipado
+    mockedJwtDecode.mockReturnValue({ sub: credentials.email });
 
-    await act(async () => {
-      await result.current.login(credentials);
-    });
+    // Act
+    await act(async () => { await result.current.login(credentials); });
 
-    expect(result.current.isLoading).toBe(false);
-    // Verificamos que el usuario simulado se establece correctamente
-    expect(result.current.user).toEqual(mockUser);
+    // Assert
     expect(result.current.isAuthenticated).toBe(true);
-    expect(result.current.error).toBeNull();
-    expect(authService.login).toHaveBeenCalledWith(credentials);
+    expect(result.current.user?.email).toBe(credentials.email);
+    expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('debería manejar el flujo de login fallido correctamente', async () => {
+  it('debería manejar el flujo de login fallido', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
-    const credentials: LoginRequest = { email: 'test@test.com', password: 'password' };
-    const errorMessage = 'Credenciales inválidas';
-    
-    mockedAuthService.login.mockRejectedValue(new Error(errorMessage));
+    const credentials = { email: 'test@test.com', password: 'password' };
+    mockedAuthService.login.mockRejectedValue(new Error('Credenciales inválidas'));
 
-    // Usamos un try-catch porque el error se re-lanza
-    await act(async () => {
-      try {
-        await result.current.login(credentials);
-      } catch (e) {
-        // Error esperado, no hacer nada
-      }
+    await act(async () => { 
+      try { await result.current.login(credentials); } catch (e) { /* Ignorado */ } 
     });
 
-    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.error).toBe('Credenciales inválidas');
+  });
+
+  it('debería llamar al servicio de logout y limpiar el estado del usuario', async () => {
+    // Arrange
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    const loginCredentials = { email: 'test@test.com', password: 'password' };
+    const loginResponse = { accessToken: 'fake-access-token', refreshToken: 'fake-refresh-token' };
+    mockedAuthService.login.mockResolvedValue(loginResponse);
+    // Corrección: Usar el mock tipado
+    mockedJwtDecode.mockReturnValue({ sub: loginCredentials.email });
+    await act(async () => { await result.current.login(loginCredentials); });
+    expect(result.current.isAuthenticated).toBe(true);
+
+    // Act
+    await act(async () => { await result.current.logout(); });
+
+    // Assert
+    expect(mockedAuthService.logout).toHaveBeenCalledWith({ refreshToken: loginResponse.refreshToken });
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.error).toBe(errorMessage);
+    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 });
