@@ -2,6 +2,7 @@ import { createContext, useState, useContext } from 'react';
 import type { ReactNode } from 'react';
 import * as authService from '../services/auth.service';
 import type { LoginRequest, Usuario } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 // 1. Definimos la forma del contexto
 interface AuthContextType {
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Usuario | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const login = async (credentials: LoginRequest) => {
     setIsLoading(true);
@@ -30,6 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // y se podría decodificar el JWT para obtener info del usuario.
       await authService.login(credentials);
       setUser({ id: 1, email: credentials.email }); // Simulamos un usuario
+      // Redirigir al dashboard después de un login exitoso
+      navigate('/dashboard');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMessage);
@@ -42,6 +46,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     // Aquí se limpiarían los tokens
+    // Redirigir a la página de login después de cerrar sesión
+    navigate('/');
   };
 
   const value = {
