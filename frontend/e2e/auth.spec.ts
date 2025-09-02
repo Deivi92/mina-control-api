@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Un token JWT de prueba válido que decodifica a {"sub":"user@test.com"}
+const VALID_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQHRlc3QuY29tIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+
 // Bloque principal para todo el dominio de Autenticación
 test.describe('Dominio de Autenticación', () => {
 
@@ -10,7 +13,7 @@ test.describe('Dominio de Autenticación', () => {
     });
 
     test('debería permitir el login y redirigir al dashboard', async ({ page }) => {
-      await page.route('**/api/auth/login', route => route.fulfill({ status: 200, body: JSON.stringify({ accessToken: 'fake-token', refreshToken: 'fake-refresh-token' }) }));
+      await page.route('**/api/auth/login', route => route.fulfill({ status: 200, body: JSON.stringify({ accessToken: VALID_JWT_TOKEN, refreshToken: 'fake-refresh-token' }) }));
       await page.getByLabel('Correo Electrónico').fill('user@test.com');
       await page.getByLabel('Contraseña').fill('password');
       await page.getByRole('button', { name: /ingresar/i }).click();
@@ -67,7 +70,7 @@ test.describe('Dominio de Autenticación', () => {
     test('debería permitir a un usuario logueado cerrar sesión', async ({ page }) => {
       // 1. Primero, simulamos un login exitoso para tener una sesión.
       await page.goto('/');
-      await page.route('**/api/auth/login', route => route.fulfill({ status: 200, body: JSON.stringify({ accessToken: 'fake-token', refreshToken: 'fake-refresh-token' }) }));
+      await page.route('**/api/auth/login', route => route.fulfill({ status: 200, body: JSON.stringify({ accessToken: VALID_JWT_TOKEN, refreshToken: 'fake-refresh-token' }) }));
       await page.getByLabel('Correo Electrónico').fill('user@test.com');
       await page.getByLabel('Contraseña').fill('password');
       await page.getByRole('button', { name: /ingresar/i }).click();
