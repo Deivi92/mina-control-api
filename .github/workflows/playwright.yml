@@ -1,0 +1,93 @@
+name: Playwright Tests with Backend
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains multiple jobs
+  setup-backend:
+    name: Setup Backend and Database
+    runs-on: ubuntu-latest
+    services:
+      # Setup PostgreSQL service
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: minacontrol_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v3
+
+    # Setup Java environment
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    # Setup Node.js environment for frontend
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    # Install backend dependencies and build
+    - name: Build Backend
+      run: |
+        cd backend
+        mvn clean package -DskipTests
+
+    # Install frontend dependencies
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    # Install Playwright browsers
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    # Start Backend in background
+    - name: Start Backend
+      run: |
+        cd backend
+        nohup java -jar target/mina-control-api-1.0.0.jar --spring.profiles.active=github &
+        # Wait for backend to start
+        sleep 30
+
+    # Run Playwright tests
+    - name: Run Playwright tests
+      run: |
+        cd frontend
+        npm run test:e2e
+
+    # Upload test results (screenshots, videos) as artifacts
+    - uses: actions/upload-artifact@v3
+      if: always() # Upload even if tests fail
+      with:
+        name: playwright-report
+        path: frontend/playwright-report/
+        retention-days: 30
