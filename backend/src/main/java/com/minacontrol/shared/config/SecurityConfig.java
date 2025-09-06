@@ -50,8 +50,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Perfil 'dev': Deshabilitar toda la seguridad
-        if (Arrays.asList(environment.getActiveProfiles()).contains("dev")) {
+        // Perfiles 'dev' y 'github': Deshabilitar toda la seguridad
+        if (Arrays.asList(environment.getActiveProfiles()).contains("dev") || 
+            Arrays.asList(environment.getActiveProfiles()).contains("github")) {
             http
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .csrf(AbstractHttpConfigurer::disable)
