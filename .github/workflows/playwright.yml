@@ -5,13 +5,16 @@ on:
   push:
     branches:
       - main
+      - 'feat/empleado-crud-e2e'
     paths:
       - 'frontend/e2e/**'
+      - 'backend/src/main/java/com/minacontrol/testsetup/**' # También si cambia el seeder
   pull_request:
     branches:
       - main
     paths:
       - 'frontend/e2e/**'
+      - 'backend/src/main/java/com/minacontrol/testsetup/**'
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel

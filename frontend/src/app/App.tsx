@@ -1,16 +1,42 @@
-import { Outlet } from 'react-router-dom';
-import { AuthProvider } from '../auth/hooks/useAuth'; // Importar AuthProvider
+import { Outlet, Link } from 'react-router-dom';
+import { AuthProvider, useAuth } from '../auth/hooks/useAuth';
+import { Box, Button } from '@mui/material';
+
+// Creamos un componente interno para poder acceder al contexto de autenticación
+const AppLayout = () => {
+  const { isAuthenticated, logout } = useAuth(); // Obtenemos la función de logout
+
+  return (
+    <>
+      {/* La navegación solo se muestra si el usuario está autenticado */}
+      {isAuthenticated && (
+        <Box component="nav" sx={{ p: 1, borderBottom: '1px solid #ddd', display: 'flex', gap: 1 }}>
+          <Button component={Link} to="/dashboard">
+            Dashboard
+          </Button>
+          <Button component={Link} to="/empleados">
+            Empleados
+          </Button>
+          <Button onClick={logout} sx={{ ml: 'auto' }}> {/* Botón de Logout a la derecha */}
+            Cerrar Sesión
+          </Button>
+        </Box>
+      )}
+      <main>
+        <Outlet />
+      </main>
+    </>
+  );
+};
 
 function App() {
   return (
-    <AuthProvider> {/* Envolver la app con AuthProvider DENTRO del Router */}
-      {/* En el futuro, aquí podríamos tener un Navbar o un Layout principal */}
-      <main>
-        {/* Outlet es el componente de react-router que renderiza la ruta hija que corresponda. */}
-        <Outlet />
-      </main>
+    // AuthProvider nos da acceso global al estado de autenticación
+    <AuthProvider>
+      <AppLayout />
     </AuthProvider>
   );
 }
 
 export default App;
+

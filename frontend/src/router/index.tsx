@@ -6,18 +6,20 @@ import { RegisterPage } from '../pages/RegisterPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { EmpleadosPage } from '../pages/EmpleadosPage';
+import { ProtectedRoute } from '../auth/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     children: [
+      // --- Rutas Públicas ---
       {
         index: true,
         element: <LoginPage />,
       },
       {
-        path: 'login', // Ruta explícita para /login
+        path: 'login',
         element: <LoginPage />,
       },
       {
@@ -32,14 +34,23 @@ export const router = createBrowserRouter([
         path: 'reset-password/:token',
         element: <ResetPasswordPage />,
       },
+
+      // --- Rutas Protegidas ---
       {
-        path: 'dashboard',
-        element: <DashboardPage />,
-      },
-      {
-        path: 'empleados',
-        element: <EmpleadosPage />,
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: 'dashboard',
+            element: <DashboardPage />,
+          },
+          {
+            path: 'empleados',
+            element: <EmpleadosPage />,
+          },
+          // ...aquí irán las futuras rutas protegidas
+        ],
       },
     ],
   },
 ]);
+

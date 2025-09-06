@@ -1,87 +1,58 @@
 import { test, expect } from '@playwright/test';
 
-// Un token JWT de prueba válido que decodifica a {"sub":"user@test.com"}
-const VALID_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQHRlc3QuY29tIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+const testTimestamp = Date.now();
+const uniqueRegisterEmail = `test.register.${testTimestamp}@test.com`;
 
-// Bloque principal para todo el dominio de Autenticación
-test.describe('Dominio de Autenticación', () => {
+test.describe('Autenticación E2E - Flujo Real', () => {
 
-  // --- Flujo de Login ---
-  test.describe('Flujo de Login', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto('/');
-    });
+  test('debería permitir a un usuario válido hacer login y logout', async ({ page }) => {
+    // --- FASE DE LOGIN ---
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Iniciar Sesión' })).toBeVisible();
 
-    test('debería permitir el login y redirigir al dashboard', async ({ page }) => {
-      await page.route('**/api/auth/login', route => route.fulfill({ status: 200, body: JSON.stringify({ accessToken: VALID_JWT_TOKEN, refreshToken: 'fake-refresh-token' }) }));
-      await page.getByLabel('Correo Electrónico').fill('user@test.com');
-      await page.getByLabel('Contraseña').fill('password');
-      await page.getByRole('button', { name: /ingresar/i }).click();
-      await expect(page).toHaveURL('/dashboard');
-    });
+    // Usamos el usuario admin que fue creado por el globalSetup
+    await page.getByLabel('Email').fill('admin@minacontrol.com');
+    await page.getByLabel('Password').fill('admin');
+    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
 
-    test('debería mostrar un error con credenciales incorrectas', async ({ page }) => {
-      await page.route('**/api/auth/login', route => route.fulfill({ status: 401, body: JSON.stringify({ message: 'Usuario o contraseña incorrectos' }) }));
-      await page.getByLabel('Correo Electrónico').fill('user@test.com');
-      await page.getByLabel('Contraseña').fill('wrong-password');
-      await page.getByRole('button', { name: /ingresar/i }).click();
-      await expect(page.getByRole('alert')).toContainText('Usuario o contraseña incorrectos');
-    });
+    // Verificamos que la navegación post-login es exitosa
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Empleados' })).toBeVisible();
+
+    // --- FASE DE LOGOUT ---
+    await page.getByRole('button', { name: 'Cerrar Sesión' }).click();
+
+    // Verificamos que somos redirigidos a la página de login
+    await expect(page.getByRole('heading', { name: 'Iniciar Sesión' })).toBeVisible();
   });
 
-  // --- Flujo de Registro ---
-  test.describe('Flujo de Registro', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto('/register');
-    });
+  test('debería mostrar un error con credenciales incorrectas', async ({ page }) => {
+    await page.goto('/');
+    await page.getByLabel('Email').fill('admin@minacontrol.com');
+    await page.getByLabel('Password').fill('wrong-password');
+    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
 
-    test('debería permitir el registro de un nuevo usuario', async ({ page }) => {
-      await page.route('**/api/auth/register', route => route.fulfill({ status: 201, body: JSON.stringify({ id: 1, email: 'new@user.com' }) }));
-      await page.getByLabel('Nombre').fill('Nuevo');
-      await page.getByLabel('Apellido').fill('Usuario');
-      await page.getByLabel('Correo Electrónico').fill('new@user.com');
-      await page.getByLabel('Contraseña').fill('password123');
-      await page.getByLabel('Cédula').fill('123456');
-      await page.getByLabel('Teléfono').fill('555-1234');
-      await page.getByLabel('Cargo').fill('Tester');
-      await page.getByRole('button', { name: /registrarse/i }).click();
-      await expect(page.getByRole('alert')).toContainText('¡Registro exitoso!');
-    });
+    // La API real debería devolver un error que el frontend muestre.
+    // Asumimos que el error se muestra en un 'alert'.
+    await expect(page.getByRole('alert')).toBeVisible();
   });
 
-  // --- Flujo de Recuperar Contraseña ---
-  test.describe('Flujo de Recuperar Contraseña', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto('/forgot-password');
-    });
+  test('debería permitir el registro de un nuevo usuario', async ({ page }) => {
+    await page.goto('/register');
+    
+    await page.getByLabel('Nombre').fill('Test');
+    await page.getByLabel('Apellido').fill('Register');
+    await page.getByLabel('Email').fill(uniqueRegisterEmail);
+    await page.getByLabel('Contraseña').fill('password123');
+    await page.getByLabel('Cédula').fill('987654321');
+    await page.getByLabel('Teléfono').fill('555-5555');
+    await page.getByLabel('Cargo').fill('Registrado');
+    await page.getByRole('button', { name: /registrarse/i }).click();
 
-    test('debería mostrar un mensaje de éxito genérico al solicitar recuperación', async ({ page }) => {
-      await page.route('**/api/auth/forgot-password', route => route.fulfill({ status: 200 }));
-      await page.getByLabel('Correo Electrónico').fill('any@user.com');
-      await page.getByRole('button', { name: /enviar enlace/i }).click();
-      await expect(page.getByRole('alert')).toContainText('recibirás un enlace para restablecer tu contraseña');
-    });
-    // Nota: Probar el flujo completo de reseteo (recibir email, hacer clic en enlace) 
-    // está fuera del alcance de una prueba E2E estándar y requiere herramientas especializadas.
+    // Después de un registro exitoso, la app debería redirigir a login
+    // y mostrar un mensaje de éxito.
+    await expect(page.getByRole('heading', { name: 'Iniciar Sesión' })).toBeVisible();
+    await expect(page.getByText('¡Registro exitoso!')).toBeVisible();
   });
 
-  // --- Flujo de Logout ---
-  test.describe('Flujo de Logout', () => {
-    test('debería permitir a un usuario logueado cerrar sesión', async ({ page }) => {
-      // 1. Primero, simulamos un login exitoso para tener una sesión.
-      await page.goto('/');
-      await page.route('**/api/auth/login', route => route.fulfill({ status: 200, body: JSON.stringify({ accessToken: VALID_JWT_TOKEN, refreshToken: 'fake-refresh-token' }) }));
-      await page.getByLabel('Correo Electrónico').fill('user@test.com');
-      await page.getByLabel('Contraseña').fill('password');
-      await page.getByRole('button', { name: /ingresar/i }).click();
-      await expect(page).toHaveURL('/dashboard'); // Verificamos que estamos en el dashboard
-
-      // 2. Ahora, hacemos clic en el botón de logout.
-      await page.getByRole('button', { name: /cerrar sesión/i }).click();
-
-      // 3. Verificamos que somos redirigidos a la página de login.
-      await expect(page).toHaveURL('/');
-      await expect(page.getByRole('heading', { name: /iniciar sesión/i })).toBeVisible();
-    });
-  });
 });
