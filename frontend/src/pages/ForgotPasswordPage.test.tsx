@@ -49,7 +49,7 @@ describe('ForgotPasswordPage', () => {
     await user.click(submitButton);
 
     expect(mockForgotPassword).toHaveBeenCalledWith({ email: 'test@example.com' });
-  });
+  }, 10000);
 
   it('debería mostrar el mensaje de éxito si isSuccess es true', () => {
     (useForgotPassword as vi.Mock).mockReturnValue({

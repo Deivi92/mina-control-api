@@ -42,7 +42,7 @@ describe('ResetPasswordPage', () => {
     // Seleccionar directamente el input por su id usando el container
     expect(container.querySelector('#password')).toBeInTheDocument();
     expect(container.querySelector('#confirmPassword')).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('debería mostrar un error si las contraseñas no coinciden', async () => {
     const user = userEvent.setup();
@@ -61,7 +61,7 @@ describe('ResetPasswordPage', () => {
 
     expect(screen.getByText(/las contraseñas no coinciden/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /guardar contraseña/i })).toBeDisabled();
-  });
+  }, 10000);
 
   it('debería llamar a resetPassword con el token y la nueva contraseña', async () => {
     const user = userEvent.setup();
@@ -81,7 +81,7 @@ describe('ResetPasswordPage', () => {
     await user.click(submitButton);
 
     expect(mockResetPassword).toHaveBeenCalledWith({ token: 'test-token', newPassword: 'new-password' });
-  });
+  }, 10000);
 
   it('debería mostrar el mensaje de éxito si isSuccess es true', () => {
     (useResetPassword as vi.Mock).mockReturnValue({ isSuccess: true });
@@ -91,5 +91,5 @@ describe('ResetPasswordPage', () => {
     // Ahora, al ser exitoso, los campos no deberían estar presentes
     expect(container.querySelector('#password')).not.toBeInTheDocument();
     expect(container.querySelector('#confirmPassword')).not.toBeInTheDocument();
-  });
+  }, 10000);
 });

@@ -289,6 +289,15 @@ Para asegurar la consistencia y rigurosidad a través de todos los dominios, se 
 
 ## Estándares y Convenciones
 
+### Idioma y Comunicación
+*   **Idioma Principal:** Español.
+*   **Regla:** Todo el código visible para el desarrollador o el usuario final debe estar en español. Esto incluye:
+    *   Comentarios en el código.
+    *   Mensajes de commit.
+    *   Texto en la interfaz de usuario (etiquetas, botones, alertas).
+    *   Documentación (Blueprints, READMEs).
+*   **Excepción:** El código en sí (nombres de variables, funciones, etc.) se mantendrá en inglés para seguir las convenciones universales de programación.
+
 ### Convención de Nomenclatura
 * **Componentes:** `PascalCase` (ej. `EmpleadoTable.tsx`)
 * **Hooks:** `useCamelCase` (ej. `useEmpleados.ts`)

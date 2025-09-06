@@ -5,6 +5,7 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage';
+import { EmpleadosPage } from '../pages/EmpleadosPage';
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <DashboardPage />,
+      },
+      {
+        path: 'empleados',
+        element: <EmpleadosPage />,
       },
     ],
   },

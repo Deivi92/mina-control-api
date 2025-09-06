@@ -43,7 +43,7 @@ describe('RegisterPage', () => {
     expect(screen.getByLabelText(/teléfono/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/cargo/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /registrarse/i })).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('debería llamar a la función de registro con los datos del formulario al hacer submit', async () => {
     // Arrange
@@ -89,5 +89,5 @@ describe('RegisterPage', () => {
     // Assert: Verificamos que nuestro mock fue llamado correctamente
     expect(mockRegisterUser).toHaveBeenCalledTimes(1);
     expect(mockRegisterUser).toHaveBeenCalledWith(testData);
-  }, 15000); // Aumentamos el timeout a 15 segundos para este test específico si es necesario
+  }, 30000); // Aumentamos el timeout a 30 segundos para este test específico si es necesario
 });

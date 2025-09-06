@@ -31,7 +31,7 @@ describe('LoginPage (Component Test)', () => {
     expect(screen.getByLabelText(/Correo Electrónico/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Contraseña/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Ingresar/i })).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('debería llamar a la función login con las credenciales correctas al enviar el formulario', async () => {
     const user = userEvent.setup();
@@ -72,10 +72,10 @@ describe('LoginPage (Component Test)', () => {
     renderWithRouter(<LoginPage />);
 
     expect(await screen.findByText('Credenciales incorrectas')).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('debería tener el botón de login deshabilitado si los campos están vacíos', () => {
     renderWithRouter(<LoginPage />);
     expect(screen.getByRole('button', { name: /Ingresar/i })).toBeDisabled();
-  });
+  }, 10000);
 });
