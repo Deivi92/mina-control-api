@@ -3,6 +3,8 @@ import axios from 'axios';
 /**
  * Esta función se ejecuta una vez antes de que comience toda la suite de pruebas E2E.
  * Su propósito es asegurar que la base de datos de prueba esté en un estado conocido y limpio.
+ * 
+ * Modificación para forzar la ejecución del workflow de Playwright.
  */
 async function globalSetup() {
   try {
