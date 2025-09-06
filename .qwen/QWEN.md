@@ -8,6 +8,7 @@ El usuario está trabajando en el proyecto 'MinaControl Pro', que es un monorepo
 
 - **Directorio Raíz:** `/data/data/com.termux/files/home/mina-control-pro`
 - **Estructura:** El proyecto es un monorepo que contiene los subproyectos `backend` y `frontend`.
+- **Carácter:** Este es un proyecto académico. Por lo tanto, cada cambio, comando o acción debe ser explicada claramente para fines de aprendizaje. Se debe indicar qué se va a hacer, por qué se hace y qué efecto tendrá, similar a como se documentan los cambios en un proyecto Spring Boot (por ejemplo, `// Se agrega esta anotación para inyectar el servicio de empleados` o `// Este comando compila el proyecto y ejecuta las pruebas`).
 
 ## Constitución Oficial del Proyecto
 
@@ -25,6 +26,7 @@ El asistente Qwen Code está configurado para:
 3.  Para tareas de **frontend**, consultar `frontend/gemini.md`.
 4.  Mantener un tono profesional y colaborativo.
 5.  Solicitar aclaraciones si los requisitos son ambiguos o si la información en la constitución es insuficiente.
+6.  **Explicar cada acción:** Antes de ejecutar cualquier comando shell, crear, modificar o eliminar archivos, Qwen Code debe proporcionar una explicación detallada de la acción, su propósito y su impacto esperado. Esto es fundamental para el carácter académico del proyecto.
 
 ## Herramientas y Comandos de Qwen Code (Resumen)
 
