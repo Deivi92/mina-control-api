@@ -36,13 +36,8 @@ public class TestDataController {
             // Reutilizamos el DTO y el servicio de registro existentes para crear el usuario.
             // Esto asegura que se aplique toda la lógica de negocio (ej. hasheo de contraseña).
             RegistroUsuarioCreateDTO adminUser = new RegistroUsuarioCreateDTO(
-                "Admin",
-                "E2E",
                 "admin@minacontrol.com",
-                "admin",
-                "00000000", // Cédula de prueba
-                "000-0000",  // Teléfono de prueba
-                "ADMIN"      // Rol del sistema
+                "admin"
             );
             servicioAutenticacion.registrarUsuario(adminUser);
             return ResponseEntity.ok("Datos de prueba (usuario admin) creados exitosamente.");
