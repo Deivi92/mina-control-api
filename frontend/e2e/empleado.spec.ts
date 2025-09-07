@@ -20,6 +20,20 @@ test.describe('Flujo de Gestión de Empleados', () => {
   });
 
   test('debería permitir crear, ver y eliminar un empleado', async ({ page }) => {
+    // Capturar peticiones de red para depuración
+    page.on('request', request => console.log('PLAYWRIGHT_NETWORK_DEBUG: >>', request.method(), request.url()));
+    page.on('response', async response => {
+      console.log('PLAYWRIGHT_NETWORK_DEBUG: <<', response.request().method(), response.url(), response.status());
+      if (response.url().includes('/api/v1/empleados')) {
+        try {
+          const body = await response.text();
+          console.log('PLAYWRIGHT_NETWORK_DEBUG: Cuerpo de respuesta de empleado:', body);
+        } catch (e) {
+          console.log('PLAYWRIGHT_NETWORK_DEBUG: No se pudo leer el cuerpo de la respuesta.', e);
+        }
+      }
+    });
+
     // Asumimos que existe un enlace en la navegación para ir a la página de empleados.
     await page.getByRole('link', { name: 'Empleados' }).click();
     await expect(page.getByRole('heading', { name: 'Gestión de Empleados' })).toBeVisible();
