@@ -50,8 +50,9 @@ test.describe('Flujo de Gestión de Empleados', () => {
     // --- FASE DE VERIFICACIÓN DE LA CREACIÓN ---
     // El modal debería cerrarse y el nuevo empleado debería ser visible en la tabla.
     // Usamos el email único para encontrarlo de forma fiable.
-    // Esperar a que la tabla se actualice después de la creación
-    await page.waitForTimeout(1000);
+    // Esperamos a que el spinner de carga aparezca y luego desaparezca.
+    await expect(page.getByRole('progressbar')).toBeVisible();
+    await expect(page.getByRole('progressbar')).not.toBeVisible();
     await expect(page.getByRole('cell', { name: uniqueEmail })).toBeVisible();
 
     // --- FASE DE ELIMINACIÓN ---
@@ -65,8 +66,9 @@ test.describe('Flujo de Gestión de Empleados', () => {
 
     // --- FASE DE VERIFICACIÓN DE LA ELIMINACIÓN ---
     // El diálogo debería cerrarse y el empleado ya no debería estar visible.
-    // Esperar a que la tabla se actualice después de la eliminación
-    await page.waitForTimeout(1000);
+    // Esperamos a que el spinner de carga aparezca y luego desaparezca.
+    await expect(page.getByRole('progressbar')).toBeVisible();
+    await expect(page.getByRole('progressbar')).not.toBeVisible();
     await expect(page.getByRole('cell', { name: uniqueEmail })).not.toBeVisible();
   });
 });
