@@ -2,6 +2,8 @@ package com.minacontrol.testsetup;
 
 import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
 import com.minacontrol.autenticacion.service.IServicioAutenticacion;
+import com.minacontrol.empleado.entity.Empleado;
+import com.minacontrol.empleado.repository.EmpleadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
@@ -20,27 +22,49 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestDataController {
 
     private final IServicioAutenticacion servicioAutenticacion;
+    private final EmpleadoRepository empleadoRepository;
 
     @Autowired
-    public TestDataController(IServicioAutenticacion servicioAutenticacion) {
+    public TestDataController(IServicioAutenticacion servicioAutenticacion, EmpleadoRepository empleadoRepository) {
         this.servicioAutenticacion = servicioAutenticacion;
+        this.empleadoRepository = empleadoRepository;
     }
 
     /**
      * Endpoint que el `globalSetup` de Playwright llamará para sembrar la base de datos.
-     * Crea un usuario administrador por defecto.
+     * Crea un empleado y usuario administrador por defecto.
      */
     @PostMapping("/setup")
     public ResponseEntity<String> setupTestData() {
         try {
-            // Reutilizamos el DTO y el servicio de registro existentes para crear el usuario.
-            // Esto asegura que se aplique toda la lógica de negocio (ej. hasheo de contraseña).
+            // Verificar si el empleado admin ya existe
+            if (empleadoRepository.findByEmail("admin@minacontrol.com").isEmpty()) {
+                // Crear un empleado admin para las pruebas
+                Empleado adminEmpleado = Empleado.builder()
+                        .nombres("Admin")
+                        .apellidos("User")
+                        .email("admin@minacontrol.com")
+                        .numeroIdentificacion("00000000")
+                        .telefono("000-0000")
+                        .cargo("Administrador")
+                        .fechaContratacion(java.time.LocalDate.now())
+                        .salarioBase(java.math.BigDecimal.ZERO)
+                        .estado(com.minacontrol.empleado.enums.EstadoEmpleado.ACTIVO)
+                        .rolSistema(com.minacontrol.empleado.enums.RolSistema.ADMINISTRADOR)
+                        .tieneUsuario(false)
+                        .build();
+                
+                // Guardar el empleado
+                empleadoRepository.save(adminEmpleado);
+            }
+            
+            // Crear el usuario admin
             RegistroUsuarioCreateDTO adminUser = new RegistroUsuarioCreateDTO(
                 "admin@minacontrol.com",
                 "admin"
             );
             servicioAutenticacion.registrarUsuario(adminUser);
-            return ResponseEntity.ok("Datos de prueba (usuario admin) creados exitosamente.");
+            return ResponseEntity.ok("Datos de prueba (empleado y usuario admin) creados exitosamente.");
         } catch (Exception e) {
             // Si el usuario ya existe, el servicio lanzará una excepción.
             // En el contexto de las pruebas, esto no es un error, solo significa que el setup ya se hizo.
