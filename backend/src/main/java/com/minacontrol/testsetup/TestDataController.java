@@ -37,10 +37,13 @@ public class TestDataController {
     @PostMapping("/setup")
     public ResponseEntity<String> setupTestData() {
         try {
-            // Verificar si el empleado admin ya existe
-            if (empleadoRepository.findByEmail("admin@minacontrol.com").isEmpty()) {
-                // Crear un empleado admin para las pruebas
-                Empleado adminEmpleado = Empleado.builder()
+            // 1. Asegurar que el Empleado admin existe y no tiene usuario asociado
+            Optional<Empleado> existingEmpleado = empleadoRepository.findByEmail("admin@minacontrol.com");
+            Empleado adminEmpleado;
+
+            if (existingEmpleado.isEmpty()) {
+                // Si no existe, crear el empleado admin
+                adminEmpleado = Empleado.builder()
                         .nombres("Admin")
                         .apellidos("User")
                         .email("admin@minacontrol.com")
@@ -51,25 +54,31 @@ public class TestDataController {
                         .salarioBase(java.math.BigDecimal.ZERO)
                         .estado(com.minacontrol.empleado.enums.EstadoEmpleado.ACTIVO)
                         .rolSistema(com.minacontrol.empleado.enums.RolSistema.ADMINISTRADOR)
-                        .tieneUsuario(false)
+                        .tieneUsuario(false) // Importante: inicialmente no tiene usuario
                         .build();
-                
-                // Guardar el empleado
                 empleadoRepository.save(adminEmpleado);
+            } else {
+                adminEmpleado = existingEmpleado.get();
+                if (adminEmpleado.isTieneUsuario()) {
+                    // Si ya tiene usuario, el setup ya está hecho para este empleado
+                    return ResponseEntity.ok("El empleado admin ya tiene una cuenta de usuario. Setup no necesario.");
+                }
             }
-            
-            // Crear el usuario admin
+
+            // 2. Intentar registrar el usuario admin
             RegistroUsuarioCreateDTO adminUser = new RegistroUsuarioCreateDTO(
                 "admin@minacontrol.com",
                 "admin"
             );
-            servicioAutenticacion.registrarUsuario(adminUser);
+            servicioAutenticacion.registrarUsuario(adminUser); // Esto actualizará tieneUsuario a true
+
             return ResponseEntity.ok("Datos de prueba (empleado y usuario admin) creados exitosamente.");
+        } catch (UsuarioYaExisteException e) {
+            // Esto significa que el usuario ya fue registrado (posiblemente en una ejecución anterior)
+            return ResponseEntity.ok("El usuario admin ya existe. Setup completado.");
         } catch (Exception e) {
-            // Si el usuario ya existe, el servicio lanzará una excepción.
-            // En el contexto de las pruebas, esto no es un error, solo significa que el setup ya se hizo.
-            // Por lo tanto, devolvemos un 200 OK para que el test continúe.
-            return ResponseEntity.ok("Los datos de prueba ya existen o ocurrió un error no crítico: " + e.getMessage());
+            // Capturar cualquier otra excepción inesperada
+            return ResponseEntity.internalServerError().body("Error crítico durante el setup de datos de prueba: " + e.getMessage());
         }
     }
 }
