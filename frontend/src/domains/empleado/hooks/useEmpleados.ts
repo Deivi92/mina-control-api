@@ -15,7 +15,11 @@ export const useEmpleados = () => {
   // QUERY: para obtener la lista de todos los empleados.
   const empleadosQuery = useQuery({
     queryKey: [EMPLEADOS_QUERY_KEY],
-    queryFn: empleadoService.obtenerEmpleados,
+    queryFn: async () => {
+      const empleados = await empleadoService.obtenerEmpleados();
+      // Filtrar empleados inactivos para que no se muestren en la tabla
+      return empleados.filter(empleado => empleado.estado === 'ACTIVO');
+    },
   });
 
   // MUTATION: para crear un nuevo empleado.
