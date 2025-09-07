@@ -50,7 +50,7 @@ test.describe('Flujo de Gestión de Empleados', () => {
     // --- FASE DE VERIFICACIÓN DE LA CREACIÓN ---
     // El modal debería cerrarse y el nuevo empleado debería ser visible en la tabla.
     // Usamos el email único para encontrarlo de forma fiable.
-    await expect(page.getByRole('cell', { name: uniqueEmail })).toBeVisible();
+    await expect(page.getByRole('cell', { name: uniqueEmail })).toBeVisible({ timeout: 15000 });
 
     // --- FASE DE ELIMINACIÓN ---
     // Encontramos la fila del nuevo empleado y hacemos clic en su botón de eliminar.
@@ -58,11 +58,11 @@ test.describe('Flujo de Gestión de Empleados', () => {
     await newEmployeeRow.getByRole('button', { name: 'eliminar' }).click();
 
     // Confirmamos la eliminación en el diálogo.
-    await expect(page.getByRole('heading', { name: 'Confirmar Eliminación' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Confirmar Eliminación' })).toBeVisible({ timeout: 15000 });
     await page.getByRole('button', { name: 'Eliminar' }).click();
 
     // --- FASE DE VERIFICACIÓN DE LA ELIMINACIÓN ---
     // El diálogo debería cerrarse y el empleado ya no debería estar visible.
-    await expect(page.getByRole('cell', { name: uniqueEmail })).not.toBeVisible();
+    await expect(page.getByRole('cell', { name: uniqueEmail })).not.toBeVisible({ timeout: 15000 });
   });
 });

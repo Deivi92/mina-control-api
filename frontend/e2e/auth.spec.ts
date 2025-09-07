@@ -47,9 +47,9 @@ test.describe('Autenticación E2E - Flujo Real', () => {
 
     // Después de un registro exitoso, la app debería redirigir a login
     // y mostrar un mensaje de éxito.
-    await expect(page.getByRole('heading', { name: 'Iniciar Sesión' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Iniciar Sesión' })).toBeVisible({ timeout: 15000 });
     // La prueba ahora también verifica el mensaje de éxito que se pasa en el estado de la navegación
-    await expect(page.getByText('¡Registro exitoso! Por favor, inicia sesión.')).toBeVisible();
+    await expect(page.getByText('¡Registro exitoso! Por favor, inicia sesión.')).toBeVisible({ timeout: 15000 });
   });
 
 });

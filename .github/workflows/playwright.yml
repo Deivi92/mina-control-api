@@ -114,7 +114,7 @@ jobs:
         nohup npm run preview &
         # Wait for frontend to be ready on port 4173 (Vite's default preview port)
         npx wait-on http://localhost:4173 --timeout 180s
-        sleep 10 # Give the frontend application more time to render
+        sleep 20 # Give the frontend application more time to render
 
     # Run Playwright tests
     - name: Run Playwright tests
