@@ -42,7 +42,9 @@ export const useEmpleados = () => {
   const eliminarEmpleadoMutation = useMutation({
     mutationFn: (id: number) => empleadoService.eliminarEmpleado(id),
     onSuccess: () => {
+      // Invalidar y refetch para asegurar que la UI se actualice correctamente
       queryClient.invalidateQueries({ queryKey: [EMPLEADOS_QUERY_KEY] });
+      queryClient.refetchQueries({ queryKey: [EMPLEADOS_QUERY_KEY] });
     },
   });
 

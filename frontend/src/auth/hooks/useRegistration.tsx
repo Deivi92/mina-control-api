@@ -15,7 +15,9 @@ export const useRegistration = () => {
     mutationFn: registerService,
     onSuccess: () => {
       // Redirigir a la página de login con un mensaje de éxito
+      // Usar replace en lugar de navigate para evitar problemas de historial
       navigate('/login', {
+        replace: true,
         state: { message: '¡Registro exitoso! Por favor, inicia sesión.' },
       });
     },

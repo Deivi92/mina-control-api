@@ -22,6 +22,14 @@ export const LoginPage = () => {
     }
   }, [successMessage]);
 
+  // Limpiar el estado de location después de usarlo
+  useEffect(() => {
+    if (location.state?.message) {
+      // Limpiar el estado para evitar que se muestre repetidamente
+      window.history.replaceState({}, document.title, location.pathname);
+    }
+  }, [location]);
+
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
