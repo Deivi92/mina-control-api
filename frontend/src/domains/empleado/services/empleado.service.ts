@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Empleado, EmpleadoRequest } from '../types';
 
-const API_URL = '/api/empleados'; // URL base para los endpoints de empleados
+const API_URL = '/api/v1/empleados'; // URL base para los endpoints de empleados
 
 /**
  * Objeto de servicio para las llamadas a la API relacionadas con los empleados.
