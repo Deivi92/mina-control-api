@@ -4,6 +4,8 @@ import com.minacontrol.autenticacion.dto.request.RegistroUsuarioCreateDTO;
 import com.minacontrol.autenticacion.service.IServicioAutenticacion;
 import com.minacontrol.empleado.entity.Empleado;
 import com.minacontrol.empleado.repository.EmpleadoRepository;
+import java.util.Optional;
+import com.minacontrol.autenticacion.exception.UsuarioYaExisteException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
