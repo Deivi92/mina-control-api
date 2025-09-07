@@ -37,7 +37,7 @@ test.describe('Autenticación E2E - Flujo Real', () => {
     await expect(page.getByRole('alert')).toBeVisible();
   });
 
-  test('debería permitir el registro de un nuevo usuario', async ({ page }) => {
+  test('debería permitir el registro de un nuevo usuario', async ({ page, request }) => {
     // Capturar peticiones de red para depuración
     page.on('request', request => console.log('PLAYWRIGHT_NETWORK_DEBUG: >>', request.method(), request.url()));
     page.on('response', async response => {
@@ -51,6 +51,25 @@ test.describe('Autenticación E2E - Flujo Real', () => {
         }
       }
     });
+
+    // --- PASO ADICIONAL: CREAR EMPLEADO PRIMERO ---
+    // El backend requiere que el usuario a registrar sea un empleado existente.
+    const createEmployeeResponse = await request.post('http://localhost:8080/api/v1/empleados', {
+      data: {
+        nombres: 'Registro',
+        apellidos: 'Test',
+        numeroIdentificacion: `ID-${testTimestamp}`,
+        email: uniqueRegisterEmail,
+        telefono: '123456789',
+        cargo: 'Tester',
+        fechaContratacion: '2024-01-01',
+        salarioBase: 1000,
+        rolSistema: 'EMPLEADO',
+      },
+    });
+    expect(createEmployeeResponse.ok()).toBeTruthy();
+    const employee = await createEmployeeResponse.json();
+    console.log('PLAYWRIGHT_NETWORK_DEBUG: Empleado creado para registro:', employee);
 
     await page.goto('/register');
     
