@@ -40,19 +40,16 @@ test.describe('Autenticación E2E - Flujo Real', () => {
   test('debería permitir el registro de un nuevo usuario', async ({ page }) => {
     await page.goto('/register');
     
-    await page.getByLabel('Nombre').fill('Test');
-    await page.getByLabel('Apellido').fill('Register');
+    // *** CAMPOS SIMPLIFICADOS ***
     await page.getByLabel('Correo Electrónico').fill(uniqueRegisterEmail);
     await page.getByLabel('Contraseña').fill('password123');
-    await page.getByLabel('Cédula').fill('987654321');
-    await page.getByLabel('Teléfono').fill('555-5555');
-    await page.getByLabel('Cargo').fill('Registrado');
     await page.getByRole('button', { name: /registrarse/i }).click();
 
     // Después de un registro exitoso, la app debería redirigir a login
     // y mostrar un mensaje de éxito.
     await expect(page.getByRole('heading', { name: 'Iniciar Sesión' })).toBeVisible();
-    await expect(page.getByText('¡Registro exitoso!')).toBeVisible();
+    // La prueba ahora también verifica el mensaje de éxito que se pasa en el estado de la navegación
+    await expect(page.getByText('¡Registro exitoso! Por favor, inicia sesión.')).toBeVisible();
   });
 
 });

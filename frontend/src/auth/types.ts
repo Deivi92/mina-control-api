@@ -22,13 +22,8 @@ export interface LoginResponse {
  * Coincide con RegistroUsuarioCreateDTO en el backend.
  */
 export interface RegistroUsuarioRequest {
-  nombre: string;
-  apellido: string;
   email: string;
   password: string;
-  cedula: string;
-  telefono: string;
-  cargo: string;
 }
 
 /**

@@ -21,7 +21,6 @@ test.describe('Flujo de Gestión de Empleados', () => {
 
   test('debería permitir crear, ver y eliminar un empleado', async ({ page }) => {
     // Asumimos que existe un enlace en la navegación para ir a la página de empleados.
-    // Este es un punto que podría necesitar ajuste si el enlace tiene otro nombre.
     await page.getByRole('link', { name: 'Empleados' }).click();
     await expect(page.getByRole('heading', { name: 'Gestión de Empleados' })).toBeVisible();
 
@@ -30,13 +29,22 @@ test.describe('Flujo de Gestión de Empleados', () => {
 
     // Rellenamos el formulario en el modal que debería haberse abierto.
     await expect(page.getByRole('heading', { name: 'Crear Nuevo Empleado' })).toBeVisible();
-    await page.getByLabel('Nombre').fill('Test E2E');
-    await page.getByLabel('Apellido').fill('Usuario');
+    
+    // *** CAMPOS ACTUALIZADOS ***
+    await page.getByLabel('Nombres').fill('Test E2E');
+    await page.getByLabel('Apellidos').fill('Usuario');
     await page.getByLabel('Correo Electrónico').fill(uniqueEmail);
     await page.getByLabel('Número de Identificación').fill(uniqueId);
-    await page.getByLabel('Fecha de Nacimiento').fill('1995-05-15');
-    await page.getByLabel('Puesto').fill('Tester Automatizado');
-    await page.getByLabel('Salario').fill('999');
+    await page.getByLabel('Fecha de Contratación').fill('2024-01-15');
+    await page.getByLabel('Cargo').fill('Tester Automatizado');
+    await page.getByLabel('Salario Base').fill('999');
+    
+    // *** NUEVO CAMPO: ROL DEL SISTEMA ***
+    // Hacemos clic en el selector para abrir las opciones
+    await page.getByLabel('Rol en el Sistema').click();
+    // Hacemos clic en la opción 'EMPLEADO'
+    await page.getByRole('option', { name: 'Empleado' }).click();
+
     await page.getByRole('button', { name: 'Guardar' }).click();
 
     // --- FASE DE VERIFICACIÓN DE LA CREACIÓN ---

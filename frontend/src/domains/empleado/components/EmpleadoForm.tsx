@@ -5,25 +5,32 @@ import {
   Box,
   Grid,
   CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
 } from '@mui/material';
-import type { Empleado, EmpleadoRequest } from '../types';
+import type { Empleado, EmpleadoRequest, RolSistema } from '../types';
 
 interface EmpleadoFormProps {
-  initialData?: Empleado | null; // Datos para el modo edición, opcional
-  isSubmitting?: boolean; // Para mostrar el estado de carga en el botón
+  initialData?: Empleado | null;
+  isSubmitting?: boolean;
   onSubmit: (data: EmpleadoRequest) => void;
   onCancel: () => void;
 }
 
-// Valores por defecto para un formulario de creación
+// Valores por defecto para un formulario de creación, alineados con el DTO del backend
 const defaultValues: EmpleadoRequest = {
-  nombre: '',
-  apellido: '',
+  nombres: '',
+  apellidos: '',
   numeroIdentificacion: '',
   email: '',
-  fechaNacimiento: '',
-  puesto: '',
-  salario: 0,
+  telefono: '',
+  cargo: '',
+  fechaContratacion: '',
+  salarioBase: 0,
+  rolSistema: 'EMPLEADO', // Valor por defecto para el rol
 };
 
 /**
@@ -38,19 +45,21 @@ export const EmpleadoForm: React.FC<EmpleadoFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<EmpleadoRequest>(defaultValues);
 
-  // useEffect se dispara cuando `initialData` cambia.
+  // useEffect se dispara cuando `initialData` cambia (modo edición).
   useEffect(() => {
     if (initialData) {
-      // Si hay datos iniciales (modo edición), los cargamos en el formulario.
-      // Formateamos la fecha para que sea compatible con el input type="date" (YYYY-MM-DD).
+      // Si hay datos iniciales, los cargamos en el formulario.
       setFormData({
-        nombre: initialData.nombre,
-        apellido: initialData.apellido,
+        nombres: initialData.nombres,
+        apellidos: initialData.apellidos,
         numeroIdentificacion: initialData.numeroIdentificacion,
         email: initialData.email,
-        fechaNacimiento: initialData.fechaNacimiento.split('T')[0],
-        puesto: initialData.puesto,
-        salario: initialData.salario,
+        telefono: initialData.telefono || '',
+        cargo: initialData.cargo,
+        // Formateamos la fecha para que sea compatible con el input type="date" (YYYY-MM-DD).
+        fechaContratacion: initialData.fechaContratacion.split('T')[0],
+        salarioBase: initialData.salarioBase,
+        rolSistema: initialData.rolSistema,
       });
     } else {
       // Si no (modo creación), reseteamos al estado por defecto.
@@ -58,7 +67,7 @@ export const EmpleadoForm: React.FC<EmpleadoFormProps> = ({
     }
   }, [initialData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -66,9 +75,17 @@ export const EmpleadoForm: React.FC<EmpleadoFormProps> = ({
     }));
   };
 
+  const handleSelectChange = (e: SelectChangeEvent) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value as RolSistema,
+    }));
+  };
+
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // En una aplicación real, aquí iría la lógica de validación (con Zod, Yup, etc.)
     onSubmit(formData);
   };
 
@@ -77,9 +94,9 @@ export const EmpleadoForm: React.FC<EmpleadoFormProps> = ({
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
-            name="nombre"
-            label="Nombre"
-            value={formData.nombre}
+            name="nombres"
+            label="Nombres"
+            value={formData.nombres}
             onChange={handleChange}
             fullWidth
             required
@@ -88,9 +105,9 @@ export const EmpleadoForm: React.FC<EmpleadoFormProps> = ({
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
-            name="apellido"
-            label="Apellido"
-            value={formData.apellido}
+            name="apellidos"
+            label="Apellidos"
+            value={formData.apellidos}
             onChange={handleChange}
             fullWidth
             required
@@ -119,21 +136,21 @@ export const EmpleadoForm: React.FC<EmpleadoFormProps> = ({
         </Grid>
         <Grid item xs={12} sm={6}>
            <TextField
-            name="fechaNacimiento"
-            label="Fecha de Nacimiento"
+            name="fechaContratacion"
+            label="Fecha de Contratación"
             type="date"
-            value={formData.fechaNacimiento}
+            value={formData.fechaContratacion}
             onChange={handleChange}
             fullWidth
             required
-            InputLabelProps={{ shrink: true }} // Para que el label no se superponga con la fecha
+            InputLabelProps={{ shrink: true }}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
-            name="puesto"
-            label="Puesto"
-            value={formData.puesto}
+            name="cargo"
+            label="Cargo"
+            value={formData.cargo}
             onChange={handleChange}
             fullWidth
             required
@@ -141,14 +158,40 @@ export const EmpleadoForm: React.FC<EmpleadoFormProps> = ({
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
-            name="salario"
-            label="Salario"
+            name="salarioBase"
+            label="Salario Base"
             type="number"
-            value={formData.salario}
+            value={formData.salarioBase}
             onChange={handleChange}
             fullWidth
             required
           />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            name="telefono"
+            label="Teléfono (Opcional)"
+            value={formData.telefono || ''}
+            onChange={handleChange}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+            <FormControl fullWidth required>
+                <InputLabel id="rol-sistema-label">Rol en el Sistema</InputLabel>
+                <Select
+                    labelId="rol-sistema-label"
+                    id="rolSistema"
+                    name="rolSistema"
+                    value={formData.rolSistema}
+                    label="Rol en el Sistema"
+                    onChange={handleSelectChange}
+                >
+                    <MenuItem value="EMPLEADO">Empleado</MenuItem>
+                    <MenuItem value="SUPERVISOR">Supervisor</MenuItem>
+                    <MenuItem value="ADMINISTRADOR">Administrador</MenuItem>
+                </Select>
+            </FormControl>
         </Grid>
       </Grid>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
