@@ -93,7 +93,7 @@ jobs:
         cd backend
         nohup java -jar target/mina-control-api-1.0.0.jar --spring.profiles.active=github &
         echo "Waiting for backend to start..."
-        timeout 120s bash -c 'while ! curl -s -f http://localhost:8080/actuator/health; do echo "Backend not ready, waiting..."; sleep 5; done'
+        npx wait-on http://localhost:8080/actuator/health --timeout 120s
         echo "Backend is ready!"
       env:
         SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/minacontrol_test
