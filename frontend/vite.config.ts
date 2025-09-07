@@ -14,4 +14,13 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     exclude: ['node_modules', 'e2e/**'],
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  }
 });
