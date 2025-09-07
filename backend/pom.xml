@@ -35,6 +35,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <!-- Spring Boot Actuator: Monitoreo y gestión de la aplicación en producción -->
+        <!-- PARA QUÉ: Proporciona endpoints como /health, /info, /metrics para supervisar la app -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         
         <!-- ========== BASE DE DATOS (DESARROLLO) ========== -->
         <!-- Spring Boot Data JPA: Abstracción para acceso a datos con JPA (Hibernate) -->
