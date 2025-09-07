@@ -13,13 +13,20 @@ export const useRegistration = () => {
     error,
   } = useMutation<Usuario, Error, RegistroUsuarioRequest>({
     mutationFn: registerService,
-    onSuccess: () => {
+    onMutate: (variables) => {
+      console.log('REGISTRATION_DEBUG: Mutación iniciada con:', variables);
+    },
+    onSuccess: (data) => {
+      console.log('REGISTRATION_DEBUG: Mutación exitosa con respuesta:', data);
       // Redirigir a la página de login con un mensaje de éxito
       // Usar replace en lugar de navigate para evitar problemas de historial
       navigate('/login', {
         replace: true,
         state: { message: '¡Registro exitoso! Por favor, inicia sesión.' },
       });
+    },
+    onError: (error) => {
+      console.error('REGISTRATION_DEBUG: Mutación falló con error:', error);
     },
   });
 

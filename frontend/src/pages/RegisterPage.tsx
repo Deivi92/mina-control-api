@@ -5,10 +5,12 @@ import { Container, Card, CardContent, Typography, TextField, Button, CircularPr
 import { theme } from '../app/styles/theme';
 
 export const RegisterPage = () => {
-  const { registerUser, isLoading, error } = useRegistration();
+  const { registerUser, isLoading, isSuccess, error } = useRegistration();
   // Estado simplificado para coincidir con la API
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  console.log('REGISTRATION_DEBUG: Estado del componente:', { isLoading, isSuccess, error });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
