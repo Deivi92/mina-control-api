@@ -204,6 +204,7 @@ class TurnoControllerIT {
 
         @BeforeEach
         void setUp() {
+            empleadoRepository.deleteAll();
             empleado = new Empleado();
             empleado.setNombres("Test");
             empleado.setApellidos("User");
