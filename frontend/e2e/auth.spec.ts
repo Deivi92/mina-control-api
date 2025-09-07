@@ -11,9 +11,9 @@ test.describe('Autenticación E2E - Flujo Real', () => {
     await expect(page.getByRole('heading', { name: 'Iniciar Sesión' })).toBeVisible();
 
     // Usamos el usuario admin que fue creado por el globalSetup
-    await page.getByLabel('Email').fill('admin@minacontrol.com');
-    await page.getByLabel('Password').fill('admin');
-    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
+    await page.getByLabel('Correo Electrónico').fill('admin@minacontrol.com');
+    await page.getByLabel('Contraseña').fill('admin');
+    await page.getByRole('button', { name: 'Ingresar' }).click();
 
     // Verificamos que la navegación post-login es exitosa
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
@@ -28,9 +28,9 @@ test.describe('Autenticación E2E - Flujo Real', () => {
 
   test('debería mostrar un error con credenciales incorrectas', async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel('Email').fill('admin@minacontrol.com');
-    await page.getByLabel('Password').fill('wrong-password');
-    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
+    await page.getByLabel('Correo Electrónico').fill('admin@minacontrol.com');
+    await page.getByLabel('Contraseña').fill('wrong-password');
+    await page.getByRole('button', { name: 'Ingresar' }).click();
 
     // La API real debería devolver un error que el frontend muestre.
     // Asumimos que el error se muestra en un 'alert'.
@@ -42,7 +42,7 @@ test.describe('Autenticación E2E - Flujo Real', () => {
     
     await page.getByLabel('Nombre').fill('Test');
     await page.getByLabel('Apellido').fill('Register');
-    await page.getByLabel('Email').fill(uniqueRegisterEmail);
+    await page.getByLabel('Correo Electrónico').fill(uniqueRegisterEmail);
     await page.getByLabel('Contraseña').fill('password123');
     await page.getByLabel('Cédula').fill('987654321');
     await page.getByLabel('Teléfono').fill('555-5555');

@@ -12,9 +12,9 @@ test.describe('Flujo de Gestión de Empleados', () => {
   // Esto asume que existe un usuario 'admin@minacontrol.com' con password 'admin' en la BBDD de pruebas.
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.getByLabel('Email').fill('admin@minacontrol.com');
-    await page.getByLabel('Password').fill('admin');
-    await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
+    await page.getByLabel('Correo Electrónico').fill('admin@minacontrol.com');
+    await page.getByLabel('Contraseña').fill('admin');
+    await page.getByRole('button', { name: 'Ingresar' }).click();
     // Esperamos a que el dashboard sea visible para confirmar que el login fue exitoso.
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   });
@@ -32,7 +32,7 @@ test.describe('Flujo de Gestión de Empleados', () => {
     await expect(page.getByRole('heading', { name: 'Crear Nuevo Empleado' })).toBeVisible();
     await page.getByLabel('Nombre').fill('Test E2E');
     await page.getByLabel('Apellido').fill('Usuario');
-    await page.getByLabel('Email').fill(uniqueEmail);
+    await page.getByLabel('Correo Electrónico').fill(uniqueEmail);
     await page.getByLabel('Número de Identificación').fill(uniqueId);
     await page.getByLabel('Fecha de Nacimiento').fill('1995-05-15');
     await page.getByLabel('Puesto').fill('Tester Automatizado');
