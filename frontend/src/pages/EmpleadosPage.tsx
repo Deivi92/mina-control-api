@@ -111,7 +111,7 @@ export const EmpleadosPage: React.FC = () => {
         open={isDeleteConfirmOpen}
         onConfirm={handleDeleteConfirm}
         onCancel={handleCloseModals}
-        empleadoNombre={selectedEmpleado ? `${selectedEmpleado.nombre} ${selectedEmpleado.apellido}` : null}
+        empleadoNombre={selectedEmpleado ? `${selectedEmpleado.nombres} ${selectedEmpleado.apellidos}` : null}
       />
     </Container>
   );

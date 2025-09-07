@@ -9,7 +9,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  SelectChangeEvent,
+  type SelectChangeEvent,
 } from '@mui/material';
 import type { Empleado, EmpleadoRequest, RolSistema } from '../types';
 

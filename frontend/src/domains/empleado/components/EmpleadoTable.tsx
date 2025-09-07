@@ -79,8 +79,8 @@ export const EmpleadoTable: React.FC<EmpleadoTableProps> = ({
         <TableBody>
           {empleados.map((empleado) => (
             <TableRow key={empleado.id} hover>
-              <TableCell>{`${empleado.nombre} ${empleado.apellido}`}</TableCell>
-              <TableCell>{empleado.puesto}</TableCell>
+              <TableCell>{`${empleado.nombres} ${empleado.apellidos}`}</TableCell>
+              <TableCell>{empleado.cargo}</TableCell>
               <TableCell>{empleado.email}</TableCell>
               <TableCell>
                 <Chip
