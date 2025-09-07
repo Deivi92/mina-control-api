@@ -58,6 +58,15 @@ jobs:
       with:
         node-version: '20'
 
+    # Wait for PostgreSQL to be ready
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h localhost -p 5432 -U postgres; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+        echo "PostgreSQL is ready!"
+
     # Install backend dependencies and build
     - name: Build Backend
       run: |
@@ -81,11 +90,16 @@ jobs:
       run: |
         cd backend
         nohup java -jar target/mina-control-api-1.0.0.jar --spring.profiles.active=github &
-        # Wait for backend to start
+        # Wait for backend to start and be ready
         sleep 30
+        # Check if the backend is responding
+        curl --retry 10 --retry-delay 5 -f http://localhost:8080/actuator/health || exit 1
       env:
         DB_USER: postgres
         DB_PASSWORD: postgres
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/minacontrol_test
+        SPRING_DATASOURCE_USERNAME: postgres
+        SPRING_DATASOURCE_PASSWORD: postgres
 
     # Run Playwright tests
     - name: Run Playwright tests
