@@ -38,6 +38,20 @@ test.describe('Autenticación E2E - Flujo Real', () => {
   });
 
   test('debería permitir el registro de un nuevo usuario', async ({ page }) => {
+    // Capturar peticiones de red para depuración
+    page.on('request', request => console.log('PLAYWRIGHT_NETWORK_DEBUG: >>', request.method(), request.url()));
+    page.on('response', async response => {
+      console.log('PLAYWRIGHT_NETWORK_DEBUG: <<', response.request().method(), response.url(), response.status());
+      if (response.url().includes('/api/auth/register')) {
+        try {
+          const body = await response.text();
+          console.log('PLAYWRIGHT_NETWORK_DEBUG: Cuerpo de respuesta de registro:', body);
+        } catch (e) {
+          console.log('PLAYWRIGHT_NETWORK_DEBUG: No se pudo leer el cuerpo de la respuesta.', e);
+        }
+      }
+    });
+
     await page.goto('/register');
     
     // *** CAMPOS SIMPLIFICADOS ***
