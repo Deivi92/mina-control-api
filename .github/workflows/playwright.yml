@@ -101,11 +101,28 @@ jobs:
         SPRING_DATASOURCE_USERNAME: postgres
         SPRING_DATASOURCE_PASSWORD: postgres
 
+    # Build Frontend for production
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+
+    # Start Frontend preview server in background
+    - name: Start Frontend
+      run: |
+        cd frontend
+        nohup npm run preview &
+        # Wait for frontend to be ready on port 4173 (Vite's default preview port)
+        npx wait-on http://localhost:4173 --timeout 120s
+
     # Run Playwright tests
     - name: Run Playwright tests
       run: |
         cd frontend
         npm run test:e2e
+      env:
+        # This variable tells the frontend where to find the backend API
+        VITE_API_BASE_URL: http://localhost:8080
 
     # Create report directory if it doesn't exist
     - name: Ensure report directory exists
