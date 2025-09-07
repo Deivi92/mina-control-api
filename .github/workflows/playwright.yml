@@ -29,7 +29,7 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: root
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: minacontrol_test
         options: >-
@@ -83,6 +83,9 @@ jobs:
         nohup java -jar target/mina-control-api-1.0.0.jar --spring.profiles.active=github &
         # Wait for backend to start
         sleep 30
+      env:
+        DB_USER: postgres
+        DB_PASSWORD: postgres
 
     # Run Playwright tests
     - name: Run Playwright tests
