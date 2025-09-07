@@ -1,8 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { register as registerService } from '../services/auth.service';
 import type { RegistroUsuarioRequest, Usuario } from '../types';
 
 export const useRegistration = () => {
+  const navigate = useNavigate();
+
   const {
     mutate: registerUser,
     isPending: isLoading,
@@ -10,8 +13,12 @@ export const useRegistration = () => {
     error,
   } = useMutation<Usuario, Error, RegistroUsuarioRequest>({
     mutationFn: registerService,
-    // Opcional: aquí podríamos añadir lógica onSuccess, onError, etc.
-    // Por ejemplo, para invalidar queries o mostrar notificaciones.
+    onSuccess: () => {
+      // Redirigir a la página de login con un mensaje de éxito
+      navigate('/login', {
+        state: { message: '¡Registro exitoso! Por favor, inicia sesión.' },
+      });
+    },
   });
 
   return {

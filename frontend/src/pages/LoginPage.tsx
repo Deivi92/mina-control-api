@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
 import { Container, Card, CardContent, Typography, TextField, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
 import { theme } from '../app/styles/theme';
@@ -8,6 +8,20 @@ export const LoginPage = () => {
   const { login, isLoading, error } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  const location = useLocation();
+  const [successMessage, setSuccessMessage] = useState(location.state?.message);
+
+  // Ocultar el mensaje después de unos segundos
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000); // 5 segundos
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,6 +44,11 @@ export const LoginPage = () => {
             {error && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {error}
+              </Alert>
+            )}
+            {successMessage && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {successMessage}
               </Alert>
             )}
             <TextField

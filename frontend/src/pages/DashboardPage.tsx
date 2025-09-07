@@ -12,9 +12,7 @@ export const DashboardPage = () => {
       <Typography variant="h6" component="h2" gutterBottom>
         Bienvenido, {user?.email}!
       </Typography>
-      <Button variant="contained" color="primary" onClick={logout}>
-        Cerrar Sesión
-      </Button>
+      
     </Container>
   );
 };

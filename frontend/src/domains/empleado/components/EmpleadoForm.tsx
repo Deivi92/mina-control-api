@@ -99,7 +99,7 @@ export const EmpleadoForm: React.FC<EmpleadoFormProps> = ({
         <Grid item xs={12}>
           <TextField
             name="email"
-            label="Email"
+            label="Correo Electrónico"
             type="email"
             value={formData.email}
             onChange={handleChange}
