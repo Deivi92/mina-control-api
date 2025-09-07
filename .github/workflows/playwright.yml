@@ -1,6 +1,5 @@
-name: Playwright Tests with Backend
+name: Build, Test and E2E Test
 
-# Controls when the action will run.
 on:
   push:
     branches:
@@ -18,122 +17,134 @@ on:
       - 'backend/**'
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains multiple jobs
-  setup-backend:
-    name: Setup Backend and Database
+  build:
+    name: Build & Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Backend and Run Unit Tests
+        run: cd backend && mvn clean install
+
+      - name: Install Frontend Dependencies
+        run: cd frontend && npm ci
+
+      - name: Build Frontend
+        run: cd frontend && npm run build
+
+      - name: Upload Backend Artifact (JAR)
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/target/mina-control-api-1.0.0.jar
+
+      - name: Upload Frontend Artifact (dist)
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+  e2e-test:
+    name: End-to-End Tests
+    needs: build
     runs-on: ubuntu-latest
     services:
-      # Setup PostgreSQL service
       postgres:
         image: postgres:13
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: minacontrol_test
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        ports:
-          - 5432:5432
 
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    # Setup Java environment
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: 'maven'
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    # Setup Node.js environment for frontend
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
 
-    # Wait for PostgreSQL to be ready
-    - name: Wait for PostgreSQL
-      run: |
-        until pg_isready -h localhost -p 5432 -U postgres; do
-          echo "Waiting for PostgreSQL..."
-          sleep 2
-        done
-        echo "PostgreSQL is ready!"
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
 
-    # Install backend dependencies and build
-    - name: Build Backend
-      run: |
-        cd backend
-        mvn clean package -DskipTests
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
 
-    # Install frontend dependencies
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm ci
+      - name: Start Backend
+        run: |
+          nohup java -jar mina-control-api-1.0.0.jar --spring.profiles.active=github &
+          echo "Waiting for backend to start..."
+          timeout 120s bash -c 'while ! curl -s -f http://localhost:8080/actuator/health; do echo "Backend not ready, waiting..."; sleep 5; done'
+          echo "Backend is ready!"
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/minacontrol_test
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: postgres
 
-    # Install Playwright browsers
-    - name: Install Playwright browsers
-      run: |
-        cd frontend
-        npx playwright install --with-deps
+      - name: Install and Start Frontend Server
+        run: |
+          cd frontend
+          npm install -g http-server
+          nohup http-server dist --port 4173 &
+          echo "Waiting for frontend to start..."
+          npx wait-on http://localhost:4173 --timeout 180s
+          echo "Frontend is ready!"
 
-    # Start Backend in background
-    - name: Start Backend
-      run: |
-        cd backend
-        nohup java -jar target/mina-control-api-1.0.0.jar --spring.profiles.active=github &
-        # Wait for backend to start and be ready
-        sleep 45
-        # Check if the backend is responding
-        curl --retry 15 --retry-delay 5 -f http://localhost:8080/actuator/health || exit 1
-      env:
-        DB_USER: postgres
-        DB_PASSWORD: postgres
-        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/minacontrol_test
-        SPRING_DATASOURCE_USERNAME: postgres
-        SPRING_DATASOURCE_PASSWORD: postgres
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+        working-directory: frontend
 
-    # Build Frontend for production
-    - name: Build Frontend
-      run: |
-        cd frontend
-        npm run build
+      - name: Run Playwright Tests
+        run: npm run test:e2e
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: http://localhost:8080
 
-    # Start Frontend preview server in background
-    - name: Start Frontend
-      run: |
-        cd frontend
-        nohup npm run preview &
-        # Wait for frontend to be ready on port 4173 (Vite's default preview port)
-        npx wait-on http://localhost:4173 --timeout 180s
-        sleep 10 # Give the frontend application more time to render
-
-    # Run Playwright tests
-    - name: Run Playwright tests
-      run: |
-        cd frontend
-        npm run test:e2e
-      env:
-        # This variable tells the frontend where to find the backend API
-        VITE_API_BASE_URL: http://localhost:8080
-
-    # Create report directory if it doesn't exist
-    - name: Ensure report directory exists
-      run: |
-        mkdir -p frontend/playwright-report
-
-    # Upload test results (screenshots, videos) as artifacts
-    - uses: actions/upload-artifact@v4
-      if: always() # Upload even if tests fail
-      with:
-        name: playwright-report
-        path: frontend/playwright-report/
-        retention-days: 30
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30

@@ -26,6 +26,7 @@ export const useEmpleados = () => {
       // Cuando la mutación es exitosa, invalida la query de empleados.
       // Esto hace que React Query vuelva a obtener los datos actualizados automáticamente.
       queryClient.invalidateQueries({ queryKey: [EMPLEADOS_QUERY_KEY] });
+      queryClient.refetchQueries({ queryKey: [EMPLEADOS_QUERY_KEY] });
     },
   });
 
@@ -35,6 +36,7 @@ export const useEmpleados = () => {
       empleadoService.actualizarEmpleado(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [EMPLEADOS_QUERY_KEY] });
+      queryClient.refetchQueries({ queryKey: [EMPLEADOS_QUERY_KEY] });
     },
   });
 
