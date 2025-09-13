@@ -7,11 +7,13 @@ import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { EmpleadosPage } from '../pages/EmpleadosPage';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
+import { ErrorBoundary } from '../shared/components/ErrorBoundary';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <ErrorBoundary />,
     children: [
       // --- Rutas Públicas ---
       {
@@ -53,4 +55,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-

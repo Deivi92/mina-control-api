@@ -1,11 +1,9 @@
 import axios from 'axios';
 import type { LoginRequest, LoginResponse, LogoutRequest, RegistroUsuarioRequest, Usuario, RecuperarContrasenaRequest, CambiarContrasenaRequest } from '../types';
 
-const API_URL = '/api/auth'; // Base URL para los endpoints de autenticación
-
 export const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
   try {
-    const response = await axios.post<LoginResponse>(`${API_URL}/login`, credentials);
+    const response = await axios.post<LoginResponse>('/api/auth/login', credentials);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -20,7 +18,7 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
 
 export const register = async (userData: RegistroUsuarioRequest): Promise<Usuario> => {
   try {
-    const response = await axios.post<Usuario>(`${API_URL}/register`, userData);
+    const response = await axios.post<Usuario>('/api/auth/register', userData);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -35,7 +33,7 @@ export const register = async (userData: RegistroUsuarioRequest): Promise<Usuari
 
 export const logout = async (payload: LogoutRequest): Promise<void> => {
   try {
-    await axios.post(`${API_URL}/logout`, payload);
+    await axios.post('/api/auth/logout', payload);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw new Error(error.response?.data?.message || 'Error al cerrar sesión');
@@ -46,7 +44,7 @@ export const logout = async (payload: LogoutRequest): Promise<void> => {
 
 export const forgotPassword = async (payload: RecuperarContrasenaRequest): Promise<void> => {
   try {
-    await axios.post(`${API_URL}/forgot-password`, payload);
+    await axios.post('/api/auth/forgot-password', payload);
   } catch (error) {
     // No lanzamos un error específico para no revelar si un email existe o no
     // La UI mostrará un mensaje genérico. El error real se puede loguear.
@@ -57,7 +55,7 @@ export const forgotPassword = async (payload: RecuperarContrasenaRequest): Promi
 
 export const resetPassword = async (payload: CambiarContrasenaRequest): Promise<void> => {
   try {
-    await axios.post(`${API_URL}/reset-password`, payload);
+    await axios.post('/api/auth/reset-password', payload);
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 400) {
       throw new Error('El enlace de recuperación es inválido o ha expirado.');
