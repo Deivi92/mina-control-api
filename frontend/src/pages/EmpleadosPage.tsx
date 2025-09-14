@@ -7,7 +7,9 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  Alert,
 } from '@mui/material';
+import { AxiosError } from 'axios';
 import { useEmpleados } from '../domains/empleado/hooks/useEmpleados';
 import { EmpleadoTable } from '../domains/empleado/components/EmpleadoTable';
 import { EmpleadoForm } from '../domains/empleado/components/EmpleadoForm';
@@ -24,6 +26,7 @@ export const EmpleadosPage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [selectedEmpleado, setSelectedEmpleado] = useState<Empleado | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Obtenemos las queries y mutaciones de nuestro hook centralizado
   const {
@@ -33,15 +36,17 @@ export const EmpleadosPage: React.FC = () => {
     eliminarEmpleadoMutation,
   } = useEmpleados();
 
-  // --- Handlers para las acciones de la UI ---
+  // --- Handlers para las acciones de la UI -- -
 
   const handleCreate = () => {
     setSelectedEmpleado(null); // Nos aseguramos de que no haya datos de un empleado anterior
+    setError(null);
     setIsFormOpen(true);
   };
 
   const handleEdit = (empleado: Empleado) => {
     setSelectedEmpleado(empleado);
+    setError(null);
     setIsFormOpen(true);
   };
 
@@ -54,24 +59,40 @@ export const EmpleadosPage: React.FC = () => {
     setIsFormOpen(false);
     setIsDeleteConfirmOpen(false);
     setSelectedEmpleado(null); // Limpiar selección al cerrar cualquier modal
+    setError(null);
   };
 
   const handleFormSubmit = (data: EmpleadoRequest) => {
+    setError(null); // Limpiar error previo
+
+    const options = {
+      onSuccess: () => {
+        handleCloseModals();
+      },
+      onError: (err: unknown) => {
+        if (err instanceof AxiosError && err.response?.data?.message) {
+          setError(err.response.data.message);
+        } else {
+          setError('Ocurrió un error inesperado. Por favor, inténtalo de nuevo.');
+        }
+      },
+    };
+
     if (selectedEmpleado) {
       // Si hay un empleado seleccionado, actualizamos
-      actualizarEmpleadoMutation.mutate({ id: selectedEmpleado.id, data });
+      actualizarEmpleadoMutation.mutate({ id: selectedEmpleado.id, data }, options);
     } else {
       // Si no, creamos uno nuevo
-      crearEmpleadoMutation.mutate(data);
+      crearEmpleadoMutation.mutate(data, options);
     }
-    handleCloseModals();
   };
 
   const handleDeleteConfirm = () => {
     if (selectedEmpleado) {
-      eliminarEmpleadoMutation.mutate(selectedEmpleado.id);
+      eliminarEmpleadoMutation.mutate(selectedEmpleado.id, {
+        onSuccess: () => handleCloseModals(),
+      });
     }
-    handleCloseModals();
   };
 
   return (
@@ -97,6 +118,11 @@ export const EmpleadosPage: React.FC = () => {
       <Dialog open={isFormOpen} onClose={handleCloseModals} maxWidth="sm" fullWidth>
         <DialogTitle>{selectedEmpleado ? 'Editar Empleado' : 'Crear Nuevo Empleado'}</DialogTitle>
         <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <EmpleadoForm
             initialData={selectedEmpleado}
             onSubmit={handleFormSubmit}
