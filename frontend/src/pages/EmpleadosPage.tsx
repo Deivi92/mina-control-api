@@ -67,7 +67,11 @@ export const EmpleadosPage: React.FC = () => {
 
     const options = {
       onSuccess: () => {
-        handleCloseModals();
+        // Pequeño retraso para dar tiempo a React a procesar la actualización de la tabla
+        // antes de desmontar el modal, evitando race conditions de renderizado.
+        setTimeout(() => {
+          handleCloseModals();
+        }, 100); // 100ms es un retraso seguro e imperceptible
       },
       onError: (err: unknown) => {
         if (err instanceof AxiosError && err.response?.data?.message) {
