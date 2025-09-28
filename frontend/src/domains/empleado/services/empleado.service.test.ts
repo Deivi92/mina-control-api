@@ -23,7 +23,7 @@ describe('EmpleadoService', () => {
       const result = await empleadoService.obtenerEmpleados();
 
       // Assert: Verificamos que todo ocurrió como esperábamos
-      expect(mockedAxios.get).toHaveBeenCalledWith('/api/empleados');
+      expect(mockedAxios.get).toHaveBeenCalledWith('/api/v1/empleados');
       expect(result).toEqual(mockData);
     });
   });
@@ -36,7 +36,7 @@ describe('EmpleadoService', () => {
 
       const result = await empleadoService.obtenerEmpleadoPorId(empleadoId);
 
-      expect(mockedAxios.get).toHaveBeenCalledWith(`/api/empleados/${empleadoId}`);
+      expect(mockedAxios.get).toHaveBeenCalledWith(`/api/v1/empleados/${empleadoId}`);
       expect(result).toEqual(mockData);
     });
   });
@@ -49,7 +49,7 @@ describe('EmpleadoService', () => {
 
       await empleadoService.crearEmpleado(newEmpleado);
 
-      expect(mockedAxios.post).toHaveBeenCalledWith('/api/empleados', newEmpleado);
+      expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/empleados', newEmpleado);
     });
   });
 
@@ -61,7 +61,7 @@ describe('EmpleadoService', () => {
 
       await empleadoService.actualizarEmpleado(empleadoId, updatedEmpleado);
 
-      expect(mockedAxios.put).toHaveBeenCalledWith(`/api/empleados/${empleadoId}`, updatedEmpleado);
+      expect(mockedAxios.put).toHaveBeenCalledWith(`/api/v1/empleados/${empleadoId}`, updatedEmpleado);
     });
   });
 
@@ -72,7 +72,7 @@ describe('EmpleadoService', () => {
 
       await empleadoService.eliminarEmpleado(empleadoId);
 
-      expect(mockedAxios.delete).toHaveBeenCalledWith(`/api/empleados/${empleadoId}`);
+      expect(mockedAxios.delete).toHaveBeenCalledWith(`/api/v1/empleados/${empleadoId}`);
     });
   });
 });

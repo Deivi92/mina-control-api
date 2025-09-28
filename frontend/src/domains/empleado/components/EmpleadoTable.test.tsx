@@ -5,8 +5,8 @@ import { Empleado } from '../types';
 
 // Mock de los datos de empleados para las pruebas
 const mockEmpleados: Empleado[] = [
-  { id: 1, nombre: 'Juan', apellido: 'Pérez', email: 'juan@test.com', puesto: 'Minero', salario: 50000, estado: 'ACTIVO', fechaContratacion: '2023-01-15', fechaNacimiento: '1990-05-20' },
-  { id: 2, nombre: 'Ana', apellido: 'García', email: 'ana@test.com', puesto: 'Geóloga', salario: 60000, estado: 'INACTIVO', fechaContratacion: '2022-11-10', fechaNacimiento: '1988-12-01' },
+  { id: 1, nombres: 'Juan', apellidos: 'Pérez', email: 'juan@test.com', cargo: 'Minero', salarioBase: 50000, estado: 'ACTIVO', fechaContratacion: '2023-01-15', numeroIdentificacion: '111' },
+  { id: 2, nombres: 'Ana', apellidos: 'García', email: 'ana@test.com', cargo: 'Geóloga', salarioBase: 60000, estado: 'INACTIVO', fechaContratacion: '2022-11-10', numeroIdentificacion: '222' },
 ];
 
 describe('EmpleadoTable', () => {

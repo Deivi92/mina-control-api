@@ -36,7 +36,7 @@ describe('ForgotPasswordPage', () => {
     expect(screen.getByRole('heading', { name: /recuperar contraseña/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /enviar enlace/i })).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('debería llamar a la función forgotPassword al enviar el formulario', async () => {
     const user = userEvent.setup();

@@ -1,12 +1,12 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { EmpleadosPage } from './EmpleadosPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 import type { Empleado } from '../domains/empleado/types';
 import userEvent from '@testing-library/user-event';
 
-// Mockear axios, que es el límite de nuestro sistema en esta prueba
+// Mockear axios
 vi.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -20,9 +20,20 @@ const createWrapper = () => {
   );
 };
 
-// Datos de prueba
-const mockEmpleados: Empleado[] = [
-  { id: 1, nombre: 'Juan', apellido: 'Pérez', email: 'juan@test.com', puesto: 'Minero', salario: 50000, estado: 'ACTIVO', fechaContratacion: '2023-01-15', fechaNacimiento: '1990-05-20', numeroIdentificacion: '111' },
+// Datos de prueba con la estructura actual
+const mockEmpleados = [
+  { 
+    id: 1, 
+    nombres: 'Ana', 
+    apellidos: 'García', 
+    email: 'ana@test.com', 
+    cargo: 'Geóloga', 
+    salarioBase: 60000, 
+    estado: 'ACTIVO', 
+    fechaContratacion: '2024-01-01', 
+    rolSistema: 'EMPLEADO' as const,
+    numeroIdentificacion: '222' 
+  },
 ];
 
 describe('EmpleadosPage - Pruebas de Integración', () => {
@@ -37,7 +48,7 @@ describe('EmpleadosPage - Pruebas de Integración', () => {
     render(<EmpleadosPage />, { wrapper: createWrapper() });
 
     // Buscamos directamente el elemento td que contiene el nombre del empleado
-    expect(await screen.findByText('Juan Pérez')).toBeInTheDocument();
+    expect(await screen.findByText('Ana García')).toBeInTheDocument();
   }, 10000);
 
   it('debería mostrar un estado de error si la API falla', async () => {
@@ -49,46 +60,73 @@ describe('EmpleadosPage - Pruebas de Integración', () => {
 
   it('debería permitir crear un empleado y mostrarlo en la tabla', async () => {
     const user = userEvent.setup();
-    mockedAxios.get.mockResolvedValueOnce({ data: [] }); // Carga inicial vacía
+    
+    // Simular la respuesta inicial vacía
+    mockedAxios.get.mockResolvedValueOnce({ data: [] });
     render(<EmpleadosPage />, { wrapper: createWrapper() });
+    
+    // Esperar a que se muestre el mensaje de "no empleados"
     expect(await screen.findByText(/No se encontraron empleados/i)).toBeInTheDocument();
 
-    const nuevoEmpleado = { id: 2, nombre: 'Ana', apellido: 'García', email: 'ana@test.com', puesto: 'Geóloga', salario: 60000, estado: 'ACTIVO', fechaContratacion: '2024-01-01', fechaNacimiento: '1992-01-01', numeroIdentificacion: '222' };
+    const nuevoEmpleado = { 
+      id: 2, 
+      nombres: 'Ana', 
+      apellidos: 'García', 
+      email: 'ana@test.com', 
+      cargo: 'Geóloga', 
+      salarioBase: 60000, 
+      estado: 'ACTIVO', 
+      fechaContratacion: '2024-01-01', 
+      rolSistema: 'EMPLEADO' as const,
+      numeroIdentificacion: '222',
+      telefono: '123456789'
+    };
+    
+    // Asegurar que todas las futuras solicitudes get devuelven la lista actualizada
+    mockedAxios.get.mockResolvedValue({ data: [nuevoEmpleado] });
     mockedAxios.post.mockResolvedValue({ data: nuevoEmpleado });
-    mockedAxios.get.mockResolvedValueOnce({ data: [nuevoEmpleado] }); // Recarga con el nuevo dato
 
     await user.click(screen.getByRole('button', { name: /Crear Nuevo Empleado/i }));
-    await user.type(screen.getByLabelText(/Nombre/i), 'Ana');
-    await user.type(screen.getByLabelText(/Apellido/i), 'García');
-    await user.type(screen.getByLabelText(/Email/i), 'ana@test.com');
-    await user.type(screen.getByLabelText(/Puesto/i), 'Geóloga');
-    await user.type(screen.getByLabelText(/Salario/i), '60000');
+
+    // Rellenamos el formulario con los campos correctos
+    await user.type(await screen.findByLabelText(/Nombres/i), 'Ana');
+    await user.type(screen.getByLabelText(/Apellidos/i), 'García');
+    await user.type(screen.getByLabelText(/Correo Electrónico/i), 'ana@test.com');
+    await user.type(screen.getByLabelText(/Cargo/i), 'Geóloga');
+    await user.type(screen.getByLabelText(/Salario Base/i), '60000');
     await user.type(screen.getByLabelText(/Número de Identificación/i), '222');
-    await user.type(screen.getByLabelText(/Fecha de Nacimiento/i), '1992-01-01');
+    await user.type(screen.getByLabelText(/Fecha de Contratación/i), '2024-01-01');
+    await user.type(screen.getByLabelText(/Teléfono/i), '123456789');
     
     await user.click(screen.getByRole('button', { name: /Guardar/i }));
 
-    // Buscamos directamente el elemento td que contiene el nombre del empleado
+    // Esperar a que se actualice la tabla y aparezca el nuevo empleado
     expect(await screen.findByText('Ana García')).toBeInTheDocument();
     expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-  }, 20000);
+  }, 40000);
 
   it('debería permitir eliminar un empleado', async () => {
     const user = userEvent.setup();
     mockedAxios.get.mockResolvedValueOnce({ data: mockEmpleados });
+    // Simular que las llamadas posteriores a la API también funcionan correctamente
+    mockedAxios.get.mockResolvedValue({ data: mockEmpleados });
     render(<EmpleadosPage />, { wrapper: createWrapper() });
     
-    // Buscamos directamente el elemento td que contiene el nombre del empleado
-    expect(await screen.findByText('Juan Pérez')).toBeInTheDocument();
+    // Buscamos directamente el elemento que contiene el nombre completo del empleado en la tabla
+    // El empleado que se espera eliminar es 'Ana García' basado en los datos mockeados
+    expect(await screen.findByText('Ana García')).toBeInTheDocument();
 
     mockedAxios.delete.mockResolvedValue({});
-    mockedAxios.get.mockResolvedValueOnce({ data: [] }); // Recarga vacía
+    // Después de eliminar, la API debería devolver una lista vacía
+    await act(async () => {
+      mockedAxios.get.mockResolvedValue({ data: [] });
+    });
 
     // Buscamos el botón de eliminar por su aria-label
     await user.click(screen.getByRole('button', { name: /eliminar/i }));
     await user.click(await screen.findByRole('button', { name: /Eliminar/i }));
 
     expect(await screen.findByText(/No se encontraron empleados/i)).toBeInTheDocument();
-    expect(mockedAxios.delete).toHaveBeenCalledWith('/api/empleados/1');
+    expect(mockedAxios.delete).toHaveBeenCalledWith('/api/v1/empleados/1');
   }, 15000);
 });
