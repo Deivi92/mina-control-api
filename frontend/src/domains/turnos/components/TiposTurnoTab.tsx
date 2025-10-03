@@ -4,7 +4,7 @@ import { Box, Button, Typography, Alert } from '@mui/material';
 import { useTiposTurno } from '../hooks/useTiposTurno';
 import { TiposTurnoTable } from './TiposTurnoTable';
 import { TipoTurnoForm } from './TipoTurnoForm';
-import { TipoTurno, TipoTurnoRequest } from '../types';
+import type { TipoTurno, TipoTurnoRequest } from '../types';
 
 export const TiposTurnoTab = () => {
   const { 

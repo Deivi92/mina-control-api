@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { AsignacionTurnoRequest, TipoTurnoRequest } from '../types';
+import type { AsignacionTurnoRequest, TipoTurnoRequest } from '../types';
 
 const API_URL = '/api/v1/turnos';
 

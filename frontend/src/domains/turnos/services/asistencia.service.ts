@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { RegistrarAsistenciaRequest, ExcepcionAsistenciaRequest } from '../types';
+import type { RegistrarAsistenciaRequest, ExcepcionAsistenciaRequest } from '../types';
 
 const API_URL = '/api/v1/asistencia';
 

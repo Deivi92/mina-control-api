@@ -3,12 +3,11 @@ import { useState, useMemo } from 'react';
 import { Box, Button, Typography, Alert, TextField } from '@mui/material';
 import { useAsistencia } from '../hooks/useAsistencia';
 import { useEmpleados } from '../../empleado/hooks/useEmpleados';
-import { useTiposTurno } from './useTiposTurno';
+import { useTiposTurno } from '../hooks/useTiposTurno';
 import { AsignacionTurnoForm } from './AsignacionTurnoForm';
 import { AsignacionesDia } from './AsignacionesDia';
 import { RegistrarAsistenciaForm } from './RegistrarAsistenciaForm';
-import { AsignacionTurnoRequest, RegistroAsistencia } from '../types';
-import { Empleado } from '../../empleado/types';
+import type { AsignacionTurnoRequest } from '../types';
 
 export const AsistenciaTab = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -23,7 +22,6 @@ export const AsistenciaTab = () => {
   const { tiposTurnoQuery } = useTiposTurno();
 
   const asignacionesProcesadas = useMemo(() => {
-    const asignacionesMap = new Map();
     if (asistenciaQuery.data && empleadosQuery.data) {
       // Lógica para cruzar datos de asistencia y empleados si es necesario
       // Esto es una simplificación. La API de asistencia ya debería devolver lo necesario.

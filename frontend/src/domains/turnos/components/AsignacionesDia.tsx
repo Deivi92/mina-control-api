@@ -1,7 +1,8 @@
 
 import { Box, Typography, Paper, Grid, Chip, CircularProgress } from '@mui/material';
-import { RegistroAsistencia, EstadoAsistencia } from '../types';
-import { Empleado } from '../../empleado/types';
+import { EstadoAsistencia } from '../types';
+import type { RegistroAsistencia } from '../types';
+import type { Empleado } from '../../empleado/types';
 
 interface AsignacionProcesada {
   empleado: Empleado;
@@ -42,7 +43,7 @@ export const AsignacionesDia = ({ asignaciones, isLoading }: Props) => {
       {Array.from(asignaciones.values()).map(({ empleado, asistencia }) => (
         <Grid item xs={12} sm={6} md={4} key={empleado.id}>
           <Paper elevation={2} sx={{ p: 2 }}>
-            <Typography variant="h6">{`${empleado.nombre} ${empleado.apellido}`}</Typography>
+            <Typography variant="h6">{`${empleado.nombres} ${empleado.apellidos}`}</Typography>
             <Chip label={asistencia.estado} color={getEstadoChipColor(asistencia.estado)} size="small" />
             <Box sx={{ mt: 1 }}>
               <Typography variant="body2">Entrada: {asistencia.horaEntrada ? new Date(asistencia.horaEntrada).toLocaleTimeString() : '--:--'}</Typography>

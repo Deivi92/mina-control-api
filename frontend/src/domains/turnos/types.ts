@@ -59,22 +59,26 @@ export interface AsignacionTurnoRequest {
  * Enum para el tipo de registro de asistencia.
  * Corresponde al TipoRegistro del backend.
  */
-export enum TipoRegistro {
-  ENTRADA = 'ENTRADA',
-  SALIDA = 'SALIDA',
-}
+export const TipoRegistro = {
+  ENTRADA: 'ENTRADA',
+  SALIDA: 'SALIDA',
+} as const;
+
+export type TipoRegistro = typeof TipoRegistro[keyof typeof TipoRegistro];
 
 /**
  * Enum para el estado de la asistencia.
  * Corresponde al EstadoAsistencia del backend.
  */
-export enum EstadoAsistencia {
-  PENDIENTE = 'PENDIENTE',
-  ASISTIO = 'ASISTIO',
-  FALTA = 'FALTA',
-  RETRASO = 'RETRASO',
-  PERMISO = 'PERMISO',
-}
+export const EstadoAsistencia = {
+  PENDIENTE: 'PENDIENTE',
+  ASISTIO: 'ASISTIO',
+  FALTA: 'FALTA',
+  RETRASO: 'RETRASO',
+  PERMISO: 'PERMISO',
+} as const;
+
+export type EstadoAsistencia = typeof EstadoAsistencia[keyof typeof EstadoAsistencia];
 
 /**
  * Representa un registro de asistencia de un empleado.

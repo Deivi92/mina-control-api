@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { asistenciaService } from '../services/asistencia.service';
 import { turnoService } from '../services/turno.service';
-import { AsignacionTurnoRequest, ExcepcionAsistenciaRequest, RegistrarAsistenciaRequest } from '../types';
+import type { AsignacionTurnoRequest, ExcepcionAsistenciaRequest, RegistrarAsistenciaRequest } from '../types';
 
 const QUERY_KEY = 'asistencia';
 

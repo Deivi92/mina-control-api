@@ -1,8 +1,9 @@
 
 import { useState } from 'react';
 import { Box, Button, Autocomplete, TextField, Paper, Typography } from '@mui/material';
-import { Empleado } from '../../empleado/types';
-import { RegistrarAsistenciaRequest, TipoRegistro } from '../types';
+import type { Empleado } from '../../empleado/types';
+import type { RegistrarAsistenciaRequest } from '../types';
+import { TipoRegistro } from '../types';
 
 interface Props {
   empleados: Empleado[];
@@ -24,7 +25,7 @@ export const RegistrarAsistenciaForm = ({ empleados, onRegister, isSubmitting }:
         <Typography variant="h6" sx={{ mb: 2 }}>Registro Rápido de Asistencia</Typography>
         <Autocomplete
             options={empleados}
-            getOptionLabel={(option) => `${option.nombre} ${option.apellido}`}
+            getOptionLabel={(option) => `${option.nombres} ${option.apellidos}`}
             value={selectedEmpleado}
             onChange={(_, newValue) => setSelectedEmpleado(newValue)}
             renderInput={(params) => <TextField {...params} label="Seleccionar Empleado" />}

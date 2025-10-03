@@ -4,8 +4,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, Autocomplete } from '@mui/material';
-import { AsignacionTurnoRequest, TipoTurno } from '../types';
-import { Empleado } from '../../empleado/types';
+import type { AsignacionTurnoRequest, TipoTurno } from '../types';
+import type { Empleado } from '../../empleado/types';
 
 const validationSchema = z.object({
   empleadoId: z.number().min(1, 'Debes seleccionar un empleado'),
@@ -47,7 +47,7 @@ export const AsignacionTurnoForm = ({ open, onClose, onSubmit, empleados, tiposT
                 render={({ field }) => (
                   <Autocomplete
                     options={empleados}
-                    getOptionLabel={(option) => `${option.nombre} ${option.apellido}`}
+                    getOptionLabel={(option) => `${option.nombres} ${option.apellidos}`}
                     onChange={(_, newValue) => field.onChange(newValue?.id || null)}
                     renderInput={(params) => (
                       <TextField

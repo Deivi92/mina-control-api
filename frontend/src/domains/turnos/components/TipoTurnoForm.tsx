@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid } from '@mui/material';
-import { TipoTurnoRequest } from '../types';
+import type { TipoTurnoRequest } from '../types';
 
 // Esquema de validación con Zod
 const validationSchema = z.object({

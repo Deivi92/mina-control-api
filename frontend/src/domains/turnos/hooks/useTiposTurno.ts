@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { turnoService } from '../services/turno.service';
-import { TipoTurnoRequest } from '../types';
+import type { TipoTurnoRequest } from '../types';
 
 const QUERY_KEY = ['tiposTurno'];
 

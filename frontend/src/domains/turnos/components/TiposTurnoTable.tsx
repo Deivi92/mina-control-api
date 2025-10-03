@@ -1,9 +1,10 @@
 
-import { Box, IconButton, Tooltip, Chip } from '@mui/material';
-import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { Box, Tooltip, Chip } from '@mui/material';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { TipoTurno } from '../types';
+import type { TipoTurno } from '../types';
 
 interface Props {
   turnos: TipoTurno[];
