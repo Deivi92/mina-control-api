@@ -11,11 +11,11 @@ const mockEmpleado: Empleado = {
   email: 'juan@test.com',
   telefono: '123456789',
   cargo: 'Minero',
-  fechaContratacion: '2023-01-15',
+  fechaContratacion: '2023-01-15T00:00:00',
   salarioBase: 50000,
   rolSistema: 'EMPLEADO',
   estado: 'ACTIVO',
-  numeroIdentificacion: '12345'
+  numeroIdentificacion: 12345
 };
 
 describe('EmpleadoForm', () => {
@@ -46,11 +46,13 @@ describe('EmpleadoForm', () => {
     expect(screen.getByLabelText(/Teléfono/i)).toHaveValue('123456789');
   }, 10000);
 
-  it('debería actualizar el valor de un campo cuando el usuario escribe en él', () => {
+  it('debería actualizar el valor de un campo cuando el usuario escribe en él', async () => {
     render(<EmpleadoForm onSubmit={onSubmitMock} onCancel={onCancelMock} />);
     
     const nombreInput = screen.getByLabelText(/Nombres/i);
-    fireEvent.change(nombreInput, { target: { value: 'Carlos' } });
+    await act(async () => {
+      fireEvent.change(nombreInput, { target: { value: 'Carlos' } });
+    });
     
     expect(nombreInput).toHaveValue('Carlos');
   }, 10000);
@@ -60,34 +62,51 @@ describe('EmpleadoForm', () => {
     
     // Simular que el usuario rellena el formulario
     const nombresInput = await screen.findByLabelText(/Nombres/i);
-    fireEvent.change(nombresInput, { target: { value: 'Nuevo' } });
+    await act(async () => {
+      fireEvent.change(nombresInput, { target: { value: 'Nuevo' } });
+    });
     
-    fireEvent.change(screen.getByLabelText(/Apellidos/i), { target: { value: 'Empleado' } });
-    fireEvent.change(screen.getByLabelText(/Correo Electrónico/i), { target: { value: 'test@test.com' } });
-    fireEvent.change(screen.getByLabelText(/Cargo/i), { target: { value: 'Tester' } });
-    fireEvent.change(screen.getByLabelText(/Salario Base/i), { target: { value: '1000' } });
-    fireEvent.change(screen.getByLabelText(/Número de Identificación/i), { target: { value: '12345678' } }); // Asegurar que tiene al menos 7 dígitos
-    fireEvent.change(screen.getByLabelText(/Fecha de Contratación/i), { target: { value: '2024-01-01' } });
-    fireEvent.change(screen.getByLabelText(/Teléfono/i), { target: { value: '123456789' } }); // Asegurar que tiene al menos 7 dígitos
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Apellidos/i), { target: { value: 'Empleado' } });
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Correo Electrónico/i), { target: { value: 'test@test.com' } });
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Cargo/i), { target: { value: 'Tester' } });
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Salario Base/i), { target: { value: '1000' } });
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Número de Identificación/i), { target: { value: '12345678' } });
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Fecha de Contratación/i), { target: { value: '2024-01-01' } });
+    });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText(/Teléfono/i), { target: { value: '123456789' } });
+    });
     
-    // Cambiar el rol usando el select - Forma correcta para interactuar con Select de Material UI
+    // Seleccionar el rol
     const rolSelect = screen.getByLabelText(/Rol en el Sistema/i);
     await act(async () => {
       fireEvent.mouseDown(rolSelect);
     });
     
-    // Seleccionar la opción EMPLEADO - usar un selector más específico para evitar ambigüedad
     const empleadoOption = screen.getByRole('option', { name: /Empleado/i });
     await act(async () => {
       fireEvent.click(empleadoOption);
     });
     
-    // Esperar a que el formulario sea válido y el botón esté habilitado
+    // Esperar a que el botón esté habilitado (esperando validación)
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Guardar/i })).not.toBeDisabled();
     });
     
-    fireEvent.click(screen.getByRole('button', { name: /Guardar/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Guardar/i }));
+    });
     
     // Verificar que onSubmit fue llamado
     await waitFor(() => {
@@ -101,7 +120,7 @@ describe('EmpleadoForm', () => {
       email: 'test@test.com',
       cargo: 'Tester',
       salarioBase: 1000,
-      numeroIdentificacion: 12345678, // Formik convierte a número cuando type="number"
+      numeroIdentificacion: '12345678', // El backend espera string
       fechaContratacion: '2024-01-01',
       telefono: '123456789',
       rolSistema: 'EMPLEADO'

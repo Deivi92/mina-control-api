@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useRegistration } from '../auth/hooks/useRegistration';
-import { Container, Card, CardContent, Typography, TextField, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { Container, Card, CardContent, Typography, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { TextField } from '@mui/material';
+import { registerSchema, type RegisterFormData } from '../auth/validation/register.schema';
 import { theme } from '../app/styles/theme';
 
 export const RegisterPage = () => {
   const { registerUser, isLoading, isSuccess, error } = useRegistration();
-  // Estado simplificado para coincidir con la API
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  
+  const { control, handleSubmit, formState: { errors, isValid } } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    }
+  });
 
   console.log('REGISTRATION_DEBUG: Estado del componente:', { isLoading, isSuccess, error });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = (data: RegisterFormData) => {
     // Enviamos solo los datos que la API espera
-    registerUser({ email, password });
+    registerUser(data);
   };
 
   return (
@@ -28,34 +36,48 @@ export const RegisterPage = () => {
             </Typography>
           </Box>
 
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
             {error && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {error.message}
               </Alert>
             )}
-            <TextField
+            <Controller
               name="email"
-              type="email"
-              label="Correo Electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              fullWidth
-              required
-              autoFocus
-              sx={{ mb: 2 }}
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  name="email"
+                  type="email"
+                  label="Correo Electrónico"
+                  fullWidth
+                  required
+                  autoFocus
+                  sx={{ mb: 2 }}
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                />
+              )}
             />
-            <TextField
+            <Controller
               name="password"
-              type="password"
-              label="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              fullWidth
-              required
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  name="password"
+                  type="password"
+                  label="Contraseña"
+                  fullWidth
+                  required
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
+                />
+              )}
             />
             <Box sx={{ position: 'relative', mt: 3 }}>
-              <Button type="submit" fullWidth variant="contained" color="primary" disabled={isLoading || !email || !password}>
+              <Button type="submit" fullWidth variant="contained" color="primary" disabled={isLoading || !isValid}>
                 Registrarse
               </Button>
               {isLoading && (

@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useForgotPassword } from '../auth/hooks/useForgotPassword';
-import { Container, Card, CardContent, Typography, TextField, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { Container, Card, CardContent, Typography, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { TextField } from '@mui/material';
+import { forgotPasswordSchema, type ForgotPasswordFormData } from '../auth/validation/forgotPassword.schema';
 
 export const ForgotPasswordPage = () => {
   const { forgotPassword, isLoading, isSuccess, error } = useForgotPassword();
-  const [email, setEmail] = useState('');
+  
+  const { control, handleSubmit, formState: { errors, isValid } } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+    }
+  });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    forgotPassword({ email });
+  const onSubmit = (data: ForgotPasswordFormData) => {
+    forgotPassword(data);
   };
 
   return (
@@ -27,7 +36,7 @@ export const ForgotPasswordPage = () => {
               Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña en breve.
             </Alert>
           ) : (
-            <form onSubmit={handleSubmit} noValidate>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
                 Ingresa tu correo electrónico y te enviaremos un enlace para recuperar tu cuenta.
               </Typography>
@@ -36,21 +45,28 @@ export const ForgotPasswordPage = () => {
                   {error.message}
                 </Alert>
               )}
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                id="email"
-                label="Correo Electrónico"
+              <Controller
                 name="email"
-                autoComplete="email"
-                autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    variant="outlined"
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="email"
+                    label="Correo Electrónico"
+                    name="email"
+                    autoComplete="email"
+                    autoFocus
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
+                  />
+                )}
               />
               <Box sx={{ position: 'relative', mt: 2 }}>
-                <Button type="submit" fullWidth variant="contained" color="primary" disabled={isLoading || !email}>
+                <Button type="submit" fullWidth variant="contained" color="primary" disabled={isLoading || !isValid}>
                   Enviar Enlace
                 </Button>
                 {isLoading && <CircularProgress size={24} sx={{ position: 'absolute', top: '50%', left: '50%', mt: '-12px', ml: '-12px' }} />}

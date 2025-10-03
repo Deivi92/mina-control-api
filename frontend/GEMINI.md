@@ -55,6 +55,15 @@ Este es un proyecto con un fuerte enfoque en el aprendizaje. Por lo tanto, el as
 - **Pruebas:** Jest + React Testing Library + Playwright.
 - **Calidad de Código:** ESLint + Prettier + Husky.
 
+## Estándar para Formularios
+
+Para garantizar la consistencia y el rendimiento en toda la aplicación, se establece el siguiente estándar obligatorio para la creación y manejo de formularios:
+
+- **Librería de Estado:** **`React Hook Form`** es la única librería autorizada para gestionar el estado y los eventos de los formularios.
+- **Librería de Validación:** **`Zod`** es la librería estándar para definir esquemas y realizar la validación de datos.
+
+**Regla de Oro:** Todo formulario nuevo **debe** implementarse usando `React Hook Form` y `Zod`. Las implementaciones existentes que utilizan `Formik` y/o `Yup` se consideran **obsoletas** y deben ser refactorizadas a este nuevo estándar tan pronto como sea posible o cuando se necesite modificarlas.
+
 ## Arquitectura de Carpetas
 
 La estructura está diseñada para ser un espejo intuitivo de la arquitectura del backend, agrupando los archivos por su responsabilidad arquitectónica.

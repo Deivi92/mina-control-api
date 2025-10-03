@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/hooks/useAuth';
-import { Container, Card, CardContent, Typography, TextField, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { Container, Card, CardContent, Typography, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { TextField } from '@mui/material';
+import { loginSchema, type LoginFormData } from '../auth/validation/login.schema';
 import { theme } from '../app/styles/theme';
 
 export const LoginPage = () => {
   const { login, isLoading, error } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  
+  const { control, handleSubmit, formState: { errors, isValid } } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    }
+  });
   
   const location = useLocation();
   const [successMessage, setSuccessMessage] = useState(location.state?.message);
@@ -31,12 +42,9 @@ export const LoginPage = () => {
   }, [location]);
 
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    login({ email, password });
+  const onSubmit = (data: LoginFormData) => {
+    login(data);
   };
-
-  const isButtonDisabled = !email || !password || isLoading;
 
   return (
     <Container component="main" maxWidth="xs" sx={{ display: 'flex', alignItems: 'center', height: '100vh' }}>
@@ -48,7 +56,7 @@ export const LoginPage = () => {
             </Typography>
           </Box>
           
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
             {error && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {error}
@@ -59,31 +67,45 @@ export const LoginPage = () => {
                 {successMessage}
               </Alert>
             )}
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Correo Electrónico"
+            <Controller
               name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="email"
+                  label="Correo Electrónico"
+                  name="email"
+                  autoComplete="email"
+                  autoFocus
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                />
+              )}
             />
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
+            <Controller
               name="password"
-              label="Contraseña"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  name="password"
+                  label="Contraseña"
+                  type="password"
+                  id="password"
+                  autoComplete="current-password"
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
+                />
+              )}
             />
             <Box sx={{ position: 'relative', mt: 2 }}>
               <Button
@@ -91,7 +113,7 @@ export const LoginPage = () => {
                 fullWidth
                 variant="contained"
                 color="primary"
-                disabled={isButtonDisabled}
+                disabled={isLoading || !isValid}
               >
                 Ingresar
               </Button>

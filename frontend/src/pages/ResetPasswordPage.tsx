@@ -1,23 +1,36 @@
-import React, { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import { useResetPassword } from '../auth/hooks/useResetPassword';
-import { Container, Card, CardContent, Typography, TextField, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { Container, Card, CardContent, Typography, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { TextField } from '@mui/material';
+import { resetPasswordSchema, type ResetPasswordFormData } from '../auth/validation/resetPassword.schema';
 
 export const ResetPasswordPage = () => {
   const { token } = useParams<{ token: string }>();
   const { resetPassword, isLoading, isSuccess, error } = useResetPassword();
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordsMatch, setPasswordsMatch] = useState(true);
+  
+  const { control, handleSubmit, formState: { errors, isValid }, setError } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    mode: 'onSubmit',
+    defaultValues: {
+      newPassword: '',
+      confirmPassword: '',
+    }
+  });
 
-  useEffect(() => {
-    setPasswordsMatch(password === confirmPassword);
-  }, [password, confirmPassword]);
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!token || !passwordsMatch) return;
-    resetPassword({ token, newPassword: password });
+  const onSubmit = (data: ResetPasswordFormData) => {
+    if (data.newPassword !== data.confirmPassword) {
+      setError('confirmPassword', {
+        type: 'manual',
+        message: 'Las contraseñas no coinciden',
+      });
+      return;
+    }
+    
+    if (token) {
+      resetPassword({ token, newPassword: data.newPassword });
+    }
   };
 
   return (
@@ -35,40 +48,58 @@ export const ResetPasswordPage = () => {
               ¡Contraseña actualizada con éxito! Ya puedes iniciar sesión.
             </Alert>
           ) : (
-            <form onSubmit={handleSubmit} noValidate>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
               {error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
                   {error.message}
                 </Alert>
               )}
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label="Nueva Contraseña"
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+              <Controller
+                name="newPassword"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    variant="outlined"
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="password"
+                    label="Nueva Contraseña"
+                    type="password"
+                    id="newPassword"
+                    error={!!errors.newPassword}
+                    helperText={errors.newPassword?.message}
+                  />
+                )}
               />
-              <TextField
-                variant="outlined"
-                margin="normal"
-                required
-                fullWidth
+              <Controller
                 name="confirmPassword"
-                label="Confirmar Nueva Contraseña"
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                error={!passwordsMatch}
-                helperText={!passwordsMatch ? 'Las contraseñas no coinciden' : ''}
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    variant="outlined"
+                    margin="normal"
+                    required
+                    fullWidth
+                    name="confirmPassword"
+                    label="Confirmar Nueva Contraseña"
+                    type="password"
+                    id="confirmPassword"
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword?.message}
+                  />
+                )}
               />
               <Box sx={{ position: 'relative', mt: 2 }}>
-                <Button type="submit" fullWidth variant="contained" color="primary" disabled={isLoading || !password || !passwordsMatch}>
+                <Button 
+                  type="submit" 
+                  fullWidth 
+                  variant="contained" 
+                  color="primary" 
+                  disabled={isLoading || !isValid}
+                >
                   Guardar Contraseña
                 </Button>
                 {isLoading && <CircularProgress size={24} sx={{ position: 'absolute', top: '50%', left: '50%', mt: '-12px', ml: '-12px' }} />}
