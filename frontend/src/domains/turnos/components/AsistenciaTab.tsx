@@ -8,6 +8,7 @@ import { AsignacionTurnoForm } from './AsignacionTurnoForm';
 import { AsignacionesDia } from './AsignacionesDia';
 import { RegistrarAsistenciaForm } from './RegistrarAsistenciaForm';
 import type { AsignacionTurnoRequest } from '../types';
+import type { Empleado } from '../../empleado/types';
 
 export const AsistenciaTab = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -22,12 +23,20 @@ export const AsistenciaTab = () => {
   const { tiposTurnoQuery } = useTiposTurno();
 
   const asignacionesProcesadas = useMemo(() => {
-    if (asistenciaQuery.data && empleadosQuery.data) {
-      // Lógica para cruzar datos de asistencia y empleados si es necesario
-      // Esto es una simplificación. La API de asistencia ya debería devolver lo necesario.
+    const mapa = new Map<number, { empleado: Empleado, asistencia: any }>();
+    if (asistenciaQuery.data) {
+      // Ahora la API devuelve directamente empleadoId en lugar de un objeto anidado
+      for (const registro of asistenciaQuery.data) {
+        if (registro.empleadoId) { 
+          // Buscamos el empleado completo usando el empleadoId
+          const empleado = empleadosQuery.data?.find(e => e.id === registro.empleadoId);
+          if (empleado) {
+            mapa.set(empleado.id, { empleado, asistencia: registro });
+          }
+        }
+      }
     }
-    // La lógica real dependerá de la estructura de datos devuelta por `asistenciaQuery`
-    return new Map(); // Placeholder
+    return mapa;
   }, [asistenciaQuery.data, empleadosQuery.data]);
 
   const handleAsignarSubmit = (data: AsignacionTurnoRequest) => {

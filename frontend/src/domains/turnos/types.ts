@@ -1,4 +1,3 @@
-
 // =================================================================
 // INTERFACES PARA TIPOS DE TURNO
 // =================================================================
@@ -31,14 +30,15 @@ export interface TipoTurnoRequest {
 // =================================================================
 
 /**
- * Representa una asignación de un empleado a un turno en una fecha específica.
+ * Representa una asignación de un empleado a un turno en un rango de fechas.
  * Corresponde al AsignacionTurnoDTO del backend.
  */
 export interface AsignacionTurno {
   id: number;
   empleadoId: number;
   tipoTurnoId: number;
-  fecha: string; // Formato "YYYY-MM-DD"
+  fechaInicio: string; // Formato "YYYY-MM-DD"
+  fechaFin: string; // Formato "YYYY-MM-DD"
 }
 
 /**
@@ -48,7 +48,8 @@ export interface AsignacionTurno {
 export interface AsignacionTurnoRequest {
   empleadoId: number;
   tipoTurnoId: number;
-  fecha: string; // Formato "YYYY-MM-DD"
+  fechaInicio: string; // Formato "YYYY-MM-DD"
+  fechaFin: string; // Formato "YYYY-MM-DD"
 }
 
 // =================================================================
@@ -86,12 +87,13 @@ export type EstadoAsistencia = typeof EstadoAsistencia[keyof typeof EstadoAsiste
  */
 export interface RegistroAsistencia {
   id: number;
-  asignacionTurnoId: number;
-  horaEntrada: string | null; // Formato "YYYY-MM-DDTHH:mm:ss"
-  horaSalida: string | null; // Formato "YYYY-MM-DDTHH:mm:ss"
+  empleadoId: number;
+  fecha: string; // Formato "YYYY-MM-DD"
+  horaEntrada: string | null; // Formato "HH:mm:ss"
+  horaSalida: string | null; // Formato "HH:mm:ss"
   horasTrabajadas: number | null;
   estado: EstadoAsistencia;
-  observaciones: string | null;
+  motivo: string | null;
 }
 
 /**

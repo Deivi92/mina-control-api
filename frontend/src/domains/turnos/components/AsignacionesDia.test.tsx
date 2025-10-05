@@ -6,8 +6,8 @@ import { Empleado } from '../../empleado/types';
 
 // Mock de datos
 const mockEmpleados: Empleado[] = [
-    { id: 1, nombre: 'Carlos', apellido: 'Rojas' },
-    { id: 2, nombre: 'Ana', apellido: 'Gomez' },
+    { id: 1, nombres: 'Carlos', apellidos: 'Rojas' },
+    { id: 2, nombres: 'Ana', apellidos: 'Gomez' },
 ];
 
 const mockAsistencias: RegistroAsistencia[] = [

@@ -1,5 +1,6 @@
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { TipoTurnoForm } from './TipoTurnoForm';
 import { TipoTurnoRequest } from '../types';
 
@@ -43,21 +44,28 @@ describe('TipoTurnoForm', () => {
   });
 
   it('debería llamar a onSubmit con los datos del formulario cuando se hace clic en guardar', async () => {
-    render(<TipoTurnoForm open={true} onClose={mockOnClose} onSubmit={mockOnSubmit} />);
+    const user = userEvent.setup();
+    render(<TipoTurnoForm open={true} onClose={mockOnClose} onSubmit={mockOnSubmit} isSubmitting={false} />);
     
-    await fireEvent.change(screen.getByLabelText(/nombre/i), { target: { value: 'Turno de Noche' } });
-    await fireEvent.change(screen.getByLabelText(/hora de inicio/i), { target: { value: '22:00' } });
-    await fireEvent.change(screen.getByLabelText(/hora de fin/i), { target: { value: '06:00' } });
-    // Suponiendo que el color tiene un valor por defecto o se puede interactuar con él
+    await user.type(screen.getByLabelText(/nombre/i), 'Turno de Noche');
+    await user.type(screen.getByLabelText(/hora de inicio/i), '22:00');
+    await user.type(screen.getByLabelText(/hora de fin/i), '06:00');
+    // El campo de color tiene un valor por defecto, no es necesario cambiarlo para esta prueba
 
-    await fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    await user.click(screen.getByRole('button', { name: /guardar/i }));
 
-    expect(mockOnSubmit).toHaveBeenCalledWith({
-      nombre: 'Turno de Noche',
-      horaInicio: '22:00',
-      horaFin: '06:00',
-      color: expect.any(String), // El color puede ser más complejo de testear dependiendo del componente
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledTimes(1);
     });
+
+    expect(mockOnSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nombre: 'Turno de Noche',
+        horaInicio: '22:00',
+        horaFin: '06:00',
+      }),
+      expect.anything() // RHF pasa el evento como segundo argumento
+    );
   });
 
   it('debería mostrar errores de validación si los campos están vacíos al enviar', async () => {

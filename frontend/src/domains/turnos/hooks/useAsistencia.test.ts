@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAsistencia } from './useAsistencia';
@@ -29,9 +30,9 @@ describe('useAsistencia', () => {
     vi.resetAllMocks();
   });
 
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return React.createElement(QueryClientProvider, { client: queryClient }, children);
+  };
 
   const defaultParams = { fechaInicio: '2024-01-01', fechaFin: '2024-01-31', empleadoId: 1 };
 
@@ -55,7 +56,12 @@ describe('useAsistencia', () => {
 
   describe('mutation: asignarEmpleado', () => {
     it('debería llamar al servicio con los datos correctos e invalidar la query de asistencia', async () => {
-      const asignacion: AsignacionTurnoRequest = { empleadoId: 1, tipoTurnoId: 1, fecha: '2024-01-15' };
+      const asignacion: AsignacionTurnoRequest = { 
+        empleadoId: 1, 
+        tipoTurnoId: 1, 
+        fechaInicio: '2024-01-15',
+        fechaFin: '2024-01-15'
+      };
       mockedTurnoService.asignarEmpleadoATurno.mockResolvedValue({ id: 1, ...asignacion });
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
@@ -65,7 +71,12 @@ describe('useAsistencia', () => {
 
       await waitFor(() => expect(result.current.asignarEmpleadoMutation.isSuccess).toBe(true));
       expect(mockedTurnoService.asignarEmpleadoATurno).toHaveBeenCalledWith(asignacion);
-      expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['asistencia', expect.any(Object)] });
+      // Verificamos que se haya llamado a invalidateQueries con la queryKey 'asistencia'
+      expect(invalidateQueriesSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queryKey: ['asistencia']
+        })
+      );
     });
   });
 
@@ -81,7 +92,12 @@ describe('useAsistencia', () => {
   
         await waitFor(() => expect(result.current.registrarAsistenciaMutation.isSuccess).toBe(true));
         expect(mockedAsistenciaService.registrarAsistencia).toHaveBeenCalledWith(registro);
-        expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['asistencia', expect.any(Object)] });
+        // Verificamos que se haya llamado a invalidateQueries con la queryKey 'asistencia'
+        expect(invalidateQueriesSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['asistencia']
+          })
+        );
       });
   });
 
@@ -89,7 +105,7 @@ describe('useAsistencia', () => {
     it('debería llamar al servicio de excepciones e invalidar la query de asistencia', async () => {
         const excepcion: ExcepcionAsistenciaRequest = { empleadoId: 1, fecha: '2024-01-15', estado: EstadoAsistencia.PERMISO, motivo: '' };
         mockedAsistenciaService.gestionarExcepcionAsistencia.mockResolvedValue({} as any);
-        const invalidateQueriesSpy = vi.spyOn(queryClien, 'invalidateQueries');
+        const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
   
         const { result } = renderHook(() => useAsistencia(defaultParams), { wrapper });
   
@@ -97,7 +113,12 @@ describe('useAsistencia', () => {
   
         await waitFor(() => expect(result.current.gestionarExcepcionMutation.isSuccess).toBe(true));
         expect(mockedAsistenciaService.gestionarExcepcionAsistencia).toHaveBeenCalledWith(excepcion);
-        expect(invalidateQueriesSpy).toHaveBeenCalledWith({ queryKey: ['asistencia', expect.any(Object)] });
+        // Verificamos que se haya llamado a invalidateQueries con la queryKey 'asistencia'
+        expect(invalidateQueriesSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['asistencia']
+          })
+        );
       });
   });
 

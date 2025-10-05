@@ -1,7 +1,8 @@
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { AsignacionTurnoForm } from './AsignacionTurnoForm';
-import { Empleado } from '../../empleado/types'; // Asumiendo que tienes tipos de empleado
+import { Empleado } from '../../empleado/types';
 import { TipoTurno } from '../types';
 
 describe('AsignacionTurnoForm', () => {
@@ -9,7 +10,7 @@ describe('AsignacionTurnoForm', () => {
   const mockOnClose = vi.fn();
 
   const empleados: Empleado[] = [
-    { id: 1, nombre: 'Juan Perez', apellido: '' },
+    { id: 1, nombres: 'Juan', apellidos: 'Perez', numeroIdentificacion: '1', email: 'a@a.com', cargo: 'a', fechaContratacion: 'a', salarioBase: 1, rolSistema: 'EMPLEADO', estado: 'ACTIVO' },
   ];
   const tiposTurno: TipoTurno[] = [
     { id: 1, nombre: 'Turno Diurno', horaInicio: '08:00', horaFin: '16:00', color: '#FFF' },
@@ -27,15 +28,18 @@ describe('AsignacionTurnoForm', () => {
         onSubmit={mockOnSubmit}
         empleados={empleados}
         tiposTurno={tiposTurno}
+        isSubmitting={false}
       />
     );
 
-    expect(screen.getByLabelText(/empleado/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/tipo de turno/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/fecha/i)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /empleado/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /tipo de turno/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/fecha inicio/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/fecha fin/i)).toBeInTheDocument();
   });
 
   it('debería llamar a onSubmit con los datos seleccionados', async () => {
+    const user = userEvent.setup();
     render(
         <AsignacionTurnoForm
           open={true}
@@ -43,34 +47,43 @@ describe('AsignacionTurnoForm', () => {
           onSubmit={mockOnSubmit}
           empleados={empleados}
           tiposTurno={tiposTurno}
+          isSubmitting={false}
         />
       );
 
-    // Simular selección en los autocompletables de MUI es complejo,
-    // aquí se asume una interacción más simple o un mock del componente Select.
-    // Por simplicidad, vamos a simular el estado y el click.
+    // Seleccionar empleado
+    await user.click(screen.getByRole('combobox', { name: /empleado/i }));
+    await user.click(await screen.findByText('Juan Perez'));
 
-    // Esta es una forma simplificada de probar la lógica.
-    // En una implementación real con MUI, se necesitaría interactuar con los popups.
-    const fakeState = {
+    // Seleccionar tipo de turno
+    await user.click(screen.getByRole('combobox', { name: /tipo de turno/i }));
+    await user.click(await screen.findByText('Turno Diurno'));
+
+    // Ingresar fechas
+    const fechaInicioInput = screen.getByLabelText(/fecha inicio/i);
+    await user.clear(fechaInicioInput);
+    await user.type(fechaInicioInput, '2024-05-23');
+    
+    const fechaFinInput = screen.getByLabelText(/fecha fin/i);
+    await user.clear(fechaFinInput);
+    await user.type(fechaFinInput, '2024-05-25');
+
+    // Enviar formulario
+    await user.click(screen.getByRole('button', { name: /asignar/i }));
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    expect(mockOnSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
         empleadoId: 1,
         tipoTurnoId: 1,
-        fecha: '2024-05-23'
-    }
-
-    // Llenar el formulario (la implementación real variará)
-    // fireEvent.change(screen.getByLabelText(/empleado/i), { target: { value: fakeState.empleadoId } });
-    // fireEvent.change(screen.getByLabelText(/tipo de turno/i), { target: { value: fakeState.tipoTurnoId } });
-    fireEvent.change(screen.getByLabelText(/fecha/i), { target: { value: fakeState.fecha } });
-
-    await fireEvent.click(screen.getByRole('button', { name: /asignar/i }));
-
-    // La aserción real dependerá de cómo se maneje el estado interno.
-    // El objetivo es verificar que onSubmit se llama con los datos correctos.
-    // Aquí asumimos que el estado se maneja internamente y onSubmit se llama con él.
-    // La prueba real necesitaría una implementación del componente para ser más precisa.
-    expect(mockOnSubmit).toHaveBeenCalled();
-    // expect(mockOnSubmit).toHaveBeenCalledWith(fakeState);
+        fechaInicio: '2024-05-23',
+        fechaFin: '2024-05-25',
+      }),
+      expect.anything() // handleSubmit de RHF pasa el evento como segundo argumento
+    );
   });
 
   it('debería llamar a onClose al hacer clic en cancelar', async () => {
@@ -81,10 +94,11 @@ describe('AsignacionTurnoForm', () => {
           onSubmit={mockOnSubmit}
           empleados={empleados}
           tiposTurno={tiposTurno}
+          isSubmitting={false}
         />
       );
 
-      await fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
+      await userEvent.click(screen.getByRole('button', { name: /cancelar/i }));
       expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 

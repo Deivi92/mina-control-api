@@ -10,7 +10,8 @@ import type { Empleado } from '../../empleado/types';
 const validationSchema = z.object({
   empleadoId: z.number().min(1, 'Debes seleccionar un empleado'),
   tipoTurnoId: z.number().min(1, 'Debes seleccionar un tipo de turno'),
-  fecha: z.string().min(1, 'La fecha es requerida'),
+  fechaInicio: z.string().min(1, 'La fecha de inicio es requerida'),
+  fechaFin: z.string().min(1, 'La fecha de fin es requerida'),
 });
 
 interface Props {
@@ -25,12 +26,18 @@ interface Props {
 export const AsignacionTurnoForm = ({ open, onClose, onSubmit, empleados, tiposTurno, isSubmitting }: Props) => {
   const { control, handleSubmit, reset, formState: { errors } } = useForm<AsignacionTurnoRequest>({
     resolver: zodResolver(validationSchema),
-    defaultValues: { fecha: new Date().toISOString().split('T')[0] },
+    defaultValues: { 
+      fechaInicio: new Date().toISOString().split('T')[0],
+      fechaFin: new Date().toISOString().split('T')[0],
+    },
   });
 
   useEffect(() => {
     if (open) {
-      reset({ fecha: new Date().toISOString().split('T')[0] });
+      reset({ 
+        fechaInicio: new Date().toISOString().split('T')[0],
+        fechaFin: new Date().toISOString().split('T')[0],
+      });
     }
   }, [open, reset]);
 
@@ -84,20 +91,38 @@ export const AsignacionTurnoForm = ({ open, onClose, onSubmit, empleados, tiposT
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <Controller
-                name="fecha"
+                name="fechaInicio"
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Fecha"
+                    label="Fecha Inicio"
                     type="date"
                     fullWidth
                     required
                     InputLabelProps={{ shrink: true }}
-                    error={!!errors.fecha}
-                    helperText={errors.fecha?.message}
+                    error={!!errors.fechaInicio}
+                    helperText={errors.fechaInicio?.message}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <Controller
+                name="fechaFin"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Fecha Fin"
+                    type="date"
+                    fullWidth
+                    required
+                    InputLabelProps={{ shrink: true }}
+                    error={!!errors.fechaFin}
+                    helperText={errors.fechaFin?.message}
                   />
                 )}
               />

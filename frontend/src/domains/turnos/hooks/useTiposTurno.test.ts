@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useTiposTurno } from './useTiposTurno';
@@ -28,9 +29,9 @@ describe('useTiposTurno', () => {
     vi.resetAllMocks();
   });
 
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return React.createElement(QueryClientProvider, { client: queryClient }, children);
+  };
 
   describe('query: listarTiposDeTurno', () => {
     it('debería obtener los datos y devolverlos correctamente', async () => {

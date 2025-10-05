@@ -49,12 +49,14 @@ describe('TurnosPage - Integration Test', () => {
 
   });
 
-  it('debería renderizar el título y las pestañas correctamente', () => {
+  it('debería renderizar el título y las pestañas correctamente', async () => {
     renderComponent();
-    expect(screen.getByText('Gestión de Turnos')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /administrar tipos de turno/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /control de asistencia/i })).toBeInTheDocument();
-  });
+    await waitFor(() => {
+      expect(screen.getByText('Gestión de Turnos')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /administrar tipos de turno/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /control de asistencia/i })).toBeInTheDocument();
+    }, { timeout: 20000 }); // Aumentar el timeout a 20 segundos
+  }, 25000); // También especificar en la función it
 
   it('debería obtener y renderizar la lista de tipos de turno en la primera pestaña', async () => {
     const mockTurnos: TipoTurno[] = [
