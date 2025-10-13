@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LoginPage } from './LoginPage';
 import { BrowserRouter } from 'react-router-dom';
-import { useAuth } from '../auth/hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 // Mock del hook de autenticación para aislar completamente el componente LoginPage
-vi.mock('../auth/hooks/useAuth');
+vi.mock('../hooks/useAuth');
 
 const renderWithRouter = (ui: React.ReactElement) => {
   return render(<BrowserRouter>{ui}</BrowserRouter>);

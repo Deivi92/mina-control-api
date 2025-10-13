@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ResetPasswordPage } from './ResetPasswordPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { useResetPassword } from '../auth/hooks/useResetPassword';
+import { useResetPassword } from '../hooks/useResetPassword';
 
 // Mock del hook y de react-router-dom
-vi.mock('../auth/hooks/useResetPassword', () => ({
+vi.mock('../hooks/useResetPassword', () => ({
   useResetPassword: vi.fn(),
 }));
 

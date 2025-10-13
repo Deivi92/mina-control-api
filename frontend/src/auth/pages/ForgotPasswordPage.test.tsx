@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ForgotPasswordPage } from './ForgotPasswordPage';
 import { BrowserRouter } from 'react-router-dom';
-import { useForgotPassword } from '../auth/hooks/useForgotPassword';
+import { useForgotPassword } from '../hooks/useForgotPassword';
 
 // Mock del hook
-vi.mock('../auth/hooks/useForgotPassword', () => ({
+vi.mock('../hooks/useForgotPassword', () => ({
   useForgotPassword: vi.fn(),
 }));
 

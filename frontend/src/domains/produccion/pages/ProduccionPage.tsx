@@ -6,13 +6,13 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
-import { RegistroProduccionForm } from '../domains/produccion/components/RegistroProduccionForm';
-import { RegistroProduccionTable } from '../domains/produccion/components/RegistroProduccionTable';
-import { RegistroProduccionFilter } from '../domains/produccion/components/RegistroProduccionFilter';
-import { useProduccion } from '../domains/produccion/hooks/useProduccion';
-import { useEmpleados } from '../domains/empleado/hooks/useEmpleados';
-import { useTiposTurno } from '../domains/turnos/hooks/useTiposTurno';
-import type { RegistroProduccionUpdateDTO, ProduccionFilters } from '../domains/produccion/types';
+import { RegistroProduccionForm } from '../components/RegistroProduccionForm';
+import { RegistroProduccionTable } from '../components/RegistroProduccionTable';
+import { RegistroProduccionFilter } from '../components/RegistroProduccionFilter';
+import { useProduccion } from '../hooks/useProduccion';
+import { useEmpleados } from '../../empleado/hooks/useEmpleados';
+import { useTiposTurno } from '../../turnos/hooks/useTiposTurno';
+import type { RegistroProduccionUpdateDTO, ProduccionFilters } from '../types';
 
 export const ProduccionPage: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);

@@ -1,10 +1,10 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { useForgotPassword } from '../auth/hooks/useForgotPassword';
+import { useForgotPassword } from '../hooks/useForgotPassword';
 import { Container, Card, CardContent, Typography, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextField } from '@mui/material';
-import { forgotPasswordSchema, type ForgotPasswordFormData } from '../auth/validation/forgotPassword.schema';
+import { forgotPasswordSchema, type ForgotPasswordFormData } from '../validation/forgotPassword.schema';
 
 export const ForgotPasswordPage = () => {
   const { forgotPassword, isLoading, isSuccess, error } = useForgotPassword();

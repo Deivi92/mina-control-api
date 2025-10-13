@@ -1,5 +1,5 @@
 import { Container, Typography, Button, Box } from '@mui/material';
-import { useAuth } from '../auth/hooks/useAuth';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 export const DashboardPage = () => {
   const { user, logout } = useAuth();

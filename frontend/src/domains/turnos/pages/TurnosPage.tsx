@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
 import { Box, Tabs, Tab, Paper, Typography } from '@mui/material';
-import { TiposTurnoTab } from '../domains/turnos/components/TiposTurnoTab';
-import { AsistenciaTab } from '../domains/turnos/components/AsistenciaTab';
+import { TiposTurnoTab } from '../components/TiposTurnoTab';
+import { AsistenciaTab } from '../components/AsistenciaTab';
 
 function TabPanel(props: { children?: React.ReactNode; index: number; value: number }) {
   const { children, value, index, ...other } = props;

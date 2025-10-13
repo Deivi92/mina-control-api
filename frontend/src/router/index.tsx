@@ -1,11 +1,11 @@
 import { createBrowserRouter } from 'react-router-dom';
 import App from '../app/App';
-import { LoginPage } from '../pages/LoginPage';
-import { DashboardPage } from '../pages/DashboardPage';
-import { RegisterPage } from '../pages/RegisterPage';
-import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
-import { ResetPasswordPage } from '../pages/ResetPasswordPage';
-import { EmpleadosPage } from '../pages/EmpleadosPage';
+import { LoginPage } from '../auth/pages/LoginPage';
+import { DashboardPage } from '../dashboard/pages/DashboardPage';
+import { RegisterPage } from '../auth/pages/RegisterPage';
+import { ForgotPasswordPage } from '../auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../auth/pages/ResetPasswordPage';
+import { EmpleadosPage } from '../domains/empleado/pages/EmpleadosPage';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { ErrorBoundary } from '../shared/components/ErrorBoundary';
 

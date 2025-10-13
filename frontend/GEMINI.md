@@ -188,6 +188,15 @@ Este es el ciclo de vida completo, paso a paso, para implementar un nuevo domini
   1. Revisar consistencia del diseño, responsive, rendimiento y pulir detalles visuales.
   2. Hacer el `commit` final y considerar el dominio cerrado.
 
+### Regla de Estructura para Dominios Futuros
+* **Intención:** Mantener la consistencia y organización del código a lo largo del proyecto.
+* **Acciones:**
+  1.  **Mantener la estructura de carpetas:** Cada dominio debe seguir la estructura estándar: `components/`, `hooks/`, `services/`, `types.ts`, y opcionalmente archivos de prueba unitaria e integración.
+  2.  **Mantener las rutas de importación consistentes:** Asegurar que las rutas de importación sigan el patrón relativo estándar (`../hooks/useX`, `../services/x.service`, etc.) y evitar rutas absolutas incorrectas.
+  3.  **Mantener la coherencia en tipos y DTOs:** Usar los mismos tipos y modelos entre componentes, hooks y servicios para garantizar la consistencia de datos.
+  4.  **Mantener pruebas unitarias e integración:** Cada dominio debe tener pruebas unitarias para servicios, hooks y componentes individuales, así como pruebas de integración para verificar la interacción entre estos elementos.
+  5.  **Mantener el estándar de formularios:** Todos los formularios deben usar React Hook Form y Zod como se especifica en la sección de estándares.
+
 ## Gestión de Estado Global y Local
 
 ### Estado del Servidor

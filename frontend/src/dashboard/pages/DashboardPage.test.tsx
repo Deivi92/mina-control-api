@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { DashboardPage } from './DashboardPage';
 import { BrowserRouter } from 'react-router-dom';
-import { useAuth } from '../auth/hooks/useAuth';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 // Mock del hook de autenticación
-vi.mock('../auth/hooks/useAuth');
+vi.mock('../../auth/hooks/useAuth');
 
 const renderWithRouter = (ui: React.ReactElement) => {
   return render(<BrowserRouter>{ui}</BrowserRouter>);

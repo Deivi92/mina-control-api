@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { useAuth } from '../auth/hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 import { Container, Card, CardContent, Typography, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextField } from '@mui/material';
-import { loginSchema, type LoginFormData } from '../auth/validation/login.schema';
-import { theme } from '../app/styles/theme';
+import { loginSchema, type LoginFormData } from '../validation/login.schema';
+import { theme } from '../../app/styles/theme';
 
 export const LoginPage = () => {
   const { login, isLoading, error } = useAuth();

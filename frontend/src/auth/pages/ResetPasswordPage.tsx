@@ -1,10 +1,10 @@
 import { useParams, Link as RouterLink } from 'react-router-dom';
-import { useResetPassword } from '../auth/hooks/useResetPassword';
+import { useResetPassword } from '../hooks/useResetPassword';
 import { Container, Card, CardContent, Typography, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextField } from '@mui/material';
-import { resetPasswordSchema, type ResetPasswordFormData } from '../auth/validation/resetPassword.schema';
+import { resetPasswordSchema, type ResetPasswordFormData } from '../validation/resetPassword.schema';
 
 export const ResetPasswordPage = () => {
   const { token } = useParams<{ token: string }>();

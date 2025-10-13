@@ -10,11 +10,11 @@ import {
   Alert,
 } from '@mui/material';
 import { AxiosError } from 'axios';
-import { useEmpleados } from '../domains/empleado/hooks/useEmpleados';
-import { EmpleadoTable } from '../domains/empleado/components/EmpleadoTable';
-import { EmpleadoForm } from '../domains/empleado/components/EmpleadoForm';
-import { DeleteEmpleadoDialog } from '../domains/empleado/components/DeleteEmpleadoDialog';
-import type { Empleado, EmpleadoRequest } from '../domains/empleado/types';
+import { useEmpleados } from '../hooks/useEmpleados';
+import { EmpleadoTable } from '../components/EmpleadoTable';
+import { EmpleadoForm } from '../components/EmpleadoForm';
+import { DeleteEmpleadoDialog } from '../components/DeleteEmpleadoDialog';
+import type { Empleado, EmpleadoRequest } from '../types';
 
 /**
  * Página principal para la gestión de Empleados.

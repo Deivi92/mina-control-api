@@ -1,11 +1,11 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { useRegistration } from '../auth/hooks/useRegistration';
+import { useRegistration } from '../hooks/useRegistration';
 import { Container, Card, CardContent, Typography, Button, CircularProgress, Alert, Box, Link } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextField } from '@mui/material';
-import { registerSchema, type RegisterFormData } from '../auth/validation/register.schema';
-import { theme } from '../app/styles/theme';
+import { registerSchema, type RegisterFormData } from '../validation/register.schema';
+import { theme } from '../../app/styles/theme';
 
 export const RegisterPage = () => {
   const { registerUser, isLoading, isSuccess, error } = useRegistration();

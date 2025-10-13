@@ -1,30 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { ProduccionPage } from './ProduccionPage';
-import { useProduccion } from '../domains/produccion/hooks/useProduccion';
-import { useEmpleados } from '../domains/empleado/hooks/useEmpleados';
-import { useTiposTurno } from '../domains/turnos/hooks/useTiposTurno';
+import { useProduccion } from '../hooks/useProduccion';
+import { useEmpleados } from '../../empleado/hooks/useEmpleados';
+import { useTiposTurno } from '../../turnos/hooks/useTiposTurno';
 import userEvent from '@testing-library/user-event';
 
 // Mock de hooks
-vi.mock('../domains/produccion/hooks/useProduccion', () => ({
+vi.mock('../hooks/useProduccion', () => ({
   useProduccion: vi.fn(),
 }));
 
-vi.mock('../domains/empleado/hooks/useEmpleados', () => ({
+vi.mock('../../empleado/hooks/useEmpleados', () => ({
   useEmpleados: vi.fn(() => ({
     empleadosQuery: { data: [], isLoading: false },
   })),
 }));
 
-vi.mock('../domains/turnos/hooks/useTiposTurno', () => ({
+vi.mock('../../turnos/hooks/useTiposTurno', () => ({
   useTiposTurno: vi.fn(() => ({
     tiposTurnoQuery: { data: [], isLoading: false },
   })),
 }));
 
 // Mock de servicios
-vi.mock('../../services/produccion.service', () => ({
+vi.mock('../services/produccion.service', () => ({
   produccionService: {
     listarRegistros: vi.fn(),
     registrarProduccion: vi.fn(),

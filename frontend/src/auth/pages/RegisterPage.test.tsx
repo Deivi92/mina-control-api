@@ -9,7 +9,7 @@ import userEvent from '@testing-library/user-event';
 const mockRegisterUser = vi.fn();
 const mockUseRegistration = vi.fn();
 
-vi.mock('../auth/hooks/useRegistration', () => ({
+vi.mock('../hooks/useRegistration', () => ({
   useRegistration: () => mockUseRegistration(),
 }));
 
