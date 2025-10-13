@@ -17,28 +17,33 @@ import type { RegistroProduccionUpdateDTO, ProduccionFilters } from '../domains/
 export const ProduccionPage: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingRegistro, setEditingRegistro] = useState<RegistroProduccionUpdateDTO | null>(null);
-  
-  // Obtener registros de producción con posibilidad de filtrar
   const [filters, setFilters] = useState<ProduccionFilters>({});
+
+  // Hook principal de producción
+  const { 
+    listarRegistros, 
+    registrarProduccion, 
+    actualizarRegistro, 
+    eliminarRegistro, 
+    validarRegistro 
+  } = useProduccion();
+
+  // Query para obtener registros
   const { 
     data: registros, 
     isLoading, 
-    error,
-    refetch
-  } = useProduccion().listarRegistros(filters);
-  
-  // Obtener empleados y tipos de turno para los selects del formulario
-  const { empleadosQuery } = useEmpleados();
-  const empleados = empleadosQuery.data || [];
-  
-  const { tiposTurnoQuery } = useTiposTurno();
-  const tiposTurno = tiposTurnoQuery.data || [];
-  
+    error 
+  } = listarRegistros(filters);
+
   // Mutaciones
-  const { mutate: crearRegistro, isPending: isCreating } = useProduccion().registrarProduccion();
-  const { mutate: actualizarRegistro, isPending: isUpdating } = useProduccion().actualizarRegistro();
-  const { mutate: eliminarRegistro, isPending: isDeleting } = useProduccion().eliminarRegistro();
-  const { mutate: validarRegistro, isPending: isValidating } = useProduccion().validarRegistro();
+  const { mutate: crearRegistro, isPending: isCreating } = registrarProduccion();
+  const { mutate: guardarActualizacion, isPending: isUpdating } = actualizarRegistro();
+  const { mutate: ejecutarEliminacion, isPending: isDeleting } = eliminarRegistro();
+  const { mutate: ejecutarValidacion, isPending: isValidating } = validarRegistro();
+
+  // Obtener empleados y tipos de turno para los selects del formulario
+  const { data: empleados = [] } = useEmpleados().empleadosQuery;
+  const { data: tiposTurno = [] } = useTiposTurno().tiposTurnoQuery;
 
   const handleOpenForm = () => {
     setEditingRegistro(null);
@@ -52,10 +57,8 @@ export const ProduccionPage: React.FC = () => {
 
   const handleSubmit = (data: any) => {
     if (editingRegistro) {
-      // Actualizar registro existente
-      actualizarRegistro({ id: editingRegistro.id, data });
+      guardarActualizacion({ id: editingRegistro.id, data });
     } else {
-      // Crear nuevo registro
       crearRegistro(data);
     }
     handleCloseForm();
@@ -68,17 +71,16 @@ export const ProduccionPage: React.FC = () => {
 
   const handleDelete = (id: number) => {
     if (window.confirm('¿Está seguro de que desea eliminar este registro de producción?')) {
-      eliminarRegistro(id);
+      ejecutarEliminacion(id);
     }
   };
 
   const handleValidate = (id: number) => {
-    validarRegistro(id);
+    ejecutarValidacion(id);
   };
 
   const handleFilter = (newFilters: ProduccionFilters) => {
     setFilters(newFilters);
-    refetch();
   };
 
   if (error) {
