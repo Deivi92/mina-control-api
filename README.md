@@ -167,12 +167,12 @@ Este proyecto es un ejemplo tangible de mi capacidad para:
 
 ## 📞 Cómo Contactarme
 
-¿Interesado en evaluar mis habilidades técnicas con Java/Spring Boot? Puedes contactarme a través de mi perfil de GitHub o correo profesional.
+¿Interesado en evaluar mis habilidades técnicas con Java/Spring Boot? Puedes contactarme a través de mi perfil de GitHub o correo electrónico: Deivi Arismendi - trianadeivi92@gmail.com
 
 ---
 
 <div align="center">
 
-**MinaControl Pro** - Proyecto desarrollado por [Tu Nombre] | Portfolio de Desarrollador Java Backend
+**MinaControl Pro** - Proyecto desarrollado por Deivi Arismendi | Portfolio de Desarrollador Java Backend
 
 </div>
