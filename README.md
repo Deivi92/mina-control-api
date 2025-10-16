@@ -110,6 +110,19 @@ La documentación técnica detallada, incluyendo casos de uso y diagramas UML, s
 -   **[Casos de Uso](./backend/docs/casos_de_uso)**
 -   **[Diagramas UML](./backend/docs/diagrams)**
 
+## 🚀 Roadmap (Trabajo Futuro)
+
+Este proyecto está en desarrollo activo. Las próximas mejoras planificadas son:
+
+*   **Integración Continua (CI/CD):**
+    *   Configurar un **workflow de GitHub Actions** para compilar y ejecutar las pruebas del backend de forma automática con cada commit.
+*   **Contenerización:**
+    *   Crear un `Dockerfile` para el backend y un `docker-compose.yml` para levantar todo el entorno (backend + base de datos) de forma sencilla y aislada.
+*   **Desarrollo del Frontend:**
+    *   Continuar con la implementación de la interfaz de usuario en React hasta cubrir todos los casos de uso definidos.
+*   **Despliegue:**
+    *   Configurar el despliegue de la aplicación en un servicio en la nube.
+
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
