@@ -131,6 +131,15 @@
             <artifactId>lombok</artifactId>
         </dependency>
 
+        <!-- ========== LECTOR DE ARCHIVOS .env ========== -->
+        <!-- Dotenv-java: Carga variables de entorno desde un archivo .env -->
+        <!-- PARA QUÉ: Facilitar la configuración de desarrollo local sin exponer secretos -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+
         <!-- ========== TESTING ========== -->
         <!-- Spring Boot Test: Framework completo de testing (JUnit 5, MockMvc, TestContainers) -->
         <!-- PARA QUÉ: Tests unitarios e integración de APIs REST -->

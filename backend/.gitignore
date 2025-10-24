@@ -1,1 +1,14 @@
-# QWEN.md
+# Maven
+target/
+
+# Logs
+*.log
+postgres.log
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+
+# Environment variables
+.env

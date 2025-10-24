@@ -22,3 +22,6 @@
     *   Se debe usar Markdown para formatear listas, encabezados y énfasis cuando sea necesario para la claridad.
     *   Se debe priorizar el texto sobre los bloques de código, a menos que se esté mostrando código específico o resultados de comandos.
     *   **Explicar cada acción:** Antes de ejecutar cualquier comando shell, crear, modificar o eliminar archivos, Qwen Code debe proporcionar una explicación detallada de la acción, su propósito (preferiblemente relacionado con Spring Boot si aplica) y su impacto esperado. Esto es fundamental para el carácter académico del proyecto.
+
+## Qwen Added Memories
+- Durante la verificación de seguridad del proyecto, se establece como norma que toda la comunicación y documentación se realizará en español.
