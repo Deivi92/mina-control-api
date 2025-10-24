@@ -11,19 +11,18 @@
 
 </div>
 
-## 🚀 Descripción del Proyecto
+##  Descripción del Proyecto
 
 **MinaControl Pro** es un sistema full-stack para la gestión de operaciones mineras. El backend está construido con Java y Spring Boot, aplicando una arquitectura en capas y patrones de diseño. El frontend es una aplicación de una sola página (SPA) construida con React y TypeScript.
 
-> 🎯 **Este proyecto sirve como un portafolio profesional para demostrar habilidades en el desarrollo de aplicaciones empresariales con tecnologías Java/Spring Boot y React.**
 
-## 🏛️ Arquitectura
+##  Arquitectura
 
 La arquitectura general del sistema está documentada y se puede visualizar en el siguiente diagrama:
 
 - **[Ver Diagrama de Arquitectura](./backend/docs/diagrams/general/architecture_overview.puml)**
 
-## ✨ Características Principales
+##  Características Principales
 
 -   **Backend RESTful API**: Desarrollado con Spring Boot, Java 17 y principios de arquitectura limpia.
 -   **Sistema de Autenticación Segura**: Implementación de JWT (JSON Web Tokens) con Spring Security.
@@ -34,7 +33,7 @@ La arquitectura general del sistema está documentada y se puede visualizar en e
 -   **Documentación de API**: Generación automática de documentación con SpringDoc OpenAPI.
 -   **Frontend Moderno**: Interfaz de usuario reactiva construida con React y TypeScript.
 
-## 🛠️ Tecnologías y Herramientas
+##  Tecnologías y Herramientas
 
 ### Backend
 - **Java 17**
@@ -54,7 +53,7 @@ La arquitectura general del sistema está documentada y se puede visualizar en e
 - **Vite** como build tool
 - **ESLint & Prettier** para la calidad del código
 
-## 📋 Prerrequisitos
+##  Prerrequisitos
 
 Asegúrate de tener instalado el siguiente software:
 
@@ -64,7 +63,7 @@ Asegúrate de tener instalado el siguiente software:
 -   npm 9 o superior
 -   PostgreSQL (opcional, puedes usar la base de datos en memoria H2 para pruebas)
 
-## 🚀 Cómo Empezar
+##  Cómo Empezar
 
 ### Backend (Java Spring Boot)
 
@@ -103,14 +102,14 @@ Para ejecutar las pruebas unitarias y de integración del backend, utiliza el si
 ./mvnw test
 ```
 
-## 📚 Documentación
+##  Documentación
 
 La documentación técnica detallada, incluyendo casos de uso y diagramas UML, se encuentra en el directorio `backend/docs`:
 
 -   **[Casos de Uso](./backend/docs/casos_de_uso)**
 -   **[Diagramas UML](./backend/docs/diagrams)**
 
-## 🚀 Roadmap (Trabajo Futuro)
+##  Roadmap (Trabajo Futuro)
 
 Este proyecto está en desarrollo activo. Las próximas mejoras planificadas son:
 
@@ -123,11 +122,11 @@ Este proyecto está en desarrollo activo. Las próximas mejoras planificadas son
 *   **Despliegue:**
     *   Configurar el despliegue de la aplicación en un servicio en la nube.
 
-## 📄 Licencia
+##  Licencia
 
 Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
 
-## 📞 Contacto
+##  Contacto
 
 -   **Deivi Arismendi** - trianadeivi92@gmail.com
 -   **Perfil de GitHub:** [Deivi92](https://github.com/Deivi92)
