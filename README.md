@@ -102,6 +102,27 @@ Para ejecutar las pruebas unitarias y de integración del backend, utiliza el si
 ./mvnw test
 ```
 
+## Pruebas Rápidas de la API del Backend
+
+Para facilitar la prueba de la API del backend sin necesidad de configurar una base de datos externa, puedes usar el perfil `github` que utiliza una base de datos en memoria H2.
+
+**Pasos para probar:**
+
+1.  **Ejecutar la aplicación:**
+    Navega al directorio del backend y ejecuta la aplicación con el perfil `github`.
+
+    ```bash
+    cd backend
+    mvn spring-boot:run -Dspring-boot.run.profiles=github
+    ```
+
+2.  **Acceder a Swagger UI:**
+    Una vez que el servidor se haya iniciado, abre tu navegador y visita:
+
+    [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+    Desde esta interfaz podrás ver, documentar y probar cada uno de los endpoints de la API de forma interactiva.
+
 ##  Documentación
 
 La documentación técnica detallada, incluyendo casos de uso y diagramas UML, se encuentra en el directorio `backend/docs`:
