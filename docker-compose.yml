@@ -1,0 +1,78 @@
+version: '3.8'
+
+# ============================================================
+# MinaControl Pro - Entorno Completo con Docker Compose
+#
+# Uso:
+#   Iniciar:  docker compose up -d
+#   Detener:  docker compose down
+#   Logs:     docker compose logs -f backend
+# ============================================================
+
+services:
+
+  # ----------------------------------------------------------
+  # Base de datos PostgreSQL
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: minacontrol-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: minacontrol_db
+      POSTGRES_USER: ${DB_USER:-minacontrol_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-minacontrol_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-minacontrol_user} -d minacontrol_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - minacontrol-network
+
+  # ----------------------------------------------------------
+  # API Backend Spring Boot
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: minacontrol-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/minacontrol_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-minacontrol_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-minacontrol_pass}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      APP_JWTSECRET: ${JWT_SECRET}
+      APP_JWTACCESSTOKENEXPIRATIONMS: ${APP_JWTACCESSTOKENEXPIRATIONMS:-900000}
+      APP_JWTREFRESHTOKENEXPIRATIONMS: ${APP_JWTREFRESHTOKENEXPIRATIONMS:-604800000}
+      JAVA_OPTS: "-Xms256m -Xmx512m"
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - minacontrol-network
+
+volumes:
+  postgres_data:
+    name: minacontrol_postgres_data
+
+networks:
+  minacontrol-network:
+    name: minacontrol-network
+    driver: bridge

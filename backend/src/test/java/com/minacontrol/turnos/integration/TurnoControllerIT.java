@@ -7,6 +7,7 @@ import com.minacontrol.turnos.dto.request.AsignacionTurnoCreateDTO;
 import com.minacontrol.turnos.dto.request.TipoTurnoCreateDTO;
 import com.minacontrol.turnos.entity.TipoTurno;
 import com.minacontrol.turnos.repository.TipoTurnoRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,6 +44,9 @@ class TurnoControllerIT {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private EntityManager entityManager;
 
     private TipoTurno turnoDia;
     private TipoTurno turnoNoche;
@@ -205,6 +209,7 @@ class TurnoControllerIT {
         @BeforeEach
         void setUp() {
             empleadoRepository.deleteAll();
+            entityManager.flush();
             empleado = new Empleado();
             empleado.setNombres("Test");
             empleado.setApellidos("User");

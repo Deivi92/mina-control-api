@@ -11,7 +11,9 @@ public class DotenvPropertySourceFactory implements PropertySourceFactory {
 
     @Override
     public PropertySource<?> createPropertySource(String name, EncodedResource resource) throws IOException {
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure()
+                .ignoreIfMissing()
+                .load();
         return new DotenvPropertySource("dotenv", dotenv);
     }
 }
