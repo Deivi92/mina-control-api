@@ -32,6 +32,8 @@ La arquitectura general del sistema está documentada y se puede visualizar en e
 -   **Pruebas Automatizadas**: Desarrollo guiado por pruebas (TDD) con pruebas unitarias y de integración.
 -   **Documentación de API**: Generación automática de documentación con SpringDoc OpenAPI.
 -   **Frontend Moderno**: Interfaz de usuario reactiva construida con React y TypeScript.
+-   **CI/CD con GitHub Actions**: Pipeline automático que compila y ejecuta las pruebas en cada commit/PR.
+-   **Contenerización con Docker**: `Dockerfile` multi-etapa y `docker-compose.yml` para levantar todo el entorno.
 
 ##  Tecnologías y Herramientas
 
@@ -64,6 +66,29 @@ Asegúrate de tener instalado el siguiente software:
 -   PostgreSQL (opcional, puedes usar la base de datos en memoria H2 para pruebas)
 
 ##  Cómo Empezar
+
+### Opción A: Docker (Recomendado)
+
+La forma más sencilla de levantar el entorno completo (backend + PostgreSQL):
+
+1.  **Copia el archivo de variables de entorno:**
+    ```bash
+    cp .env.example .env
+    # Edita .env con tus valores reales (contraseña de BD, clave JWT, etc.)
+    ```
+2.  **Levanta todos los servicios:**
+    ```bash
+    docker compose up -d
+    ```
+    La API estará disponible en `http://localhost:8080`.
+    La consola de administración de PostgreSQL estará disponible en el puerto `5432`.
+
+3.  **Para detener los servicios:**
+    ```bash
+    docker compose down
+    ```
+
+### Opción B: Ejecución Local
 
 ### Backend (Java Spring Boot)
 
@@ -134,10 +159,11 @@ La documentación técnica detallada, incluyendo casos de uso y diagramas UML, s
 
 Este proyecto está en desarrollo activo. Las próximas mejoras planificadas son:
 
-*   **Integración Continua (CI/CD):**
-    *   Configurar un **workflow de GitHub Actions** para compilar y ejecutar las pruebas del backend de forma automática con cada commit.
-*   **Contenerización:**
-    *   Crear un `Dockerfile` para el backend y un `docker-compose.yml` para levantar todo el entorno (backend + base de datos) de forma sencilla y aislada.
+*   **Integración Continua (CI/CD):** ✅ Completado
+    *   Pipeline de **GitHub Actions** configurado en `.github/workflows/ci.yml` que compila y ejecuta todas las pruebas del backend automáticamente en cada commit y pull request.
+*   **Contenerización:** ✅ Completado
+    *   `Dockerfile` multi-etapa para el backend (build + runtime mínimo).
+    *   `docker-compose.yml` para levantar todo el entorno (backend + PostgreSQL) con un solo comando.
 *   **Desarrollo del Frontend:**
     *   Continuar con la implementación de la interfaz de usuario en React hasta cubrir todos los casos de uso definidos.
 *   **Despliegue:**

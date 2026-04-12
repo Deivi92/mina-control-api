@@ -1,0 +1,54 @@
+name: CI - Backend Build & Test
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'fix/**'
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build y Pruebas del Backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compilar el proyecto
+        run: |
+          cd backend
+          mvn clean compile --no-transfer-progress
+
+      - name: Ejecutar pruebas unitarias e integración
+        run: |
+          cd backend
+          mvn verify --no-transfer-progress -Dspring.profiles.active=test
+
+      - name: Publicar reporte de pruebas
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports/
+          retention-days: 7
